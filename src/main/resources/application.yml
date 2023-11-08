@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: efti-gate
+  datasource:
+    platform: postgres
+    url: jdbc:postgresql://localhost:8081/efti
+    username: julien
+    password: root
+    driverClassName: org.postgresql.Driver
+
+server:
+  port: 8082
