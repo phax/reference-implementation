@@ -4,7 +4,7 @@ spring:
   datasource:
     platform: postgres
     url: jdbc:postgresql://localhost:8081/efti
-    username: julien
+    username: ingroup
     password: root
     driverClassName: org.postgresql.Driver
 

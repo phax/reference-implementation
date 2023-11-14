@@ -1,4 +1,4 @@
-package fr.impnat.efti.eftigate;
+package com.ingroupe.efti.eftigate;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
