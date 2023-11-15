@@ -1,6 +1,5 @@
 package com.ingroupe.efti.eftigate.controller;
 
-import com.ingroupe.efti.eftigate.Controller.ControlController;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import org.junit.jupiter.api.Test;
