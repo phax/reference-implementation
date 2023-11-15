@@ -8,11 +8,10 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-@SpringBootApplication(scanBasePackages = {"com.ingroupe.efti"}, exclude = {DataSourceAutoConfiguration.class})
+@SpringBootApplication
 @EntityScan("com.ingroupe.efti")
 @EnableJpaRepositories("com.ingroupe.efti")
 @ComponentScan({"com.ingroupe.efti"})
-@EnableAutoConfiguration
 public class EftiGateApplication {
 
     public static void main(String[] args) {
