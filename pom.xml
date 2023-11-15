@@ -19,6 +19,8 @@
         </sonar.coverage.jacoco.xmlReportPaths>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        <properties-maven-plugin-version>1.1.0</properties-maven-plugin-version>
+        <sonar.projectName>EFTI : efti-gate</sonar.projectName>
     </properties>
 
     <distributionManagement>
@@ -131,7 +133,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.7</version>
+                <version>0.8.10</version>
                 <executions>
                     <execution>
                         <id>jacoco-initialize</id>
@@ -162,6 +164,26 @@
                 <artifactId>maven-project-info-reports-plugin</artifactId>
                 <version>3.1.2</version>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>${properties-maven-plugin-version}</version>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>sonar</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>read-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <files>
+                                <file>sonar-project.properties</file>
+                            </files>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <reporting>
@@ -184,7 +206,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.7</version>
+                <version>0.8.10</version>
                 <reportSets>
                     <reportSet>
                         <reports>
