@@ -1,6 +1,5 @@
 package com.ingroupe.efti.eftigate.service;
 
-
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
 import org.junit.jupiter.api.Assertions;
