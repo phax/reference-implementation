@@ -20,7 +20,7 @@ public class AuthorityEntity {
     private int id;
     
     @Column(name = "controlid")
-    private int controlid;
+    private int controlId;
     
     @Column(name = "country")
     private String country;
@@ -29,14 +29,14 @@ public class AuthorityEntity {
     private String email;
     
     @Column(name = "physicaladdress")
-    private String physicaladdress;
+    private String physicalAddress;
     
     @Column(name = "isemergencyservice")
-    private boolean isemergencyservice;
+    private boolean isEmergencyService;
     
     @Column(name = "authorityname")
-    private String authorityname;
+    private String authorityName;
     
     @Column(name = "nationaluniqueidentifier")
-    private String nationaluniqueidentifier;
+    private String nationalUniqueIdentifier;
 }

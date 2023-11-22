@@ -15,55 +15,55 @@ import java.util.UUID;
 @NoArgsConstructor
 public class ControlDto {
     @NotNull
-    private String eftidatauuid;
+    private String eftiDataUuid;
 
     @NotNull
-    private String requestuuid;
+    private String requestUuid;
 
     @NotNull
-    private String requesttype;
+    private String requestType;
 
     @NotNull
     private String status;
 
     @NotNull
-    private String eftiplatformurl;
+    private String eftiPlatformUrl;
 
     @NotNull
-    private String eftigateurl;
+    private String eftiGateUrl;
 
     @NotNull
-    private String subseteurequested;
+    private String subsetEuRequested;
 
     @NotNull
-    private String subsetmsrequested;
+    private String subsetMsRequested;
 
     @NotNull
-    private LocalDateTime createddate;
+    private LocalDateTime createdDate;
 
     @NotNull
-    private LocalDateTime lastmodifieddate;
+    private LocalDateTime lastModifiedDate;
 
-    private byte[] eftidata;
+    private byte[] eftiData;
 
-    private Object transportmetadata;
+    private Object transportMetaData;
 
-    private String fromgateurl;
+    private String fromGateUrl;
 
 
     public ControlDto(UilDto uilDto) {
         String requestUuid = UUID.randomUUID().toString();
         LocalDateTime localDateTime = LocalDateTime.now();
 
-        this.setEftidatauuid(uilDto.getUuid());
-        this.setEftigateurl(uilDto.getGate());
-        this.setEftiplatformurl(uilDto.getPlatform());
-        this.setRequestuuid(requestUuid);
-        this.setRequesttype(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
+        this.setEftiDataUuid(uilDto.getUuid());
+        this.setEftiGateUrl(uilDto.getGate());
+        this.setEftiPlatformUrl(uilDto.getPlatform());
+        this.setRequestUuid(requestUuid);
+        this.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
         this.setStatus(StatusEnum.PENDING.toString());
-        this.setSubseteurequested("oki");
-        this.setSubsetmsrequested("oki");
-        this.setCreateddate(localDateTime);
-        this.setLastmodifieddate(localDateTime);
+        this.setSubsetEuRequested("oki");
+        this.setSubsetMsRequested("oki");
+        this.setCreatedDate(localDateTime);
+        this.setLastModifiedDate(localDateTime);
     }
 }

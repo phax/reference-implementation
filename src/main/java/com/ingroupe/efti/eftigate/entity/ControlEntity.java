@@ -28,43 +28,43 @@ public class ControlEntity {
     private int id;
 
     @Column(name = "eftidatauuid")
-    private String eftidatauuid;
+    private String eftiDataUuid;
     
     @Column(name = "requestuuid")
-    private String requestuuid;
+    private String requestUuid;
 
     @Column(name = "requesttype")
-    private String requesttype;
+    private String requestType;
 
     @Column(name = "status")
     private String status;
 
     @Column(name = "eftiplatformurl")
-    private String eftiplatformurl;
+    private String eftiPlatformUrl;
 
     @Column(name = "eftigateurl")
-    private String eftigateurl;
+    private String eftiGateUrl;
 
     @Column(name = "subseteurequested")
-    private String subseteurequested;
+    private String subsetEuRequested;
 
     @Column(name = "subsetmsrequested")
-    private String subsetmsrequested;
+    private String subsetMsRequested;
 
     @Column(name = "createddate")
-    private LocalDateTime createddate;
+    private LocalDateTime createdDate;
 
     @Column(name = "lastmodifieddate")
-    private LocalDateTime lastmodifieddate;
+    private LocalDateTime lastModifiedDate;
 
     @Column(name = "eftidata")
-    private byte[] eftidata;
+    private byte[] eftiData;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "transportmetadata")
-    private Object transportmetadata;
+    private Object transportMetadata;
 
     @Column(name = "fromgateurl")
-    private String fromgateurl;
+    private String fromGateUrl;
 
 }

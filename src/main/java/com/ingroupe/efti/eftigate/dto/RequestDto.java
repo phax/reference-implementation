@@ -2,14 +2,11 @@ package com.ingroupe.efti.eftigate.dto;
 
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.utils.RequestStatusEnum;
-import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.cglib.core.Local;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Getter
@@ -18,35 +15,35 @@ import java.time.LocalDateTime;
 public class RequestDto {
 
     @NotNull
-    private int controlid;
+    private int controlId;
 
     @NotNull
     private String status;
 
-    private String edeliverymessageid;
+    private String edeliveryMessageId;
 
     @NotNull
     private Integer retry;
 
-    private Object reponsedata;
+    private Object reponseData;
 
-    private LocalDateTime lastretrydate;
-
-    @NotNull
-    private LocalDateTime createddate;
-
-    private LocalDateTime lastmodifieddate;
+    private LocalDateTime lastRetryDate;
 
     @NotNull
-    private String gateurldest;
+    private LocalDateTime createdDate;
+
+    private LocalDateTime lastModifiedDate;
+
+    @NotNull
+    private String gateUrlDest;
 
     public RequestDto(ControlEntity controlEntity) {
         LocalDateTime localDateTime = LocalDateTime.now();
 
-        this.controlid = controlEntity.getId();
+        this.controlId = controlEntity.getId();
         this.status = RequestStatusEnum.RECEIVED.toString();
         this.retry = 0;
-        this.createddate = localDateTime;
-        this.gateurldest = controlEntity.getEftigateurl();
+        this.createdDate = localDateTime;
+        this.gateUrlDest = controlEntity.getEftiGateUrl();
     }
 }

@@ -1,7 +1,6 @@
 package com.ingroupe.efti.eftigate.entity;
 
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
-import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -13,11 +12,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.cglib.core.Local;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Entity
 @Table(name = "request", schema = "efti", catalog = "efti")
@@ -31,30 +27,30 @@ public class RequestEntity {
     private int id;
     
     @Column(name = "controlid")
-    private int controlid;
+    private int controlId;
     
     @Column(name = "status")
     private String status;
     
     @Column(name = "edeliverymessageid")
-    private String edeliverymessageid;
+    private String edeliveryMessageId;
     
     @Column(name = "retry")
     private Integer retry;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "reponsedata")
-    private Object reponsedata;
+    private Object reponseData;
     
     @Column(name = "lastretrydate")
-    private LocalDateTime lastretrydate;
+    private LocalDateTime lastRetryDate;
     
     @Column(name = "createddate")
-    private LocalDateTime createddate;
+    private LocalDateTime createdDate;
     
     @Column(name = "lastmodifieddate")
-    private LocalDateTime lastmodifieddate;
+    private LocalDateTime lastModifiedDate;
     
     @Column(name = "gateurldest")
-    private String gateurldest;
+    private String gateUrlDest;
 }

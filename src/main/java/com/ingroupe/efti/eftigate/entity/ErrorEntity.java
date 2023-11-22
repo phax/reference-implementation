@@ -20,11 +20,11 @@ public class ErrorEntity {
     private int id;
     
     @Column(name = "requestid")
-    private int requestid;
+    private int requestId;
     
     @Column(name = "errorcode")
-    private String errorcode;
+    private String errorCode;
     
     @Column(name = "errordescription")
-    private String errordescription;
+    private String errorDescription;
 }

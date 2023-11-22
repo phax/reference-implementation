@@ -13,8 +13,6 @@ import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
@@ -22,24 +20,21 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 
-public class RequestServiceTest {
+class RequestServiceTest {
 
-    @Mock
     private final RequestRepository requestRepository = Mockito.mock(RequestRepository.class);;
 
-    @Mock
-    private MapperUtils mapperUtils = Mockito.mock(MapperUtils.class);
+    private final MapperUtils mapperUtils = Mockito.mock(MapperUtils.class);
 
-    @InjectMocks
-    RequestService requestService = new RequestService(requestRepository, mapperUtils);
+    private final RequestService requestService = new RequestService(requestRepository, mapperUtils);
 
     private final UilDto uilDto = new UilDto();
-    private ControlDto controlDto = new ControlDto();
-    private ControlEntity controlEntity = new ControlEntity();
+    private final ControlDto controlDto = new ControlDto();
+    private final ControlEntity controlEntity = new ControlEntity();
 
-    private RequestEntity requestEntity = new RequestEntity();
+    private final RequestEntity requestEntity = new RequestEntity();
 
-    private RequestDto requestDto = new RequestDto();
+    private final RequestDto requestDto = new RequestDto();
 
     @BeforeEach
     public void before() {
@@ -49,42 +44,42 @@ public class RequestServiceTest {
         this.uilDto.setGate("gate");
         this.uilDto.setUuid("uuid");
         this.uilDto.setPlatform("plateform");
-        this.controlDto.setEftidatauuid(uilDto.getUuid());
+        this.controlDto.setEftiDataUuid(uilDto.getUuid());
         this.controlDto.setEftigateurl(uilDto.getGate());
-        this.controlDto.setEftiplatformurl(uilDto.getPlatform());
-        this.controlDto.setRequestuuid(requestUuid);
-        this.controlDto.setRequesttype(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
+        this.controlDto.setEftiPlatformUrl(uilDto.getPlatform());
+        this.controlDto.setRequestUuid(requestUuid);
+        this.controlDto.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
         this.controlDto.setStatus(StatusEnum.PENDING.toString());
-        this.controlDto.setSubseteurequested("oki");
-        this.controlDto.setSubsetmsrequested("oki");
-        this.controlDto.setCreateddate(localDateTime);
-        this.controlDto.setLastmodifieddate(localDateTime);
+        this.controlDto.setSubsetEuRequested("oki");
+        this.controlDto.setSubsetMsRequested("oki");
+        this.controlDto.setCreatedDate(localDateTime);
+        this.controlDto.setLastModifiedDate(localDateTime);
 
-        this.controlEntity.setEftidatauuid(controlDto.getEftidatauuid());
-        this.controlEntity.setRequestuuid(controlDto.getRequestuuid());
-        this.controlEntity.setRequesttype(controlDto.getRequesttype());
+        this.controlEntity.setEftiDataUuid(controlDto.getEftiDataUuid());
+        this.controlEntity.setRequestUuid(controlDto.getRequestUuid());
+        this.controlEntity.setRequestType(controlDto.getRequestType());
         this.controlEntity.setStatus(controlDto.getStatus());
-        this.controlEntity.setEftiplatformurl(controlDto.getEftiplatformurl());
-        this.controlEntity.setEftigateurl(controlDto.getEftigateurl());
-        this.controlEntity.setSubseteurequested(controlDto.getSubseteurequested());
-        this.controlEntity.setSubsetmsrequested(controlDto.getSubsetmsrequested());
-        this.controlEntity.setCreateddate(controlDto.getCreateddate());
-        this.controlEntity.setLastmodifieddate(controlDto.getLastmodifieddate());
-        this.controlEntity.setEftidata(controlDto.getEftidata());
-        this.controlEntity.setTransportmetadata(controlDto.getTransportmetadata());
-        this.controlEntity.setFromgateurl(controlDto.getFromgateurl());
+        this.controlEntity.setEftiPlatformUrl(controlDto.getEftiPlatformUrl());
+        this.controlEntity.setEftiGateUrl(controlDto.getEftigateurl());
+        this.controlEntity.setSubsetEuRequested(controlDto.getSubsetEuRequested());
+        this.controlEntity.setSubsetMsRequested(controlDto.getSubsetMsRequested());
+        this.controlEntity.setCreatedDate(controlDto.getCreatedDate());
+        this.controlEntity.setLastModifiedDate(controlDto.getLastModifiedDate());
+        this.controlEntity.setEftiData(controlDto.getEftiData());
+        this.controlEntity.setTransportMetadata(controlDto.getTransportMetaData());
+        this.controlEntity.setFromGateUrl(controlDto.getFromGateUrl());
 
-        this.requestDto.setControlid(this.controlEntity.getId());
+        this.requestDto.setControlId(this.controlEntity.getId());
         this.requestDto.setStatus(RequestStatusEnum.RECEIVED.toString());
         this.requestDto.setRetry(0);
-        this.requestDto.setCreateddate(localDateTime);
-        this.requestDto.setGateurldest(controlEntity.getEftigateurl());
+        this.requestDto.setCreatedDate(localDateTime);
+        this.requestDto.setGateUrlDest(controlEntity.getEftiGateUrl());
 
-        this.requestEntity.setControlid(this.requestDto.getControlid());
+        this.requestEntity.setControlId(this.requestDto.getControlId());
         this.requestEntity.setStatus(this.requestDto.getStatus());
         this.requestEntity.setRetry(this.requestDto.getRetry());
-        this.requestEntity.setCreateddate(this.requestEntity.getCreateddate());
-        this.requestEntity.setGateurldest(this.requestDto.getGateurldest());
+        this.requestEntity.setCreatedDate(this.requestEntity.getCreatedDate());
+        this.requestEntity.setGateUrlDest(this.requestDto.getGateUrlDest());
     }
 
     @Test

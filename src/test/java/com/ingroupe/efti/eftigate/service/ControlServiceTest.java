@@ -11,10 +11,7 @@ import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -23,21 +20,18 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 
 class ControlServiceTest {
-    @Mock
-    private ControlRepository controlRepository = Mockito.mock(ControlRepository.class);
 
-    @Mock
-    private MapperUtils mapperUtils = Mockito.mock(MapperUtils.class);
+    private final ControlRepository controlRepository = Mockito.mock(ControlRepository.class);
 
-    @Mock
-    private RequestService requestService = Mockito.mock(RequestService.class);
+    private final MapperUtils mapperUtils = Mockito.mock(MapperUtils.class);
 
-    @InjectMocks
-    private ControlService controlService = new ControlService(controlRepository, mapperUtils, requestService);
+    private final RequestService requestService = Mockito.mock(RequestService.class);
+
+    private final ControlService controlService = new ControlService(controlRepository, mapperUtils, requestService);
 
     private final UilDto uilDto = new UilDto();
-    private ControlDto controlDto = new ControlDto();
-    private ControlEntity controlEntity = new ControlEntity();
+    private final ControlDto controlDto = new ControlDto();
+    private final ControlEntity controlEntity = new ControlEntity();
 
     @BeforeEach
     public void before() {
@@ -47,30 +41,30 @@ class ControlServiceTest {
         this.uilDto.setGate("gate");
         this.uilDto.setUuid("uuid");
         this.uilDto.setPlatform("plateform");
-        this.controlDto.setEftidatauuid(uilDto.getUuid());
+        this.controlDto.setEftiDataUuid(uilDto.getUuid());
         this.controlDto.setEftigateurl(uilDto.getGate());
-        this.controlDto.setEftiplatformurl(uilDto.getPlatform());
-        this.controlDto.setRequestuuid(requestUuid);
-        this.controlDto.setRequesttype(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
+        this.controlDto.setEftiPlatformUrl(uilDto.getPlatform());
+        this.controlDto.setRequestUuid(requestUuid);
+        this.controlDto.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
         this.controlDto.setStatus(StatusEnum.PENDING.toString());
-        this.controlDto.setSubseteurequested("oki");
-        this.controlDto.setSubsetmsrequested("oki");
-        this.controlDto.setCreateddate(localDateTime);
-        this.controlDto.setLastmodifieddate(localDateTime);
+        this.controlDto.setSubsetEuRequested("oki");
+        this.controlDto.setSubsetMsRequested("oki");
+        this.controlDto.setCreatedDate(localDateTime);
+        this.controlDto.setLastModifiedDate(localDateTime);
 
-        this.controlEntity.setEftidatauuid(controlDto.getEftidatauuid());
-        this.controlEntity.setRequestuuid(controlDto.getRequestuuid());
-        this.controlEntity.setRequesttype(controlDto.getRequesttype());
+        this.controlEntity.setEftiDataUuid(controlDto.getEftiDataUuid());
+        this.controlEntity.setRequestUuid(controlDto.getRequestUuid());
+        this.controlEntity.setRequestType(controlDto.getRequestType());
         this.controlEntity.setStatus(controlDto.getStatus());
-        this.controlEntity.setEftiplatformurl(controlDto.getEftiplatformurl());
-        this.controlEntity.setEftigateurl(controlDto.getEftigateurl());
-        this.controlEntity.setSubseteurequested(controlDto.getSubseteurequested());
-        this.controlEntity.setSubsetmsrequested(controlDto.getSubsetmsrequested());
-        this.controlEntity.setCreateddate(controlDto.getCreateddate());
-        this.controlEntity.setLastmodifieddate(controlDto.getLastmodifieddate());
-        this.controlEntity.setEftidata(controlDto.getEftidata());
-        this.controlEntity.setTransportmetadata(controlDto.getTransportmetadata());
-        this.controlEntity.setFromgateurl(controlDto.getFromgateurl());
+        this.controlEntity.setEftiPlatformUrl(controlDto.getEftiPlatformUrl());
+        this.controlEntity.setEftiGateUrl(controlDto.getEftigateurl());
+        this.controlEntity.setSubsetEuRequested(controlDto.getSubsetEuRequested());
+        this.controlEntity.setSubsetMsRequested(controlDto.getSubsetMsRequested());
+        this.controlEntity.setCreatedDate(controlDto.getCreatedDate());
+        this.controlEntity.setLastModifiedDate(controlDto.getLastModifiedDate());
+        this.controlEntity.setEftiData(controlDto.getEftiData());
+        this.controlEntity.setTransportMetadata(controlDto.getTransportMetaData());
+        this.controlEntity.setFromGateUrl(controlDto.getFromGateUrl());
     }
 
     @Test
