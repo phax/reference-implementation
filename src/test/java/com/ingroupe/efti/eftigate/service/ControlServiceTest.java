@@ -42,7 +42,7 @@ class ControlServiceTest {
         this.uilDto.setUuid("uuid");
         this.uilDto.setPlatform("plateform");
         this.controlDto.setEftiDataUuid(uilDto.getUuid());
-        this.controlDto.setEftigateurl(uilDto.getGate());
+        this.controlDto.setEftiGateUrl(uilDto.getGate());
         this.controlDto.setEftiPlatformUrl(uilDto.getPlatform());
         this.controlDto.setRequestUuid(requestUuid);
         this.controlDto.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
@@ -57,7 +57,7 @@ class ControlServiceTest {
         this.controlEntity.setRequestType(controlDto.getRequestType());
         this.controlEntity.setStatus(controlDto.getStatus());
         this.controlEntity.setEftiPlatformUrl(controlDto.getEftiPlatformUrl());
-        this.controlEntity.setEftiGateUrl(controlDto.getEftigateurl());
+        this.controlEntity.setEftiGateUrl(controlDto.getEftiGateUrl());
         this.controlEntity.setSubsetEuRequested(controlDto.getSubsetEuRequested());
         this.controlEntity.setSubsetMsRequested(controlDto.getSubsetMsRequested());
         this.controlEntity.setCreatedDate(controlDto.getCreatedDate());
