@@ -1,7 +1,8 @@
 package com.ingroupe.efti.eftigate.entity;
 
-import jakarta.persistence.Basic;
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,14 +10,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import java.sql.Timestamp;
-import java.util.Objects;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "request", schema = "efti", catalog = "efti")
 @Getter
 @Setter
+@Convert(attributeName = "entityAttrName", converter = JsonBinaryType.class)
 public class RequestEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
@@ -24,29 +27,30 @@ public class RequestEntity {
     private int id;
     
     @Column(name = "controlid")
-    private int controlid;
+    private int controlId;
     
     @Column(name = "status")
     private String status;
     
     @Column(name = "edeliverymessageid")
-    private String edeliverymessageid;
+    private String edeliveryMessageId;
     
     @Column(name = "retry")
     private Integer retry;
-    
+
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "reponsedata")
-    private Object reponsedata;
+    private Object reponseData;
     
     @Column(name = "lastretrydate")
-    private Timestamp lastretrydate;
+    private LocalDateTime lastRetryDate;
     
     @Column(name = "createddate")
-    private Timestamp createddate;
+    private LocalDateTime createdDate;
     
     @Column(name = "lastmodifieddate")
-    private Timestamp lastmodifieddate;
+    private LocalDateTime lastModifiedDate;
     
     @Column(name = "gateurldest")
-    private String gateurldest;
+    private String gateUrlDest;
 }

@@ -1,11 +1,13 @@
 package com.ingroupe.efti.eftigate.service;
 
-
 import com.ingroupe.efti.eftigate.dto.ControlDto;
+import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
+import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
-import com.ingroupe.efti.eftigate.repository.ControlRepository;
+import com.ingroupe.efti.eftigate.repository.RequestRepository;
+import com.ingroupe.efti.eftigate.utils.RequestStatusEnum;
 import com.ingroupe.efti.eftigate.utils.RequestTypeEnum;
 import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import org.junit.jupiter.api.Assertions;
@@ -14,24 +16,25 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 
-class ControlServiceTest {
+class RequestServiceTest {
 
-    private final ControlRepository controlRepository = Mockito.mock(ControlRepository.class);
+    private final RequestRepository requestRepository = Mockito.mock(RequestRepository.class);;
 
     private final MapperUtils mapperUtils = Mockito.mock(MapperUtils.class);
 
-    private final RequestService requestService = Mockito.mock(RequestService.class);
-
-    private final ControlService controlService = new ControlService(controlRepository, mapperUtils, requestService);
+    private final RequestService requestService = new RequestService(requestRepository, mapperUtils);
 
     private final UilDto uilDto = new UilDto();
     private final ControlDto controlDto = new ControlDto();
     private final ControlEntity controlEntity = new ControlEntity();
+
+    private final RequestEntity requestEntity = new RequestEntity();
+
+    private final RequestDto requestDto = new RequestDto();
 
     @BeforeEach
     public void before() {
@@ -65,27 +68,29 @@ class ControlServiceTest {
         this.controlEntity.setEftiData(controlDto.getEftiData());
         this.controlEntity.setTransportMetadata(controlDto.getTransportMetaData());
         this.controlEntity.setFromGateUrl(controlDto.getFromGateUrl());
+
+        this.requestDto.setControlId(this.controlEntity.getId());
+        this.requestDto.setStatus(RequestStatusEnum.RECEIVED.toString());
+        this.requestDto.setRetry(0);
+        this.requestDto.setCreatedDate(localDateTime);
+        this.requestDto.setGateUrlDest(controlEntity.getEftiGateUrl());
+
+        this.requestEntity.setControlId(this.requestDto.getControlId());
+        this.requestEntity.setStatus(this.requestDto.getStatus());
+        this.requestEntity.setRetry(this.requestDto.getRetry());
+        this.requestEntity.setCreatedDate(this.requestEntity.getCreatedDate());
+        this.requestEntity.setGateUrlDest(this.requestDto.getGateUrlDest());
     }
 
     @Test
-    void getByIdWithDataTest() {
-        Mockito.when(controlRepository.findById(1L)).thenReturn(Optional.of(new ControlEntity()));
+    void createRequestEntityTest() {
+        Mockito.when(mapperUtils.requestDtoToRequestEntity(requestDto)).thenReturn(requestEntity);
+        Mockito.when(requestRepository.save(any())).thenReturn(requestEntity);
 
-        ControlEntity controlEntity = controlService.getById(1L);
+        RequestEntity requestEntityResult = requestService.createRequestEntity(controlEntity);
 
-        Mockito.verify(controlRepository, Mockito.times(1)).findById(1L);
-        Assertions.assertNotNull(controlEntity);
-    }
-
-    @Test
-    void createControlEntityTest() {
-        Mockito.when(mapperUtils.controlDtoToControEntity(controlDto)).thenReturn(controlEntity);
-        Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
-
-        ControlEntity controlEntityResult = controlService.createControlEntity(uilDto);
-
-        Mockito.verify(mapperUtils, Mockito.times(1)).controlDtoToControEntity(any());
-        Mockito.verify(controlRepository, Mockito.times(1)).save(any());
-        Assertions.assertNotNull(controlEntityResult);
+        Assertions.assertNotNull(requestEntityResult);
+        Mockito.verify(mapperUtils, Mockito.times(1)).requestDtoToRequestEntity(any());
+        Mockito.verify(requestRepository, Mockito.times(1)).save(any());
     }
 }
