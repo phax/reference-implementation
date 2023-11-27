@@ -37,6 +37,7 @@ class ControlServiceTest {
     private final RequestUuidDto requestUuidDto = new RequestUuidDto();
     private final String requestUuid = UUID.randomUUID().toString();
 
+
     @BeforeEach
     public void before() {
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
@@ -89,11 +90,11 @@ class ControlServiceTest {
         Mockito.when(mapperUtils.controlDtoToControEntity(controlDto)).thenReturn(controlEntity);
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
-        ControlEntity controlEntityResult = controlService.createControlEntity(uilDto);
+        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
 
         Mockito.verify(mapperUtils, Mockito.times(1)).controlDtoToControEntity(any());
         Mockito.verify(controlRepository, Mockito.times(1)).save(any());
-        Assertions.assertNotNull(controlEntityResult);
+        Assertions.assertNotNull(requestUuidDtoResult);
     }
 
     @Test

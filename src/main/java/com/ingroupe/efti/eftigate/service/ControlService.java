@@ -29,14 +29,18 @@ public class ControlService {
     }
 
     @Transactional
-    public ControlEntity createControlEntity(UilDto uilDto) {
+    public RequestUuidDto createControlEntity(UilDto uilDto) {
         log.info("createControlEntity with uuid : {}", uilDto.getUuid());
         ControlDto controlDto = new ControlDto(uilDto);
 
         ControlEntity controlEntity = controlRepository.save(mapperUtils.controlDtoToControEntity(controlDto));
         log.info("control with uil '{}' has been register", uilDto.getUuid());
         requestService.createRequestEntity(controlEntity);
-        return controlEntity;
+        RequestUuidDto requestUuidDto = new RequestUuidDto();
+        requestUuidDto.setRequestUuid(controlEntity.getRequestUuid());
+        requestUuidDto.setStatus(controlEntity.getStatus());
+        requestUuidDto.setEFTIData(controlEntity.getEftiData());
+        return requestUuidDto;
     }
 
     public RequestUuidDto getControlEntity(String requestUuid) {

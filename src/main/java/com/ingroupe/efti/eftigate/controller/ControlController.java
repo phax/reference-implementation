@@ -34,7 +34,7 @@ public class ControlController {
 
     @PostMapping("/requestUil")
     @Secured(Roles.ROLE_ROAD_CONTROLER)
-    public ResponseEntity<ControlEntity> requestUil(@RequestBody UilDto uilDto) {
+    public ResponseEntity<RequestUuidDto> requestUil(@RequestBody UilDto uilDto) {
         log.info("POST on /requestUil with param uuid {}", uilDto.getUuid());
         return new ResponseEntity<>(controlService.createControlEntity(uilDto), HttpStatus.ACCEPTED);
     }
