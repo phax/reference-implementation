@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Getter
@@ -53,7 +54,7 @@ public class ControlDto {
 
     public ControlDto(UilDto uilDto) {
         String requestUuid = UUID.randomUUID().toString();
-        LocalDateTime localDateTime = LocalDateTime.now();
+        LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
 
         this.setEftiDataUuid(uilDto.getUuid());
         this.setEftiGateUrl(uilDto.getGate());

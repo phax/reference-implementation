@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,7 +39,7 @@ class ControlServiceTest {
 
     @BeforeEach
     public void before() {
-        LocalDateTime localDateTime = LocalDateTime.now();
+        LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         String status = StatusEnum.PENDING.toString();
 
         requestUuidDto.setRequestUuid(requestUuid);
