@@ -30,7 +30,7 @@ public class ControlService {
 
     @Transactional
     public RequestUuidDto createControlEntity(UilDto uilDto) {
-        log.info("createControlEntity with uuid : {}", uilDto.getUuid());
+        log.info("create ControlEntity with uuid : {}", uilDto.getUuid());
         ControlDto controlDto = new ControlDto(uilDto);
 
         ControlEntity controlEntity = controlRepository.save(mapperUtils.controlDtoToControEntity(controlDto));
@@ -44,12 +44,12 @@ public class ControlService {
     }
 
     public RequestUuidDto getControlEntity(String requestUuid) {
-        log.info("getControlEntity with uuid : {}", requestUuid);
+        log.info("get ControlEntity with uuid : {}", requestUuid);
         Optional<ControlEntity> optionalControlEntity = controlRepository.findByRequestUuid(requestUuid);
         RequestUuidDto requestUuidDto = new RequestUuidDto();
 
         if (optionalControlEntity.isPresent()) {
-            log.info("Sucess, found controlEntity with {} as uuid", requestUuid);
+            log.info("Success, found controlEntity with {} as uuid", requestUuid);
             ControlEntity controlEntity = optionalControlEntity.get();
 
             requestUuidDto.setStatus(controlEntity.getStatus());
