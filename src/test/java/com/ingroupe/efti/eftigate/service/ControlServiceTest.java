@@ -2,6 +2,7 @@ package com.ingroupe.efti.eftigate.service;
 
 
 import com.ingroupe.efti.eftigate.dto.ControlDto;
+import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
@@ -32,11 +33,16 @@ class ControlServiceTest {
     private final UilDto uilDto = new UilDto();
     private final ControlDto controlDto = new ControlDto();
     private final ControlEntity controlEntity = new ControlEntity();
+    private final RequestUuidDto requestUuidDto = new RequestUuidDto();
+    private final String requestUuid = UUID.randomUUID().toString();
 
     @BeforeEach
     public void before() {
         LocalDateTime localDateTime = LocalDateTime.now();
-        String requestUuid = UUID.randomUUID().toString();
+        String status = StatusEnum.PENDING.toString();
+
+        requestUuidDto.setRequestUuid(requestUuid);
+        requestUuidDto.setStatus(status);
 
         this.uilDto.setGate("gate");
         this.uilDto.setUuid("uuid");
@@ -46,7 +52,7 @@ class ControlServiceTest {
         this.controlDto.setEftiPlatformUrl(uilDto.getPlatform());
         this.controlDto.setRequestUuid(requestUuid);
         this.controlDto.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
-        this.controlDto.setStatus(StatusEnum.PENDING.toString());
+        this.controlDto.setStatus(status);
         this.controlDto.setSubsetEuRequested("oki");
         this.controlDto.setSubsetMsRequested("oki");
         this.controlDto.setCreatedDate(localDateTime);
@@ -87,5 +93,28 @@ class ControlServiceTest {
         Mockito.verify(mapperUtils, Mockito.times(1)).controlDtoToControEntity(any());
         Mockito.verify(controlRepository, Mockito.times(1)).save(any());
         Assertions.assertNotNull(controlEntityResult);
+    }
+
+    @Test
+    void getControlEntitySucessTest() {
+        Mockito.when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
+
+        RequestUuidDto requestUuidDtoResult = controlService.getControlEntity(requestUuid);
+
+        Mockito.verify(controlRepository, Mockito.times(1)).findByRequestUuid(any());
+        Assertions.assertNotNull(requestUuidDtoResult);
+        Assertions.assertEquals(requestUuidDtoResult.getRequestUuid(), controlEntity.getRequestUuid());
+    }
+
+    @Test
+    void getControlEntityNotFoundTest() {
+        Mockito.when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.empty());
+
+        RequestUuidDto requestUuidDtoResult = controlService.getControlEntity(requestUuid);
+
+        Mockito.verify(controlRepository, Mockito.times(1)).findByRequestUuid(any());
+        Assertions.assertNotNull(requestUuidDtoResult);
+        Assertions.assertEquals("ERROR", requestUuidDtoResult.getStatus());
+        Assertions.assertNull(requestUuidDtoResult.getEFTIData());
     }
 }
