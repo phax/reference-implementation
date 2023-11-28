@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Getter
 @Setter
@@ -38,7 +39,7 @@ public class RequestDto {
     private String gateUrlDest;
 
     public RequestDto(ControlEntity controlEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now();
+        LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
 
         this.controlId = controlEntity.getId();
         this.status = RequestStatusEnum.RECEIVED.toString();

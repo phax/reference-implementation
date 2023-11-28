@@ -29,23 +29,27 @@ public class ControlService {
     }
 
     @Transactional
-    public ControlEntity createControlEntity(UilDto uilDto) {
-        log.info("createControlEntity with uuid : {}", uilDto.getUuid());
+    public RequestUuidDto createControlEntity(UilDto uilDto) {
+        log.info("create ControlEntity with uuid : {}", uilDto.getUuid());
         ControlDto controlDto = new ControlDto(uilDto);
 
         ControlEntity controlEntity = controlRepository.save(mapperUtils.controlDtoToControEntity(controlDto));
         log.info("control with uil '{}' has been register", uilDto.getUuid());
         requestService.createRequestEntity(controlEntity);
-        return controlEntity;
+        RequestUuidDto requestUuidDto = new RequestUuidDto();
+        requestUuidDto.setRequestUuid(controlEntity.getRequestUuid());
+        requestUuidDto.setStatus(controlEntity.getStatus());
+        requestUuidDto.setEFTIData(controlEntity.getEftiData());
+        return requestUuidDto;
     }
 
     public RequestUuidDto getControlEntity(String requestUuid) {
-        log.info("getControlEntity with uuid : {}", requestUuid);
+        log.info("get ControlEntity with uuid : {}", requestUuid);
         Optional<ControlEntity> optionalControlEntity = controlRepository.findByRequestUuid(requestUuid);
         RequestUuidDto requestUuidDto = new RequestUuidDto();
 
         if (optionalControlEntity.isPresent()) {
-            log.info("Sucess, found controlEntity with {} as uuid", requestUuid);
+            log.info("Success, found controlEntity with {} as uuid", requestUuid);
             ControlEntity controlEntity = optionalControlEntity.get();
 
             requestUuidDto.setStatus(controlEntity.getStatus());

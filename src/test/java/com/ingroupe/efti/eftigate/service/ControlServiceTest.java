@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -36,9 +37,10 @@ class ControlServiceTest {
     private final RequestUuidDto requestUuidDto = new RequestUuidDto();
     private final String requestUuid = UUID.randomUUID().toString();
 
+
     @BeforeEach
     public void before() {
-        LocalDateTime localDateTime = LocalDateTime.now();
+        LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         String status = StatusEnum.PENDING.toString();
 
         requestUuidDto.setRequestUuid(requestUuid);
@@ -88,11 +90,11 @@ class ControlServiceTest {
         Mockito.when(mapperUtils.controlDtoToControEntity(controlDto)).thenReturn(controlEntity);
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
-        ControlEntity controlEntityResult = controlService.createControlEntity(uilDto);
+        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
 
         Mockito.verify(mapperUtils, Mockito.times(1)).controlDtoToControEntity(any());
         Mockito.verify(controlRepository, Mockito.times(1)).save(any());
-        Assertions.assertNotNull(controlEntityResult);
+        Assertions.assertNotNull(requestUuidDtoResult);
     }
 
     @Test

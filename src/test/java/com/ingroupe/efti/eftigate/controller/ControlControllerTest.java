@@ -76,7 +76,7 @@ class ControlControllerTest {
         uilDto.setUuid("uuid");
         uilDto.setGate("gate");
 
-        Mockito.when(controlService.createControlEntity(uilDto)).thenReturn(controlEntity);
+        Mockito.when(controlService.createControlEntity(uilDto)).thenReturn(requestUuidDto);
 
         mockMvc.perform(post("/v1/requestUil")
                         .with(csrf())
