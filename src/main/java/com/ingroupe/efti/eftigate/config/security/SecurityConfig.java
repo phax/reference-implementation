@@ -8,6 +8,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -45,16 +46,9 @@ public class SecurityConfig {
                         //require login to everything else
                         .anyRequest().authenticated()
                 )
-                .formLogin(Customizer.withDefaults())
+                .formLogin(AbstractHttpConfigurer::disable)
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(customizer -> customizer.jwtAuthenticationConverter((jwtAuthenticationConverter))));
 
         return http.build();
-    }
-
-    @Bean
-    public AuthenticationManager noopAuthenticationManager() {
-        return authentication -> {
-            throw new AuthenticationServiceException("external authentication only");
-        };
     }
 }
