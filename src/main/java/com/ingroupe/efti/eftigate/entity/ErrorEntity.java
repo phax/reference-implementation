@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "error", schema = "efti", catalog = "efti")
+@Table(name = "error", catalog = "efti")
 @Getter
 @Setter
 public class ErrorEntity {

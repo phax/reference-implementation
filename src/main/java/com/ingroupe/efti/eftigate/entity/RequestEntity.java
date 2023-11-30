@@ -12,11 +12,12 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "request", schema = "efti", catalog = "efti")
+@Table(name = "request", catalog = "efti")
 @Getter
 @Setter
 @Convert(attributeName = "entityAttrName", converter = JsonBinaryType.class)
