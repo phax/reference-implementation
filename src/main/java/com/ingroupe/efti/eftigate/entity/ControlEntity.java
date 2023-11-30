@@ -16,7 +16,7 @@ import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "control", schema = "efti", catalog = "efti")
+@Table(name = "control", catalog = "efti")
 @Getter
 @Setter
 @Convert(attributeName = "entityAttrName", converter = JsonBinaryType.class)
