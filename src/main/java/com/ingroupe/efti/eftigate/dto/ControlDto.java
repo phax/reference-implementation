@@ -1,56 +1,41 @@
 package com.ingroupe.efti.eftigate.dto;
 
+import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.utils.RequestTypeEnum;
 import com.ingroupe.efti.eftigate.utils.StatusEnum;
-import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.UUID;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ControlDto {
-    @NotNull
+
+    private int id;
     private String eftiDataUuid;
-
-    @NotNull
     private String requestUuid;
-
-    @NotNull
     private String requestType;
-
-    @NotNull
     private String status;
-
-    @NotNull
     private String eftiPlatformUrl;
-
-    @NotNull
     private String eftiGateUrl;
-
-    @NotNull
     private String subsetEuRequested;
-
-    @NotNull
     private String subsetMsRequested;
-
-    @NotNull
     private LocalDateTime createdDate;
-
-    @NotNull
     private LocalDateTime lastModifiedDate;
-
     private byte[] eftiData;
-
     private Object transportMetaData;
-
     private String fromGateUrl;
-
+    private List<RequestDto> requests;
+    private AuthorityDto authority;
+    private ErrorDto error;
 
     public ControlDto(UilDto uilDto) {
         String requestUuid = UUID.randomUUID().toString();
@@ -66,5 +51,9 @@ public class ControlDto {
         this.setSubsetMsRequested("oki");
         this.setCreatedDate(localDateTime);
         this.setLastModifiedDate(localDateTime);
+    }
+
+    public boolean isError() {
+        return StatusEnum.ERROR.name().equals(status);
     }
 }

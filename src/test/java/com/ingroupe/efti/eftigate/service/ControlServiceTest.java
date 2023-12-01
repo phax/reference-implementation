@@ -1,35 +1,42 @@
 package com.ingroupe.efti.eftigate.service;
 
-
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
-import com.ingroupe.efti.eftigate.mapper.MapperUtils;
+import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
+import com.ingroupe.efti.eftigate.utils.ErrorCodesEnum;
 import com.ingroupe.efti.eftigate.utils.RequestTypeEnum;
 import com.ingroupe.efti.eftigate.utils.StatusEnum;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-class ControlServiceTest {
+class ControlServiceTest extends AbstractServceTest {
 
+    AutoCloseable openMocks;
+    @Mock
     private final ControlRepository controlRepository = Mockito.mock(ControlRepository.class);
-
-    private final MapperUtils mapperUtils = Mockito.mock(MapperUtils.class);
-
+    @Mock
     private final RequestService requestService = Mockito.mock(RequestService.class);
-
-    private final ControlService controlService = new ControlService(controlRepository, mapperUtils, requestService);
+    private ControlService controlService;
 
     private final UilDto uilDto = new UilDto();
     private final ControlDto controlDto = new ControlDto();
@@ -37,9 +44,11 @@ class ControlServiceTest {
     private final RequestUuidDto requestUuidDto = new RequestUuidDto();
     private final String requestUuid = UUID.randomUUID().toString();
 
-
     @BeforeEach
     public void before() {
+        openMocks = MockitoAnnotations.openMocks(this);
+        controlService = new ControlService(controlRepository, mapperUtils, requestService);
+
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         String status = StatusEnum.PENDING.toString();
 
@@ -75,26 +84,85 @@ class ControlServiceTest {
         this.controlEntity.setFromGateUrl(controlDto.getFromGateUrl());
     }
 
+    @AfterEach
+    void tearDown() throws Exception {
+        openMocks.close();
+    }
+
     @Test
     void getByIdWithDataTest() {
         Mockito.when(controlRepository.findById(1L)).thenReturn(Optional.of(new ControlEntity()));
 
         ControlEntity controlEntity = controlService.getById(1L);
 
-        Mockito.verify(controlRepository, Mockito.times(1)).findById(1L);
+        verify(controlRepository, Mockito.times(1)).findById(1L);
         Assertions.assertNotNull(controlEntity);
     }
 
     @Test
     void createControlEntityTest() {
-        Mockito.when(mapperUtils.controlDtoToControEntity(controlDto)).thenReturn(controlEntity);
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
         RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
 
-        Mockito.verify(mapperUtils, Mockito.times(1)).controlDtoToControEntity(any());
-        Mockito.verify(controlRepository, Mockito.times(1)).save(any());
+        verify(requestService, times(1)).createAndSendRequest(any());
+        verify(controlRepository, Mockito.times(1)).save(any());
         Assertions.assertNotNull(requestUuidDtoResult);
+        assertNull(requestUuidDtoResult.getErrorCode());
+        assertNull(requestUuidDtoResult.getErrorDescription());
+    }
+
+    @Test
+    void createControlEntityErrorGateNullTest() {
+        uilDto.setGate(null);
+        controlDto.setEftiGateUrl(null);
+        controlEntity.setError(ErrorEntity.builder().errorCode(ErrorCodesEnum.UIL_GATE_EMPTY.name())
+                .errorDescription("The gate identifier is empty.").build());
+        controlEntity.setStatus(StatusEnum.ERROR.name());
+        Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
+        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
+
+        verify(requestService, never()).createAndSendRequest(any());
+        verify(controlRepository, Mockito.times(1)).save(any());
+        Assertions.assertNotNull(requestUuidDtoResult);
+        assertEquals(ErrorCodesEnum.UIL_GATE_EMPTY.name(), requestUuidDtoResult.getErrorCode());
+        assertEquals("The gate identifier is empty.", requestUuidDtoResult.getErrorDescription());
+    }
+
+    @Test
+    void createControlEntityErrorPlatformNullTest() {
+        uilDto.setPlatform(null);
+        controlDto.setEftiPlatformUrl(null);
+        controlEntity.setError(ErrorEntity.builder().errorCode(ErrorCodesEnum.UIL_PLATFORM_EMPTY.name())
+                .errorDescription("The platform identifier is empty.").build());
+        controlEntity.setStatus(StatusEnum.ERROR.name());
+        Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
+
+        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
+
+        verify(requestService, never()).createAndSendRequest(any());
+        verify(controlRepository, Mockito.times(1)).save(any());
+        Assertions.assertNotNull(requestUuidDtoResult);
+        assertEquals(ErrorCodesEnum.UIL_PLATFORM_EMPTY.name(), requestUuidDtoResult.getErrorCode());
+        assertEquals("The platform identifier is empty.", requestUuidDtoResult.getErrorDescription());
+    }
+
+    @Test
+    void createControlEntityErrorUuidNullTest() {
+        uilDto.setUuid(null);
+        controlDto.setRequestUuid(null);
+        controlEntity.setError(ErrorEntity.builder().errorCode(ErrorCodesEnum.UIL_UUID_EMPTY.name())
+                .errorDescription("The request uuid is empty.").build());
+        controlEntity.setStatus(StatusEnum.ERROR.name());
+        Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
+
+        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
+
+        verify(requestService, never()).createAndSendRequest(any());
+        verify(controlRepository, Mockito.times(1)).save(any());
+        Assertions.assertNotNull(requestUuidDtoResult);
+        assertEquals(ErrorCodesEnum.UIL_UUID_EMPTY.name(), requestUuidDtoResult.getErrorCode());
+        assertEquals("The request uuid is empty.", requestUuidDtoResult.getErrorDescription());
     }
 
     @Test
@@ -103,9 +171,9 @@ class ControlServiceTest {
 
         RequestUuidDto requestUuidDtoResult = controlService.getControlEntity(requestUuid);
 
-        Mockito.verify(controlRepository, Mockito.times(1)).findByRequestUuid(any());
+        verify(controlRepository, Mockito.times(1)).findByRequestUuid(any());
         Assertions.assertNotNull(requestUuidDtoResult);
-        Assertions.assertEquals(requestUuidDtoResult.getRequestUuid(), controlEntity.getRequestUuid());
+        assertEquals(requestUuidDtoResult.getRequestUuid(), controlEntity.getRequestUuid());
     }
 
     @Test
@@ -114,9 +182,9 @@ class ControlServiceTest {
 
         RequestUuidDto requestUuidDtoResult = controlService.getControlEntity(requestUuid);
 
-        Mockito.verify(controlRepository, Mockito.times(1)).findByRequestUuid(any());
+        verify(controlRepository, Mockito.times(1)).findByRequestUuid(any());
         Assertions.assertNotNull(requestUuidDtoResult);
-        Assertions.assertEquals("ERROR", requestUuidDtoResult.getStatus());
+        assertEquals("ERROR", requestUuidDtoResult.getStatus());
         Assertions.assertNull(requestUuidDtoResult.getEFTIData());
     }
 }

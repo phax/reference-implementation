@@ -1,50 +1,37 @@
 package com.ingroupe.efti.eftigate.dto;
 
-import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.utils.RequestStatusEnum;
-import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class RequestDto {
-
-    @NotNull
-    private int controlId;
-
-    @NotNull
+    private long id;
     private String status;
-
     private String edeliveryMessageId;
-
-    @NotNull
     private Integer retry;
-
     private Object reponseData;
-
     private LocalDateTime lastRetryDate;
-
-    @NotNull
     private LocalDateTime createdDate;
-
     private LocalDateTime lastModifiedDate;
-
-    @NotNull
     private String gateUrlDest;
+    private ControlDto control;
+    private ErrorDto error;
 
-    public RequestDto(ControlEntity controlEntity) {
+    public RequestDto(final ControlDto controlDto) {
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
-
-        this.controlId = controlEntity.getId();
         this.status = RequestStatusEnum.RECEIVED.toString();
         this.retry = 0;
         this.createdDate = localDateTime;
-        this.gateUrlDest = controlEntity.getEftiGateUrl();
+        this.gateUrlDest = controlDto.getEftiGateUrl();
+        this.control = controlDto;
     }
 }

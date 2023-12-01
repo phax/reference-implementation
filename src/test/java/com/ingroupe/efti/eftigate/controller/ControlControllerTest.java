@@ -71,7 +71,6 @@ class ControlControllerTest {
     @WithMockUser
     void requestUilTest() throws Exception {
         UilDto uilDto = new UilDto();
-        ControlEntity controlEntity = new ControlEntity();
         uilDto.setPlatform("platform");
         uilDto.setUuid("uuid");
         uilDto.setGate("gate");

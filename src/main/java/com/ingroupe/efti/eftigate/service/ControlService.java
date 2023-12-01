@@ -1,14 +1,20 @@
 package com.ingroupe.efti.eftigate.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
+import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
+import com.ingroupe.efti.eftigate.entity.ErrorEntity;
+import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
+import com.ingroupe.efti.eftigate.utils.ErrorCodesEnum;
 import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,34 +39,69 @@ public class ControlService {
         log.info("create ControlEntity with uuid : {}", uilDto.getUuid());
         ControlDto controlDto = new ControlDto(uilDto);
 
-        ControlEntity controlEntity = controlRepository.save(mapperUtils.controlDtoToControEntity(controlDto));
+        final Optional<ErrorDto> errorOptional = this.validateControl(controlDto);
+        final ControlDto saveControl = this.save(controlDto, errorOptional);
+
         log.info("control with uil '{}' has been register", uilDto.getUuid());
-        requestService.createRequestEntity(controlEntity);
-        RequestUuidDto requestUuidDto = new RequestUuidDto();
-        requestUuidDto.setRequestUuid(controlEntity.getRequestUuid());
-        requestUuidDto.setStatus(controlEntity.getStatus());
-        requestUuidDto.setEFTIData(controlEntity.getEftiData());
-        return requestUuidDto;
+
+        errorOptional.ifPresentOrElse(a -> {} , () -> requestService.createAndSendRequest(saveControl));
+
+        return buildResponse(controlDto);
     }
 
-    public RequestUuidDto getControlEntity(String requestUuid) {
+    public RequestUuidDto getControlEntity(final String requestUuid) {
         log.info("get ControlEntity with uuid : {}", requestUuid);
-        Optional<ControlEntity> optionalControlEntity = controlRepository.findByRequestUuid(requestUuid);
-        RequestUuidDto requestUuidDto = new RequestUuidDto();
-
-        if (optionalControlEntity.isPresent()) {
-            log.info("Success, found controlEntity with {} as uuid", requestUuid);
-            ControlEntity controlEntity = optionalControlEntity.get();
-
-            requestUuidDto.setStatus(controlEntity.getStatus());
-            requestUuidDto.setRequestUuid(controlEntity.getRequestUuid());
-            requestUuidDto.setEFTIData(controlEntity.getEftiData());
-        } else {
-            log.error("ERROR requestUuid {} not found", requestUuid);
-            requestUuidDto.setStatus(StatusEnum.ERROR.toString());
-            requestUuidDto.setRequestUuid(requestUuid);
-            requestUuidDto.setErrorDescription("Error requestUuid not found");
-        }
-        return requestUuidDto;
+        final Optional<ControlEntity> optionalControlEntity = controlRepository.findByRequestUuid(requestUuid);
+        final ControlDto controlDto = mapperUtils.controlEntityToControlDto(optionalControlEntity.orElse(
+                ControlEntity.builder()
+                        .status(StatusEnum.ERROR.name())
+                        .error(ErrorEntity.builder()
+                                .errorCode(ErrorCodesEnum.UUID_NOT_FOUND.name())
+                                .errorDescription("Error requestUuid not found.").build()).build()));
+        return buildResponse(controlDto);
     }
+
+    private ControlDto save(final ControlDto controlDto) {
+        return mapperUtils.controlEntityToControlDto(
+                controlRepository.save(mapperUtils.controlDtoToControEntity(controlDto)));
+    }
+
+    private ControlDto save(final ControlDto controlDto, final Optional<ErrorDto> errorDto) {
+        errorDto.ifPresent(error -> {
+                controlDto.setError(error);
+                controlDto.setStatus(StatusEnum.ERROR.name());
+        });
+        return this.save(controlDto);
+    }
+
+    private Optional<ErrorDto> validateControl(final ControlDto controlDto) {
+        if(StringUtils.isBlank(controlDto.getEftiGateUrl())) {
+            return Optional.of(ErrorDto.builder()
+                    .errorCode(ErrorCodesEnum.UIL_GATE_EMPTY.name())
+                    .errorDescription("The gate identifier is empty.").build());
+        }
+        if(StringUtils.isBlank(controlDto.getEftiPlatformUrl())) {
+            return Optional.of(ErrorDto.builder()
+                    .errorCode(ErrorCodesEnum.UIL_PLATFORM_EMPTY.name())
+                    .errorDescription("The platform identifier is empty.").build());
+        }
+        if(StringUtils.isBlank(controlDto.getEftiDataUuid())) {
+            return Optional.of(ErrorDto.builder()
+                    .errorCode(ErrorCodesEnum.UIL_UUID_EMPTY.name())
+                    .errorDescription("The request uuid is empty.").build());
+        }
+        return Optional.empty();
+    }
+
+    private RequestUuidDto buildResponse(final ControlDto controlDto) {
+        final RequestUuidDto result = RequestUuidDto.builder()
+                .requestUuid(controlDto.getRequestUuid())
+                .status(controlDto.getStatus()).build();
+        if(controlDto.isError()) {
+            result.setErrorDescription(controlDto.getError().getErrorDescription());
+            result.setErrorCode(controlDto.getError().getErrorCode());
+        }
+        return result;
+    }
+
 }
