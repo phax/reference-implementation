@@ -8,3 +8,10 @@ spring:
     properties:
       hibernate:
         default_schema: "eftili"
+
+gate:
+  owner: listenbourg
+  ap:
+    url: http://efti.gate.listenbourg.eu:81/domibus/services/wsplugin
+    username: listenbourg_service_account
+    password: Azerty59*1234567

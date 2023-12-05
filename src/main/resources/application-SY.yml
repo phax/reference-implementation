@@ -8,3 +8,10 @@ spring:
     properties:
       hibernate:
         default_schema: "eftisy"
+
+gate:
+  owner: syldavia
+  ap:
+    url: http://efti.gate.syldavia.eu:81/domibus/services/wsplugin
+    username: syldavia_service_account
+    password: Azerty59*1234567

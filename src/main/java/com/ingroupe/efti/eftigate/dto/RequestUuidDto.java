@@ -1,13 +1,15 @@
 package com.ingroupe.efti.eftigate.dto;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Setter
-@Getter
-@RequiredArgsConstructor
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RequestUuidDto {
 
     @NotNull
@@ -15,9 +17,7 @@ public class RequestUuidDto {
 
     @NotNull
     private String status;
-
+    private String errorCode;
     private String errorDescription;
-
     private byte[] eFTIData;
-
 }

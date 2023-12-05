@@ -19,9 +19,6 @@ public class AuthorityEntity {
     @Column(name = "id")
     private int id;
     
-    @Column(name = "controlid")
-    private int controlId;
-    
     @Column(name = "country")
     private String country;
     
