@@ -14,5 +14,5 @@ public class ApConstant {
     public static final String PARTY_TO_ROLE = "http://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/core/200704/responder";
     public static final String SERVICE_TYPE = "tc1";
     public static final String SERVICE_VALUE = "bdx:noprocess";
-    public static final String SERVICE_ACTION = "TC1Leg1";
+    public static final String SERVICE_ACTION = "getUIL";
 }

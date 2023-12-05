@@ -32,7 +32,7 @@ class RequestServiceTest {
         service = new RequestSendingService();
 
         wireMockServer = new WireMockServer(WireMockConfiguration
-                .wireMockConfig().withRootDirectory(FOLDER).port(3838)
+                .wireMockConfig().withRootDirectory(FOLDER).dynamicPort()
                 .notifier(new ConsoleNotifier(true)));
         wireMockServer.start();
     }
@@ -51,7 +51,7 @@ class RequestServiceTest {
             .body("PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGhlbGxvPndvcmxkPC9oZWxsbz4=")
             .apConfig(ApConfigDto.
                     builder()
-                    .url("http://localhost:3838/domibus/services/wsplugin?wsdl")
+                    .url(String.format("http://localhost:%s/domibus/services/wsplugin?wsdl", wireMockServer.port()))
                     .username("username")
                     .password("password")
                     .build()).build();
@@ -73,7 +73,7 @@ class RequestServiceTest {
             .body("PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGhlbGxvPndvcmxkPC9oZWxsbz4=")
             .apConfig(ApConfigDto.
                     builder()
-                    .url("http://localhost:3838/domibus/services/wsplugin?wsdl")
+                    .url(String.format("http://localhost:%s/domibus/services/wsplugin?wsdl", wireMockServer.port()))
                     .username("username")
                     .password("password")
                     .build()).build();
