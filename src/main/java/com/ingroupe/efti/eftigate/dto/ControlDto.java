@@ -1,6 +1,5 @@
 package com.ingroupe.efti.eftigate.dto;
 
-import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.utils.RequestTypeEnum;
 import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import lombok.AllArgsConstructor;
