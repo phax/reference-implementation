@@ -104,6 +104,7 @@
 			<groupId>javax.xml.bind</groupId>
 			<artifactId>jaxb-api</artifactId>
 			<version>2.3.1</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<!-- JAXB RI -->
@@ -111,22 +112,26 @@
 			<groupId>com.sun.xml.bind</groupId>
 			<artifactId>jaxb-impl</artifactId>
 			<version>2.3.4</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>com.sun.xml.ws</groupId>
 			<artifactId>jaxws-rt</artifactId>
 			<version>2.3.5</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-xml</artifactId>
 			<version>2.14.1</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.sun.xml.messaging.saaj</groupId>
 			<artifactId>saaj-impl</artifactId>
 			<version>1.5.1</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<!-- DOMIBUS -->
