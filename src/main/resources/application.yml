@@ -2,10 +2,10 @@ spring:
   application:
     name: efti-gate
   datasource:
-    url: jdbc:postgresql://localhost:5432/efti
+    url: jdbc:postgresql://localhost:9000/efti
     username: ingroup
     password: root
     driverClassName: org.postgresql.Driver
 
 server:
-  port: 9000
+  port: 9001

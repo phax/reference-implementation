@@ -7,6 +7,7 @@ import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
+import com.ingroupe.efti.eftigate.config.MyForkJoinWorkerThreadFactory;
 import com.ingroupe.efti.eftigate.dto.AuthorityDto;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 
 @Service
 @AllArgsConstructor
@@ -54,6 +56,12 @@ public class RequestService {
             return;
         }
 
+        //see https://stackoverflow.com/questions/49113207/completablefuture-forkjoinpool-set-class-loader/59444016#59444016
+        final ForkJoinPool myCommonPool = new ForkJoinPool(
+                Runtime.getRuntime().availableProcessors(),
+                new MyForkJoinWorkerThreadFactory()
+                , null, false);
+
         CompletableFuture.runAsync(() -> {
             try {
                 final String result = this.requestSendingService.sendRequest(apRequestDto);
@@ -66,7 +74,7 @@ public class RequestService {
                         .errorDescription("Error while sending request to AP").build());
                 this.updateStatus(requestDto, RequestStatusEnum.SEND_ERROR);
             }
-        });
+        }, myCommonPool);
     }
 
     private RequestDto updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {

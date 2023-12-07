@@ -105,14 +105,14 @@ class RequestServiceTest extends AbstractServceTest {
     }
 
     @Test
-    void createRequestEntityTest() throws SendRequestException {
+    void createRequestEntityTest() throws SendRequestException, InterruptedException {
         final String edeliveryId = "id123";
         when(requestRepository.save(any())).thenReturn(requestEntity);
         when(requestSendingService.sendRequest(any())).thenReturn(edeliveryId);
 
         final RequestDto requestDto = requestService.createAndSendRequest(controlDto);
 
-        assertTrue(ForkJoinPool.commonPool().awaitQuiescence(5, TimeUnit.SECONDS));
+        Thread.sleep(1000);
         Mockito.verify(requestRepository, Mockito.times(2)).save(any());
         Assertions.assertNotNull(requestDto);
         Assertions.assertEquals(RequestStatusEnum.IN_PROGRESS.name(), requestDto.getStatus());
@@ -120,13 +120,13 @@ class RequestServiceTest extends AbstractServceTest {
     }
 
     @Test
-    void shouldSetSendErrorTest() throws SendRequestException {
+    void shouldSetSendErrorTest() throws SendRequestException, InterruptedException {
         when(requestRepository.save(any())).thenReturn(requestEntity);
         when(requestSendingService.sendRequest(any())).thenThrow(SendRequestException.class);
 
         final RequestDto requestDto = requestService.createAndSendRequest(controlDto);
 
-        assertTrue(ForkJoinPool.commonPool().awaitQuiescence(5, TimeUnit.SECONDS));
+        Thread.sleep(1000);
         Mockito.verify(requestRepository, Mockito.times(2)).save(any());
         Assertions.assertNotNull(requestDto);
         Assertions.assertEquals(RequestStatusEnum.SEND_ERROR.name(), requestDto.getStatus());
