@@ -9,6 +9,10 @@ import java.util.List;
 
 public interface RequestRepository extends JpaRepository<RequestEntity, Long> {
 
+    RequestEntity findByControlRequestUuid(final String EftiDataUuid);
+
+    RequestEntity findByEdeliveryMessageId(final String messageId);
+
     @Query(value = "select e from RequestEntity e where e.status = :status and e.nextRetryDate is not null and e.nextRetryDate < :currentDate order by e.nextRetryDate asc limit :querySize")
     List<RequestEntity> getRequestEntitiesByStatus(String status , int querySize, LocalDateTime currentDate);
 }

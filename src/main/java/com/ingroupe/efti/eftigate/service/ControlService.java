@@ -94,7 +94,8 @@ public class ControlService {
     private RequestUuidDto buildResponse(final ControlDto controlDto) {
         final RequestUuidDto result = RequestUuidDto.builder()
                 .requestUuid(controlDto.getRequestUuid())
-                .status(controlDto.getStatus()).build();
+                .status(controlDto.getStatus())
+                .eFTIData(controlDto.getEftiData()).build();
         if(controlDto.isError()) {
             result.setErrorDescription(controlDto.getError().getErrorDescription());
             result.setErrorCode(controlDto.getError().getErrorCode());

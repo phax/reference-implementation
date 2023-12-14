@@ -4,15 +4,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.RetrieveMessageDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.config.MyForkJoinWorkerThreadFactory;
-import com.ingroupe.efti.eftigate.dto.AuthorityDto;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.requestbody.RequestBodyDto;
+import com.ingroupe.efti.eftigate.entity.RequestEntity;
+import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
@@ -27,6 +30,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.LinkedList;
+import java.util.Optional;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
@@ -117,6 +121,44 @@ public class RequestService {
         return nextRetryDate;
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void updateWithResponse(final NotificationDto notificationDto) {
+        switch (notificationDto.getNotificationType()) {
+            case RECEIVED -> manageMessageReceive(notificationDto);
+            case SEND_FAILURE -> manageSendFailure(notificationDto);
+            default -> log.warn("unknow notification {} ", notificationDto.getNotificationType());
+        }
+    }
+
+    private void manageMessageReceive(final NotificationDto<RetrieveMessageDto> notificationDto) {
+        final RetrieveMessageDto retrieveMessageDto = notificationDto.getContent();
+        final RequestDto requestDto = this.findByRequestUuidOrThrow(retrieveMessageDto.getMessageBodyDto().getRequestUuid());
+
+        requestDto.getControl().setStatus(StatusEnum.COMPLETE.name());
+        requestDto.getControl().setEftiData(retrieveMessageDto.getMessageBodyDto().getEFTIData().toString().getBytes());
+
+        this.updateStatus(requestDto, RequestStatusEnum.RECEIVED);
+    }
+
+    private void manageSendFailure(final NotificationDto<?> notificationDto) {
+        final RequestDto requestDto = this.findByMessageIdOrThrow(notificationDto.getMessageId());
+        this.updateStatus(requestDto, RequestStatusEnum.SEND_ERROR);
+    }
+
+    private RequestDto findByRequestUuidOrThrow(final String requestId) {
+        final RequestEntity requestEntity =
+                Optional.ofNullable(this.requestRepository.findByControlRequestUuid(requestId))
+                        .orElseThrow(() -> new RequestNotFoundException("couldn't find request for requestUuid: " + requestId));
+        return mapperUtils.requestToRequestDto(requestEntity);
+    }
+
+    private RequestDto findByMessageIdOrThrow(final String messageId) {
+        final RequestEntity requestEntity =
+                Optional.ofNullable(this.requestRepository.findByEdeliveryMessageId(messageId))
+                        .orElseThrow(() -> new RequestNotFoundException("couldn't find request for messageId: " + messageId));
+        return mapperUtils.requestToRequestDto(requestEntity);
+    }
+
     private RequestDto updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {
         requestDto.setStatus(status.name());
         requestDto.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
@@ -132,13 +174,11 @@ public class RequestService {
     }
 
     private ApRequestDto buildApRequestDto(final RequestDto requestDto) throws TechnicalException {
-        return ApRequestDto
-                .builder()
+        return ApRequestDto.builder()
                 .sender(gateProperties.getOwner())
                 .receiver(requestDto.getControl().getEftiPlatformUrl())
                 .body(buildBody(requestDto))
-                .apConfig(ApConfigDto
-                        .builder()
+                .apConfig(ApConfigDto.builder()
                         .username(gateProperties.getAp().getUsername())
                         .password(gateProperties.getAp().getPassword())
                         .url(gateProperties.getAp().getUrl())
@@ -147,13 +187,12 @@ public class RequestService {
     }
 
     private String buildBody(final RequestDto requestDto) throws TechnicalException {
-        final RequestBodyDto requestBodyDto = new RequestBodyDto();
-        requestBodyDto.setRequestUuid(requestDto.getControl().getRequestUuid());
-        requestBodyDto.setAuthority(mapperUtils.authorityDtoToAuthorityBodyDto(new AuthorityDto()));
-        requestBodyDto.setEFTIDataUuid(requestDto.getControl().getEftiDataUuid());
-        requestBodyDto.setSubsetEU(new LinkedList<>());
-        requestBodyDto.setSubsetMS(new LinkedList<>());
-
+        final RequestBodyDto requestBodyDto = RequestBodyDto.builder()
+                .requestUuid(requestDto.getControl().getRequestUuid())
+                .eFTIDataUuid(requestDto.getControl().getEftiDataUuid())
+                .subsetEU(new LinkedList<>())
+                .subsetMS(new LinkedList<>())
+                .build();
         try {
             return objectMapper.writeValueAsString(requestBodyDto);
         } catch (JsonProcessingException e) {

@@ -1,6 +1,10 @@
 package com.ingroupe.efti.eftigate.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
+import com.ingroupe.efti.edeliveryapconnector.dto.RetrieveMessageDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
@@ -9,14 +13,15 @@ import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
+import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.utils.RequestStatusEnum;
 import com.ingroupe.efti.eftigate.utils.RequestTypeEnum;
 import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -26,7 +31,12 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class RequestServiceTest extends AbstractServceTest {
@@ -120,9 +130,9 @@ class RequestServiceTest extends AbstractServceTest {
 
         Thread.sleep(1000);
         Mockito.verify(requestRepository, Mockito.times(2)).save(any());
-        Assertions.assertNotNull(requestDto);
-        Assertions.assertEquals(RequestStatusEnum.IN_PROGRESS.name(), requestDto.getStatus());
-        Assertions.assertEquals(edeliveryId, requestDto.getEdeliveryMessageId());
+        assertNotNull(requestDto);
+        assertEquals(RequestStatusEnum.IN_PROGRESS.name(), requestDto.getStatus());
+        assertEquals(edeliveryId, requestDto.getEdeliveryMessageId());
     }
 
     @Test
@@ -134,9 +144,9 @@ class RequestServiceTest extends AbstractServceTest {
 
         Thread.sleep(1000);
         Mockito.verify(requestRepository, Mockito.times(2)).save(any());
-        Assertions.assertNotNull(requestDto);
-        Assertions.assertEquals(RequestStatusEnum.SEND_ERROR.name(), requestDto.getStatus());
-        Assertions.assertNotNull(requestDto.getError());
+        assertNotNull(requestDto);
+        assertEquals(RequestStatusEnum.SEND_ERROR.name(), requestDto.getStatus());
+        assertNotNull(requestDto.getError());
     }
 
     @Test
@@ -147,8 +157,52 @@ class RequestServiceTest extends AbstractServceTest {
         final RequestDto requestDto = requestService.createAndSendRequest(controlDto);
 
         Mockito.verify(requestRepository, Mockito.times(2)).save(any());
-        Assertions.assertNotNull(requestDto);
-        Assertions.assertEquals(RequestStatusEnum.SEND_ERROR.name(), requestDto.getStatus());
-        Assertions.assertNotNull(requestDto.getError());
+        assertNotNull(requestDto);
+        assertEquals(RequestStatusEnum.SEND_ERROR.name(), requestDto.getStatus());
+        assertNotNull(requestDto.getError());
+    }
+
+    @Test
+    void shouldUpdateResponse() {
+        final String messageId = "messageId";
+        final String eftiData = "<data>vive les datas</data>";
+        final NotificationDto<?> notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.RECEIVED)
+                .content(RetrieveMessageDto.builder()
+                        .messageId(messageId)
+                        .messageBodyDto(MessageBodyDto.builder().eFTIData(eftiData).build())
+                        .build())
+                .build();
+        final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
+        when(requestRepository.findByControlRequestUuid(any())).thenReturn(requestEntity);
+        when(requestRepository.save(any())).thenReturn(requestEntity);
+
+        requestService.updateWithResponse(notificationDto);
+
+        verify(requestRepository).save(argumentCaptor.capture());
+        assertNotNull(argumentCaptor.getValue());
+        assertEquals(RequestStatusEnum.RECEIVED.name(), argumentCaptor.getValue().getStatus());
+        assertEquals(eftiData, new String(argumentCaptor.getValue().getControl().getEftiData()));
+        assertEquals(StatusEnum.COMPLETE.name(), argumentCaptor.getValue().getControl().getStatus());
+    }
+
+    @Test
+    void shouldReThrowException() {
+        final String messageId = "messageId";
+        final String eftiData = "<data>vive les datas</data>";
+
+        final NotificationDto<?> notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.RECEIVED)
+                .content(RetrieveMessageDto.builder()
+                        .messageId(messageId)
+                        .messageBodyDto(MessageBodyDto.builder().eFTIData(eftiData).build())
+                        .build())
+                .build();
+        final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
+        when(requestRepository.findByControlRequestUuid(any())).thenReturn(null);
+
+        assertThrows(RequestNotFoundException.class, () -> requestService.updateWithResponse(notificationDto));
+
+        verify(requestRepository, never()).save(argumentCaptor.capture());
     }
 }
