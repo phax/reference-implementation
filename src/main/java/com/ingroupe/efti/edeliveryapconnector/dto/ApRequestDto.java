@@ -11,5 +11,4 @@ public class ApRequestDto {
     private String receiver;
     private String body;
     private ApConfigDto apConfig;
-
 }

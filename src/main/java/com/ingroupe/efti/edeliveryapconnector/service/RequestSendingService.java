@@ -3,9 +3,7 @@ package com.ingroupe.efti.edeliveryapconnector.service;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.sun.xml.ws.wsdl.parser.InaccessibleWSDLException;
-import eu.domibus.plugin.ws.client.WebserviceClient;
 import eu.domibus.plugin.ws.generated.SubmitMessageFault;
-import eu.domibus.plugin.ws.generated.WebServicePluginInterface;
 import eu.domibus.plugin.ws.generated.body.LargePayloadType;
 import eu.domibus.plugin.ws.generated.body.SubmitRequest;
 import eu.domibus.plugin.ws.generated.body.SubmitResponse;
@@ -51,7 +49,7 @@ import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RequestSendingService {
+public class RequestSendingService extends AbstractApService{
 
     public String sendRequest(final ApRequestDto requestDto) throws SendRequestException {
         final Messaging messaging = createMessaging(requestDto);
@@ -67,11 +65,8 @@ public class RequestSendingService {
     }
 
     private SubmitResponse sendRequestToAPOrThrow(final ApRequestDto requestDto, final SubmitRequest submitRequest, final Messaging messaging) throws SendRequestException {
-        final WebserviceClient webserviceExample = new WebserviceClient(requestDto.getApConfig().getUrl(), true);
-        final WebServicePluginInterface webServicePluginInterface;
         try {
-            webServicePluginInterface = webserviceExample.getPort(requestDto.getApConfig().getUsername(), requestDto.getApConfig().getPassword());
-            return webServicePluginInterface.submitMessage(submitRequest, messaging);
+            return initApWebService(requestDto.getApConfig()).submitMessage(submitRequest, messaging);
         } catch (SubmitMessageFault | MalformedURLException | InaccessibleWSDLException e) {
             throw new SendRequestException("error while sending request", e);
         }

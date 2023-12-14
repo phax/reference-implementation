@@ -1,5 +1,8 @@
 package com.ingroupe.efti.edeliveryapconnector.constant;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class ApConstant {
 
     public static final String PARTY_TYPE = "urn:oasis:names:tc:ebcore:partyid-type:unregistered";

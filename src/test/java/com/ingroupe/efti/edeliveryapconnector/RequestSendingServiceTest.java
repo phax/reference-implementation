@@ -12,8 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.io.IOException;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
@@ -21,11 +19,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(SpringExtension.class)
-class RequestServiceTest {
+class RequestSendingServiceTest {
 
     private RequestSendingService service;
     private final static String FOLDER = "src/test/java/resources/wiremock";
-    private static WireMockServer wireMockServer;
+    private WireMockServer wireMockServer;
 
     @BeforeEach
     void init() {
