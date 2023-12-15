@@ -2,6 +2,7 @@ package com.ingroupe.efti.edeliveryapconnector.service;
 
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
+import com.sun.xml.ws.client.ClientTransportException;
 import com.sun.xml.ws.wsdl.parser.InaccessibleWSDLException;
 import eu.domibus.plugin.ws.generated.SubmitMessageFault;
 import eu.domibus.plugin.ws.generated.body.LargePayloadType;
@@ -66,8 +67,9 @@ public class RequestSendingService extends AbstractApService{
 
     private SubmitResponse sendRequestToAPOrThrow(final ApRequestDto requestDto, final SubmitRequest submitRequest, final Messaging messaging) throws SendRequestException {
         try {
-            return initApWebService(requestDto.getApConfig()).submitMessage(submitRequest, messaging);
-        } catch (SubmitMessageFault | MalformedURLException | InaccessibleWSDLException e) {
+            webServicePluginInterface = webserviceExample.getPort(requestDto.getApConfig().getUsername(), requestDto.getApConfig().getPassword());
+            return webServicePluginInterface.submitMessage(submitRequest, messaging);
+        } catch (SubmitMessageFault | MalformedURLException | InaccessibleWSDLException | ClientTransportException e ) {
             throw new SendRequestException("error while sending request", e);
         }
     }
