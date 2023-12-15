@@ -2,6 +2,7 @@ package com.ingroupe.efti.edeliveryapconnector.service;
 
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
+import com.sun.xml.ws.client.ClientTransportException;
 import com.sun.xml.ws.wsdl.parser.InaccessibleWSDLException;
 import eu.domibus.plugin.ws.client.WebserviceClient;
 import eu.domibus.plugin.ws.generated.SubmitMessageFault;
@@ -72,7 +73,7 @@ public class RequestSendingService {
         try {
             webServicePluginInterface = webserviceExample.getPort(requestDto.getApConfig().getUsername(), requestDto.getApConfig().getPassword());
             return webServicePluginInterface.submitMessage(submitRequest, messaging);
-        } catch (SubmitMessageFault | MalformedURLException | InaccessibleWSDLException e) {
+        } catch (SubmitMessageFault | MalformedURLException | InaccessibleWSDLException | ClientTransportException e ) {
             throw new SendRequestException("error while sending request", e);
         }
     }
