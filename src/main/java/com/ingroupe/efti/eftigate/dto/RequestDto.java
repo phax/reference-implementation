@@ -19,7 +19,7 @@ public class RequestDto {
     private String edeliveryMessageId;
     private Integer retry;
     private Object reponseData;
-    private LocalDateTime lastRetryDate;
+    private LocalDateTime nextRetryDate;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
     private String gateUrlDest;

@@ -9,3 +9,10 @@ spring:
 
 server:
   port: 9001
+
+
+batch:
+  retry:
+    cron: "*/20 * * * * *"
+    time: 20, 120, 300
+    size: 10
