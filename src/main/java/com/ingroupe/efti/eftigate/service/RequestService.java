@@ -18,6 +18,7 @@ import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.utils.ErrorCodesEnum;
 import com.ingroupe.efti.eftigate.utils.RequestStatusEnum;
+import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -119,6 +120,10 @@ public class RequestService {
     private RequestDto updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {
         requestDto.setStatus(status.name());
         requestDto.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
+        if (requestDto.getRetry() > listTime.size()) {
+            requestDto.setStatus(RequestStatusEnum.ERROR.toString());
+            requestDto.getControl().setStatus(StatusEnum.ERROR.toString());
+        }
         return this.save(requestDto);
     }
 

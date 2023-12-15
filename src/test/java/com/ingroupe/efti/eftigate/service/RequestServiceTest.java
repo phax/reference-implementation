@@ -1,7 +1,6 @@
 package com.ingroupe.efti.eftigate.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
@@ -10,7 +9,6 @@ import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
-import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.utils.RequestStatusEnum;
 import com.ingroupe.efti.eftigate.utils.RequestTypeEnum;
@@ -22,7 +20,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -42,7 +39,6 @@ class RequestServiceTest extends AbstractServceTest {
 
     private GateProperties gateProperties;
     private RequestService requestService;
-
     private final UilDto uilDto = new UilDto();
     private final ControlDto controlDto = new ControlDto();
     private final ControlEntity controlEntity = new ControlEntity();
