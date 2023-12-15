@@ -122,9 +122,7 @@ public class RequestService {
         requestDto.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
         if (requestDto.getRetry() > listTime.size()) {
             requestDto.setStatus(RequestStatusEnum.ERROR.toString());
-            ControlDto controlDto = requestDto.getControl();
-            controlDto.setStatus(StatusEnum.ERROR.toString());
-            requestDto.setControl(controlDto);
+            requestDto.getControl().setStatus(StatusEnum.ERROR.toString());
         }
         return this.save(requestDto);
     }
