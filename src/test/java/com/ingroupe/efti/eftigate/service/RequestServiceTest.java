@@ -1,7 +1,7 @@
 package com.ingroupe.efti.eftigate.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
@@ -10,6 +10,7 @@ import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
+import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.utils.RequestStatusEnum;
 import com.ingroupe.efti.eftigate.utils.RequestTypeEnum;
@@ -21,14 +22,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -39,6 +39,7 @@ class RequestServiceTest extends AbstractServceTest {
     private RequestRepository requestRepository;
     @Mock
     private RequestSendingService requestSendingService;
+
     private GateProperties gateProperties;
     private RequestService requestService;
 
@@ -53,7 +54,7 @@ class RequestServiceTest extends AbstractServceTest {
         openMocks = MockitoAnnotations.openMocks(this);
 
         gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).build();
-        requestService = new RequestService(requestRepository, requestSendingService, gateProperties, mapperUtils, objectMapper);
+        requestService = new RequestService(requestRepository, requestSendingService, gateProperties, mapperUtils, objectMapper, List.of(20,120,300));
 
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         String requestUuid = UUID.randomUUID().toString();
@@ -91,6 +92,7 @@ class RequestServiceTest extends AbstractServceTest {
         this.requestDto.setCreatedDate(localDateTime);
         this.requestDto.setGateUrlDest(controlEntity.getEftiGateUrl());
         this.requestDto.setControl(ControlDto.builder().id(1).build());
+        this.requestDto.setGateUrlDest("gate");
 
         this.requestEntity.setStatus(this.requestDto.getStatus());
         this.requestEntity.setRetry(this.requestDto.getRetry());
@@ -102,6 +104,14 @@ class RequestServiceTest extends AbstractServceTest {
     @AfterEach
     void tearDown() throws Exception {
         openMocks.close();
+    }
+
+    @Test
+    void trySendDomibusSucessTest() throws SendRequestException {
+        when(requestSendingService.sendRequest(any())).thenReturn("result");
+        when(requestRepository.save(any())).thenReturn(requestEntity);
+
+        requestService.sendRetryRequest(requestDto);
     }
 
     @Test

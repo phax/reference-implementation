@@ -1,7 +1,6 @@
 package com.ingroupe.efti.eftigate.entity;
 
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -17,9 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -81,7 +78,7 @@ public class ControlEntity {
     @Column(name = "fromgateurl")
     private String fromGateUrl;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "control", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "control", fetch = FetchType.EAGER)
     @ToString.Exclude @EqualsAndHashCode.Exclude
     List<RequestEntity> requests;
 
@@ -90,7 +87,7 @@ public class ControlEntity {
     @ToString.Exclude @EqualsAndHashCode.Exclude
     AuthorityEntity authority;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
     @JoinColumn(name = "error", referencedColumnName = "id")
     @ToString.Exclude @EqualsAndHashCode.Exclude
     ErrorEntity error;

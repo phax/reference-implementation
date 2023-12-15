@@ -44,8 +44,8 @@ public class RequestEntity {
     @Column(name = "reponsedata")
     private Object reponseData;
     
-    @Column(name = "lastretrydate")
-    private LocalDateTime lastRetryDate;
+    @Column(name = "nextretrydate")
+    private LocalDateTime nextRetryDate;
     
     @Column(name = "createddate")
     private LocalDateTime createdDate;
@@ -56,7 +56,7 @@ public class RequestEntity {
     @Column(name = "gateurldest")
     private String gateUrlDest;
 
-    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "control")
     ControlEntity control;
 
