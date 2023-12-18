@@ -25,6 +25,7 @@ import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -102,7 +103,14 @@ public class RequestService {
             requestDto.setError(ErrorDto.builder()
                     .errorCode(ErrorCodesEnum.AP_SUBMISSION_ERROR.name())
                     .errorDescription("Error while sending request to AP").build());
-            requestDto.setNextRetryDate(setNextRetryDate(requestDto));
+            LocalDateTime nextRetryDate = setNextRetryDate(requestDto);
+            if (nextRetryDate == null) {
+                requestDto.getControl().setError(ErrorDto.builder()
+                        .errorCode(ErrorCodesEnum.AP_SUBMISSION_ERROR.name())
+                        .errorDescription("Error while sending request to AP").build());
+            } else {
+                requestDto.setNextRetryDate(setNextRetryDate(requestDto));
+            }
             requestDto.setRetry(requestDto.getRetry() + 1);
             this.updateStatus(requestDto, RequestStatusEnum.SEND_ERROR);
         }

@@ -56,7 +56,7 @@ public class RequestEntity {
     @Column(name = "gateurldest")
     private String gateUrlDest;
 
-    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "control")
     ControlEntity control;
 
