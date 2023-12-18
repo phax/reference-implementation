@@ -33,14 +33,14 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(final HttpSecurity http, final JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
-        http.csrf(Customizer.withDefaults())
+        http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(
                         management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                                 .sessionFixation().changeSessionId()
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         //open url
-                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/ws/**").permitAll()
                         //require login to everything else
                         .anyRequest().authenticated()
                 )
