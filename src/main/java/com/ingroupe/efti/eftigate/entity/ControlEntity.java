@@ -1,6 +1,7 @@
 package com.ingroupe.efti.eftigate.entity;
 
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -87,7 +88,7 @@ public class ControlEntity {
     @ToString.Exclude @EqualsAndHashCode.Exclude
     AuthorityEntity authority;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "error", referencedColumnName = "id")
     @ToString.Exclude @EqualsAndHashCode.Exclude
     ErrorEntity error;

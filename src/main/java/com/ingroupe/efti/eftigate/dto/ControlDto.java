@@ -37,17 +37,17 @@ public class ControlDto {
     private ErrorDto error;
 
     public ControlDto(UilDto uilDto) {
-        String requestUuid = UUID.randomUUID().toString();
+        String uuidGenerator = UUID.randomUUID().toString();
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
 
         this.setEftiDataUuid(uilDto.getUuid());
         this.setEftiGateUrl(uilDto.getGate());
         this.setEftiPlatformUrl(uilDto.getPlatform());
-        this.setRequestUuid(requestUuid);
+        this.setRequestUuid(uuidGenerator);
         this.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
         this.setStatus(StatusEnum.PENDING.toString());
-        this.setSubsetEuRequested("oki");
-        this.setSubsetMsRequested("oki");
+        this.setSubsetEuRequested("SubsetEuRequested");
+        this.setSubsetMsRequested("SubsetMsRequested");
         this.setCreatedDate(localDateTime);
         this.setLastModifiedDate(localDateTime);
     }
