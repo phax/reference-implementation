@@ -50,7 +50,7 @@ import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RequestSendingService extends AbstractApService{
+public class RequestSendingService extends AbstractApService {
 
     public String sendRequest(final ApRequestDto requestDto) throws SendRequestException {
         final Messaging messaging = createMessaging(requestDto);
@@ -67,8 +67,7 @@ public class RequestSendingService extends AbstractApService{
 
     private SubmitResponse sendRequestToAPOrThrow(final ApRequestDto requestDto, final SubmitRequest submitRequest, final Messaging messaging) throws SendRequestException {
         try {
-            webServicePluginInterface = webserviceExample.getPort(requestDto.getApConfig().getUsername(), requestDto.getApConfig().getPassword());
-            return webServicePluginInterface.submitMessage(submitRequest, messaging);
+            return initApWebService(requestDto.getApConfig()).submitMessage(submitRequest, messaging);
         } catch (SubmitMessageFault | MalformedURLException | InaccessibleWSDLException | ClientTransportException e ) {
             throw new SendRequestException("error while sending request", e);
         }
