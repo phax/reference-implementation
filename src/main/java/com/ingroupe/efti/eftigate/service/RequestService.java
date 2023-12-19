@@ -21,23 +21,22 @@ import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.utils.ErrorCodesEnum;
 import com.ingroupe.efti.eftigate.utils.RequestStatusEnum;
-import com.ingroupe.efti.eftigate.utils.StatusEnum;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cglib.core.Local;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.LinkedList;
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor(onConstructor = @__(@Lazy))
 @Slf4j
 public class RequestService {
 
@@ -46,32 +45,21 @@ public class RequestService {
     private final GateProperties gateProperties;
     private final MapperUtils mapperUtils;
     private final ObjectMapper objectMapper;
+    @Lazy
+    private final ControlService controlService;
 
     @Value("${batch.retry.time}")
-    private List<Integer> listTime;
+    private final List<Integer> listTime;
 
     public RequestDto createAndSendRequest(final ControlDto controlDto) {
         RequestDto requestDto = new RequestDto(controlDto);
         log.info("Request has been register with controlId : {}", requestDto.getControl().getId());
         final RequestDto result = this.save(requestDto);
-        this.sendRequest(result);
+        this.sendRequest(result, true);
         return result;
     }
 
-    public void sendRetryRequest(final RequestDto requestDto) {
-        final ApRequestDto apRequestDto;
-        try {
-            apRequestDto = buildApRequestDto(requestDto);
-        } catch (TechnicalException e) {
-            log.error("error while building request", e);
-            requestDto.setError(ErrorDto.builder().errorCode(ErrorCodesEnum.REQUEST_BUILDING.name()).build());
-            this.updateStatus(requestDto, RequestStatusEnum.SEND_ERROR);
-            return;
-        }
-        trySendDomibus(requestDto, apRequestDto);
-    }
-
-    public void sendRequest(final RequestDto requestDto) {
+    public void sendRequest(final RequestDto requestDto, final boolean runAsynch) {
         final ApRequestDto apRequestDto;
         try {
             apRequestDto = buildApRequestDto(requestDto);
@@ -82,51 +70,17 @@ public class RequestService {
             return;
         }
 
-        //see https://stackoverflow.com/questions/49113207/completablefuture-forkjoinpool-set-class-loader/59444016#59444016
-        final ForkJoinPool myCommonPool = new ForkJoinPool(
-                Runtime.getRuntime().availableProcessors(),
-                new MyForkJoinWorkerThreadFactory()
-                , null, false);
+        if(runAsynch) {
+            //see https://stackoverflow.com/questions/49113207/completablefuture-forkjoinpool-set-class-loader/59444016#59444016
+            final ForkJoinPool myCommonPool = new ForkJoinPool(
+                    Runtime.getRuntime().availableProcessors(),
+                    new MyForkJoinWorkerThreadFactory()
+                    , null, false);
 
-        CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(() -> trySendDomibus(requestDto, apRequestDto), myCommonPool);
+        } else {
             trySendDomibus(requestDto, apRequestDto);
-        }, myCommonPool);
-    }
-
-    private void trySendDomibus(RequestDto requestDto, ApRequestDto apRequestDto) {
-        try {
-            final String result = this.requestSendingService.sendRequest(apRequestDto);
-            requestDto.setEdeliveryMessageId(result);
-            this.updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
-        } catch (SendRequestException e) {
-            log.error("error while sending request");
-            requestDto.setError(ErrorDto.builder()
-                    .errorCode(ErrorCodesEnum.AP_SUBMISSION_ERROR.name())
-                    .errorDescription("Error while sending request to AP").build());
-            LocalDateTime nextRetryDate = setNextRetryDate(requestDto);
-            if (nextRetryDate == null) {
-                requestDto.getControl().setError(ErrorDto.builder()
-                        .errorCode(ErrorCodesEnum.AP_SUBMISSION_ERROR.name())
-                        .errorDescription("Error while sending request to AP").build());
-            } else {
-                requestDto.setNextRetryDate(setNextRetryDate(requestDto));
-            }
-            requestDto.setRetry(requestDto.getRetry() + 1);
-            this.updateStatus(requestDto, RequestStatusEnum.SEND_ERROR);
         }
-    }
-
-    private LocalDateTime setNextRetryDate(RequestDto requestDto) {
-        LocalDateTime nextRetryDate = LocalDateTime.now(ZoneOffset.UTC);
-        try {
-            if (listTime.get(requestDto.getRetry()) != null) {
-                nextRetryDate = nextRetryDate.plusSeconds(listTime.get(requestDto.getRetry()));
-            }
-        } catch (IndexOutOfBoundsException e) {
-            log.info("Request with id {} have reach the maximal number of retry", requestDto.getId());
-            return null;
-        }
-        return nextRetryDate;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -138,12 +92,48 @@ public class RequestService {
         }
     }
 
+    private void trySendDomibus(final RequestDto requestDto, final ApRequestDto apRequestDto) {
+        try {
+            final String result = this.requestSendingService.sendRequest(apRequestDto);
+            requestDto.setEdeliveryMessageId(result);
+            this.updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
+        } catch (SendRequestException e) {
+            log.error("error while sending request");
+            manageSendError(requestDto);
+        }
+    }
+
+    private void manageSendError(final RequestDto requestDto) {
+        final ErrorDto errorDto = ErrorDto.builder()
+                .errorCode(ErrorCodesEnum.AP_SUBMISSION_ERROR.name())
+                .errorDescription(ErrorCodesEnum.AP_SUBMISSION_ERROR.getMessage()).build();
+        requestDto.setError(errorDto);
+
+        final Optional<LocalDateTime> optionalDate = setNextRetryDate(requestDto);
+        optionalDate.ifPresentOrElse(requestDto::setNextRetryDate,
+                () -> controlService.setError(requestDto.getControl(), errorDto));
+        requestDto.setRetry(requestDto.getRetry() + 1);
+        this.updateStatus(requestDto, optionalDate.isPresent() ? RequestStatusEnum.SEND_ERROR : RequestStatusEnum.ERROR);
+    }
+
+    private Optional<LocalDateTime> setNextRetryDate(final RequestDto requestDto) {
+        LocalDateTime nextRetryDate = LocalDateTime.now(ZoneOffset.UTC);
+        try {
+            if (listTime.get(requestDto.getRetry()) != null) {
+                nextRetryDate = nextRetryDate.plusSeconds(listTime.get(requestDto.getRetry()));
+            }
+        } catch (IndexOutOfBoundsException e) {
+            log.info("Request with id {} have reach the maximal number of retry", requestDto.getId());
+            return Optional.empty();
+        }
+        return Optional.of(nextRetryDate);
+    }
+
     private void manageMessageReceive(final NotificationDto<RetrieveMessageDto> notificationDto) {
         final RetrieveMessageDto retrieveMessageDto = notificationDto.getContent();
         final RequestDto requestDto = this.findByRequestUuidOrThrow(retrieveMessageDto.getMessageBodyDto().getRequestUuid());
 
-        requestDto.getControl().setStatus(StatusEnum.COMPLETE.name());
-        requestDto.getControl().setEftiData(retrieveMessageDto.getMessageBodyDto().getEFTIData().toString().getBytes());
+        this.controlService.setEftiData(requestDto.getControl(), retrieveMessageDto.getMessageBodyDto().getEFTIData().toString().getBytes());
 
         this.updateStatus(requestDto, RequestStatusEnum.RECEIVED);
     }
@@ -170,10 +160,6 @@ public class RequestService {
     private RequestDto updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {
         requestDto.setStatus(status.name());
         requestDto.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
-        if (requestDto.getRetry() > listTime.size()) {
-            requestDto.setStatus(RequestStatusEnum.ERROR.toString());
-            requestDto.getControl().setStatus(StatusEnum.ERROR.toString());
-        }
         return this.save(requestDto);
     }
 
@@ -183,7 +169,7 @@ public class RequestService {
 
     private ApRequestDto buildApRequestDto(final RequestDto requestDto) throws TechnicalException {
         return ApRequestDto.builder()
-                .sender(gateProperties.getOwner())
+                .sender(requestDto.getControl().getEftiGateUrl())
                 .receiver(requestDto.getControl().getEftiPlatformUrl())
                 .body(buildBody(requestDto))
                 .apConfig(ApConfigDto.builder()

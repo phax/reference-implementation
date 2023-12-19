@@ -83,7 +83,7 @@ public class ControlEntity {
     @ToString.Exclude @EqualsAndHashCode.Exclude
     List<RequestEntity> requests;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "authority", referencedColumnName = "id")
     @ToString.Exclude @EqualsAndHashCode.Exclude
     AuthorityEntity authority;

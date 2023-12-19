@@ -36,8 +36,8 @@ public class ControlDto {
     private AuthorityDto authority;
     private ErrorDto error;
 
-    public ControlDto(UilDto uilDto) {
-        String uuidGenerator = UUID.randomUUID().toString();
+    public ControlDto(final UilDto uilDto) {
+        final String uuidGenerator = UUID.randomUUID().toString();
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
 
         this.setEftiDataUuid(uilDto.getUuid());

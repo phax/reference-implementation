@@ -15,7 +15,7 @@ public class EftiConfig {
     public ModelMapper modelMapper() {
         final ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.LOOSE);
-        modelMapper.getConfiguration().setPreferNestedProperties(false);
+        modelMapper.getConfiguration().setFieldMatchingEnabled(true);
         return new ModelMapper();
     }
 
