@@ -46,7 +46,8 @@ class RequestServiceTest extends AbstractServceTest {
     private RequestRepository requestRepository;
     @Mock
     private RequestSendingService requestSendingService;
-
+    @Mock
+    private ControlService controlService;
     private GateProperties gateProperties;
     private RequestService requestService;
     private final UilDto uilDto = new UilDto();
@@ -60,7 +61,7 @@ class RequestServiceTest extends AbstractServceTest {
         openMocks = MockitoAnnotations.openMocks(this);
 
         gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).build();
-        requestService = new RequestService(requestRepository, requestSendingService, gateProperties, mapperUtils, objectMapper, List.of(20,120,300));
+        requestService = new RequestService(requestRepository, requestSendingService, gateProperties, mapperUtils, objectMapper, controlService, List.of(20,120,300));
 
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         String requestUuid = UUID.randomUUID().toString();
@@ -117,7 +118,7 @@ class RequestServiceTest extends AbstractServceTest {
         when(requestSendingService.sendRequest(any())).thenReturn("result");
         when(requestRepository.save(any())).thenReturn(requestEntity);
 
-        requestService.sendRetryRequest(requestDto);
+        requestService.sendRequest(requestDto, false);
     }
 
     @Test
@@ -176,14 +177,12 @@ class RequestServiceTest extends AbstractServceTest {
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
         when(requestRepository.findByControlRequestUuid(any())).thenReturn(requestEntity);
         when(requestRepository.save(any())).thenReturn(requestEntity);
-
         requestService.updateWithResponse(notificationDto);
 
+        verify(controlService).setEftiData(controlDto, eftiData.getBytes());
         verify(requestRepository).save(argumentCaptor.capture());
         assertNotNull(argumentCaptor.getValue());
         assertEquals(RequestStatusEnum.RECEIVED.name(), argumentCaptor.getValue().getStatus());
-        assertEquals(eftiData, new String(argumentCaptor.getValue().getControl().getEftiData()));
-        assertEquals(StatusEnum.COMPLETE.name(), argumentCaptor.getValue().getControl().getStatus());
     }
 
     @Test

@@ -4,7 +4,6 @@ import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
-import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
 import com.ingroupe.efti.eftigate.utils.ErrorCodesEnum;
 import com.ingroupe.efti.eftigate.utils.RequestTypeEnum;
@@ -33,9 +32,9 @@ class ControlServiceTest extends AbstractServceTest {
 
     AutoCloseable openMocks;
     @Mock
-    private final ControlRepository controlRepository = Mockito.mock(ControlRepository.class);
+    private ControlRepository controlRepository;
     @Mock
-    private final RequestService requestService = Mockito.mock(RequestService.class);
+    private RequestService requestService;
     private ControlService controlService;
 
     private final UilDto uilDto = new UilDto();
@@ -55,9 +54,9 @@ class ControlServiceTest extends AbstractServceTest {
         requestUuidDto.setRequestUuid(requestUuid);
         requestUuidDto.setStatus(status);
 
-        this.uilDto.setGate("gate");
-        this.uilDto.setUuid("uuid");
-        this.uilDto.setPlatform("plateform");
+        this.uilDto.setGate("http://www.gate.com");
+        this.uilDto.setUuid("12345678-ab12-4ab6-8999-123456789abc");
+        this.uilDto.setPlatform("http://www.platform.com");
         this.controlDto.setEftiDataUuid(uilDto.getUuid());
         this.controlDto.setEftiGateUrl(uilDto.getGate());
         this.controlDto.setEftiPlatformUrl(uilDto.getPlatform());
@@ -116,25 +115,37 @@ class ControlServiceTest extends AbstractServceTest {
     void createControlEntityErrorGateNullTest() {
         uilDto.setGate(null);
         controlDto.setEftiGateUrl(null);
-        controlEntity.setError(ErrorEntity.builder().errorCode(ErrorCodesEnum.UIL_GATE_EMPTY.name())
-                .errorDescription("The gate identifier is empty.").build());
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
+
         RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
 
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(1)).save(any());
         Assertions.assertNotNull(requestUuidDtoResult);
         assertEquals(ErrorCodesEnum.UIL_GATE_EMPTY.name(), requestUuidDtoResult.getErrorCode());
-        assertEquals("The gate identifier is empty.", requestUuidDtoResult.getErrorDescription());
+        assertEquals("Gate should not be empty.", requestUuidDtoResult.getErrorDescription());
+    }
+
+    @Test
+    void createControlEntityErrorGateFormatTest() {
+        uilDto.setGate("toto");
+        controlEntity.setStatus(StatusEnum.ERROR.name());
+        Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
+
+        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
+
+        verify(requestService, never()).createAndSendRequest(any());
+        verify(controlRepository, Mockito.times(1)).save(any());
+        Assertions.assertNotNull(requestUuidDtoResult);
+        assertEquals(ErrorCodesEnum.UIL_GATE_INCORRECT_FORMAT.name(), requestUuidDtoResult.getErrorCode());
+        assertEquals("Gate format incorrect.", requestUuidDtoResult.getErrorDescription());
     }
 
     @Test
     void createControlEntityErrorPlatformNullTest() {
         uilDto.setPlatform(null);
         controlDto.setEftiPlatformUrl(null);
-        controlEntity.setError(ErrorEntity.builder().errorCode(ErrorCodesEnum.UIL_PLATFORM_EMPTY.name())
-                .errorDescription("The platform identifier is empty.").build());
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
@@ -144,15 +155,28 @@ class ControlServiceTest extends AbstractServceTest {
         verify(controlRepository, Mockito.times(1)).save(any());
         Assertions.assertNotNull(requestUuidDtoResult);
         assertEquals(ErrorCodesEnum.UIL_PLATFORM_EMPTY.name(), requestUuidDtoResult.getErrorCode());
-        assertEquals("The platform identifier is empty.", requestUuidDtoResult.getErrorDescription());
+        assertEquals("Platform should not be empty.", requestUuidDtoResult.getErrorDescription());
+    }
+
+    @Test
+    void createControlEntityErrorPlatformFormatTest() {
+        uilDto.setPlatform("toto");
+        controlEntity.setStatus(StatusEnum.ERROR.name());
+        Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
+
+        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
+
+        verify(requestService, never()).createAndSendRequest(any());
+        verify(controlRepository, Mockito.times(1)).save(any());
+        Assertions.assertNotNull(requestUuidDtoResult);
+        assertEquals(ErrorCodesEnum.UIL_PLATFORM_INCORRECT_FORMAT.name(), requestUuidDtoResult.getErrorCode());
+        assertEquals("Platform format incorrect.", requestUuidDtoResult.getErrorDescription());
     }
 
     @Test
     void createControlEntityErrorUuidNullTest() {
         uilDto.setUuid(null);
         controlDto.setRequestUuid(null);
-        controlEntity.setError(ErrorEntity.builder().errorCode(ErrorCodesEnum.UIL_UUID_EMPTY.name())
-                .errorDescription("The request uuid is empty.").build());
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
@@ -162,7 +186,22 @@ class ControlServiceTest extends AbstractServceTest {
         verify(controlRepository, Mockito.times(1)).save(any());
         Assertions.assertNotNull(requestUuidDtoResult);
         assertEquals(ErrorCodesEnum.UIL_UUID_EMPTY.name(), requestUuidDtoResult.getErrorCode());
-        assertEquals("The request uuid is empty.", requestUuidDtoResult.getErrorDescription());
+        assertEquals("Uuid should not be empty.", requestUuidDtoResult.getErrorDescription());
+    }
+
+    @Test
+    void createControlEntityErrorUuidFormatTest() {
+        uilDto.setUuid("toto");
+        controlEntity.setStatus(StatusEnum.ERROR.name());
+        Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
+
+        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
+
+        verify(requestService, never()).createAndSendRequest(any());
+        verify(controlRepository, Mockito.times(1)).save(any());
+        Assertions.assertNotNull(requestUuidDtoResult);
+        assertEquals(ErrorCodesEnum.UIL_UUID_INCORRECT_FORMAT.name(), requestUuidDtoResult.getErrorCode());
+        assertEquals("Uuid format incorrect.", requestUuidDtoResult.getErrorDescription());
     }
 
     @Test
