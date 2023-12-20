@@ -23,7 +23,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class ApIncomingServiceTest extends AbstractServceTest {
+class ApIncomingServiceTest extends AbstractServceTest {
 
     AutoCloseable openMocks;
 
