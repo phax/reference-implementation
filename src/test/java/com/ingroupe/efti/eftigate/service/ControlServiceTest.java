@@ -1,6 +1,9 @@
 package com.ingroupe.efti.eftigate.service;
 
+import com.ingroupe.efti.eftigate.dto.AuthorityDto;
+import com.ingroupe.efti.eftigate.dto.ContactInformationDto;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
+import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
@@ -12,10 +15,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -27,6 +32,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class ControlServiceTest extends AbstractServceTest {
 
@@ -67,6 +73,12 @@ class ControlServiceTest extends AbstractServceTest {
         this.controlDto.setSubsetMsRequested("oki");
         this.controlDto.setCreatedDate(localDateTime);
         this.controlDto.setLastModifiedDate(localDateTime);
+        this.controlDto.setAuthority(AuthorityDto.builder()
+                .country("FR")
+                .isEmergencyService(true)
+                .legalContact(ContactInformationDto.builder().build())
+                .workingContact(ContactInformationDto.builder().build())
+                .nationalUniqueIdentifier("unique").build());
 
         this.controlEntity.setEftiDataUuid(controlDto.getEftiDataUuid());
         this.controlEntity.setRequestUuid(controlDto.getRequestUuid());
@@ -225,5 +237,34 @@ class ControlServiceTest extends AbstractServceTest {
         Assertions.assertNotNull(requestUuidDtoResult);
         assertEquals("ERROR", requestUuidDtoResult.getStatus());
         Assertions.assertNull(requestUuidDtoResult.getEFTIData());
+    }
+
+    @Test
+    void shouldSetError() {
+        final String description = "description";
+        final String code = "code";
+        final ErrorDto errorDto = ErrorDto.builder()
+                .errorDescription(description)
+                .errorCode(code).build();
+        final ArgumentCaptor<ControlEntity> argumentCaptor = ArgumentCaptor.forClass(ControlEntity.class);
+        when(controlRepository.save(any())).thenReturn(controlEntity);
+
+        controlService.setError(controlDto, errorDto);
+
+        verify(controlRepository).save(argumentCaptor.capture());
+        assertEquals(StatusEnum.ERROR.name(), argumentCaptor.getValue().getStatus());
+    }
+
+    @Test
+    void shouldSetData() {
+        final ArgumentCaptor<ControlEntity> argumentCaptor = ArgumentCaptor.forClass(ControlEntity.class);
+        when(controlRepository.save(any())).thenReturn(controlEntity);
+
+        final String datas = "les grosses datas";
+        controlService.setEftiData(controlDto, datas.getBytes(StandardCharsets.UTF_8));
+
+        verify(controlRepository).save(argumentCaptor.capture());
+        assertEquals(datas, new String(argumentCaptor.getValue().getEftiData(), StandardCharsets.UTF_8));
+        assertEquals(StatusEnum.COMPLETE.name(), argumentCaptor.getValue().getStatus());
     }
 }

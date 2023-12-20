@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.LinkedList;
@@ -133,7 +134,7 @@ public class RequestService {
         final RetrieveMessageDto retrieveMessageDto = notificationDto.getContent();
         final RequestDto requestDto = this.findByRequestUuidOrThrow(retrieveMessageDto.getMessageBodyDto().getRequestUuid());
 
-        this.controlService.setEftiData(requestDto.getControl(), retrieveMessageDto.getMessageBodyDto().getEFTIData().toString().getBytes());
+        this.controlService.setEftiData(requestDto.getControl(), retrieveMessageDto.getMessageBodyDto().getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
 
         this.updateStatus(requestDto, RequestStatusEnum.RECEIVED);
     }

@@ -81,15 +81,15 @@ public class ControlEntity {
 
     @OneToMany(mappedBy = "control", fetch = FetchType.EAGER)
     @ToString.Exclude @EqualsAndHashCode.Exclude
-    List<RequestEntity> requests;
+    private List<RequestEntity> requests;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "authority", referencedColumnName = "id")
     @ToString.Exclude @EqualsAndHashCode.Exclude
-    AuthorityEntity authority;
+    private AuthorityEntity authority;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "error", referencedColumnName = "id")
     @ToString.Exclude @EqualsAndHashCode.Exclude
-    ErrorEntity error;
+    private ErrorEntity error;
 }
