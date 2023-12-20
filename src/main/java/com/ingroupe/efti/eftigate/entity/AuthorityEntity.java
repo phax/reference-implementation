@@ -1,10 +1,13 @@
 package com.ingroupe.efti.eftigate.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,18 +24,20 @@ public class AuthorityEntity {
     
     @Column(name = "country")
     private String country;
-    
-    @Column(name = "email")
-    private String email;
-    
-    @Column(name = "physicaladdress")
-    private String physicalAddress;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "legalcontact", referencedColumnName = "id")
+    private ContactInformationEntity legalContact;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "workingcontact", referencedColumnName = "id")
+    private ContactInformationEntity workingContact;
     
     @Column(name = "isemergencyservice")
     private boolean isEmergencyService;
     
-    @Column(name = "authorityname")
-    private String authorityName;
+    @Column(name = "name")
+    private String name;
     
     @Column(name = "nationaluniqueidentifier")
     private String nationalUniqueIdentifier;

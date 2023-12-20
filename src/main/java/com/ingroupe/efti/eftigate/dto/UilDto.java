@@ -30,4 +30,6 @@ public class UilDto {
     @Size(max = 255, message = "UIL_PLATFORM_TOO_LONG")
     @Pattern(regexp = REGEX_URI, message = "UIL_PLATFORM_INCORRECT_FORMAT")
     private String platform;
+
+    private AuthorityDto authority;
 }

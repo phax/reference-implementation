@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 public class AuthorityDto {
     private int id;
     private String country;
-    private String email;
-    private String physicalAddress;
+    private ContactInformationDto legalContact;
+    private ContactInformationDto workingContact;
     private boolean isEmergencyService;
-    private String authorityName;
+    private String name;
     private String nationalUniqueIdentifier;
 }
