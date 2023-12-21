@@ -50,6 +50,7 @@ public class ControlDto {
         this.setSubsetMsRequested("SubsetMsRequested");
         this.setCreatedDate(localDateTime);
         this.setLastModifiedDate(localDateTime);
+        this.setAuthority(uilDto.getAuthority());
     }
 
     public boolean isError() {

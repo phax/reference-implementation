@@ -26,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -119,6 +120,7 @@ class RequestServiceTest extends AbstractServceTest {
         when(requestRepository.save(any())).thenReturn(requestEntity);
 
         requestService.sendRequest(requestDto, false);
+        verify(requestSendingService).sendRequest(any());
     }
 
     @Test
@@ -128,7 +130,6 @@ class RequestServiceTest extends AbstractServceTest {
         when(requestSendingService.sendRequest(any())).thenReturn(edeliveryId);
 
         final RequestDto requestDto = requestService.createAndSendRequest(controlDto);
-
         Thread.sleep(1000);
         Mockito.verify(requestRepository, Mockito.times(2)).save(any());
         assertNotNull(requestDto);
@@ -179,10 +180,41 @@ class RequestServiceTest extends AbstractServceTest {
         when(requestRepository.save(any())).thenReturn(requestEntity);
         requestService.updateWithResponse(notificationDto);
 
-        verify(controlService).setEftiData(controlDto, eftiData.getBytes());
+        verify(controlService).setEftiData(controlDto, eftiData.getBytes(StandardCharsets.UTF_8));
         verify(requestRepository).save(argumentCaptor.capture());
         assertNotNull(argumentCaptor.getValue());
         assertEquals(RequestStatusEnum.RECEIVED.name(), argumentCaptor.getValue().getStatus());
+    }
+
+    @Test
+    void shouldUpdateResponseSendFailure() {
+        final String messageId = "messageId";
+        final NotificationDto<?> notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.SEND_FAILURE)
+                .content(RetrieveMessageDto.builder()
+                        .messageId(messageId)
+                        .build())
+                .build();
+        final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
+        when(requestRepository.findByEdeliveryMessageId(any())).thenReturn(requestEntity);
+        when(requestRepository.save(any())).thenReturn(requestEntity);
+        requestService.updateWithResponse(notificationDto);
+        verify(requestRepository).save(argumentCaptor.capture());
+        assertNotNull(argumentCaptor.getValue());
+        assertEquals(RequestStatusEnum.SEND_ERROR.name(), argumentCaptor.getValue().getStatus());
+    }
+
+    @Test
+    void shouldThrowIfMessageNotFound() {
+        final String messageId = "messageId";
+        final NotificationDto<?> notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.SEND_FAILURE)
+                .content(RetrieveMessageDto.builder()
+                        .messageId(messageId)
+                        .build())
+                .build();
+        when(requestRepository.findByEdeliveryMessageId(any())).thenReturn(null);
+        assertThrows(RequestNotFoundException.class, () -> requestService.updateWithResponse(notificationDto));
     }
 
     @Test

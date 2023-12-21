@@ -18,6 +18,8 @@ public enum ErrorCodesEnum {
     UIL_UUID_TOO_LONG("Uuid max length is 36 characters."),
     UIL_UUID_INCORRECT_FORMAT("Uuid format incorrect."),
 
+    AUTHORITY_ERROR("Given authority incorrect."),
+
     AP_SUBMISSION_ERROR("Error during ap submission."),
     REQUEST_BUILDING("Error while building request."),
     UUID_NOT_FOUND(" Uuid not found.");

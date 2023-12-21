@@ -1,6 +1,7 @@
 package com.ingroupe.efti.eftigate.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -30,4 +31,7 @@ public class UilDto {
     @Size(max = 255, message = "UIL_PLATFORM_TOO_LONG")
     @Pattern(regexp = REGEX_URI, message = "UIL_PLATFORM_INCORRECT_FORMAT")
     private String platform;
+
+    @NotNull(message= "AUTHORITY_ERROR")
+    private AuthorityDto authority;
 }
