@@ -32,9 +32,9 @@ class ApIncomingServiceTest extends AbstractServceTest {
     private NotificationService notificationService;
     @Mock
     private RequestService requestService;
-    private final String url = "url";
-    private final String password = "password";
-    private final String username = "username";
+    private final static String url = "url";
+    private final static String password = "password";
+    private final static String username = "username";
 
     @BeforeEach
     public void before() {
