@@ -12,5 +12,6 @@ import lombok.NoArgsConstructor;
 public class RetrieveMessageDto {
     private String messageId;
     private String action;
+    private String contentType;
     private MessageBodyDto messageBodyDto;
 }
