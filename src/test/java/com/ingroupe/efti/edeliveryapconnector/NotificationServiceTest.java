@@ -1,10 +1,10 @@
 package com.ingroupe.efti.edeliveryapconnector;
 
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
-import com.ingroupe.efti.edeliveryapconnector.dto.RetrieveMessageDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
@@ -58,7 +58,7 @@ class NotificationServiceTest {
         final ApConfigDto apConfigDto = ApConfigDto.builder().build();
         final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
                 .body(Map.of(RECEIVE_SUCCESS, Map.of(MESSAGE_ID, messageId))).build();
-        when(requestRetrievingService.retrieveMessage(any(), any())).thenReturn(new RetrieveMessageDto());
+        when(requestRetrievingService.retrieveMessage(any(), any())).thenReturn(new NotificationContentDto());
         service.consume(apConfigDto, receivedNotificationDto);
         verify(requestRetrievingService).retrieveMessage(apConfigDto, messageId);
     }
@@ -79,7 +79,7 @@ class NotificationServiceTest {
         final ApConfigDto apConfigDto = ApConfigDto.builder().build();
         final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
                 .body(Map.of(SENT_FAILURE, Map.of(MESSAGE_ID, messageId))).build();
-        Optional<NotificationDto<?>> result  = service.consume(apConfigDto, receivedNotificationDto);
+        Optional<NotificationDto> result  = service.consume(apConfigDto, receivedNotificationDto);
         verify(requestRetrievingService, never()).retrieveMessage(apConfigDto, messageId);
         assertTrue(result.isPresent());
         assertEquals(messageId, result.get().getMessageId());
@@ -92,7 +92,7 @@ class NotificationServiceTest {
         final ApConfigDto apConfigDto = ApConfigDto.builder().build();
         final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
                 .body(Map.of(SENT_SUCCESS, Map.of(MESSAGE_ID, messageId))).build();
-        Optional<NotificationDto<?>> result  = service.consume(apConfigDto, receivedNotificationDto);
+        Optional<NotificationDto> result  = service.consume(apConfigDto, receivedNotificationDto);
         verify(requestRetrievingService, never()).retrieveMessage(apConfigDto, messageId);
         assertTrue(result.isEmpty());
     }
