@@ -7,10 +7,12 @@ spring:
   jpa:
     properties:
       hibernate:
+        control_schema: "eftibo"
+        metadata_schema: "eftibo"
         default_schema: "eftibo"
 
 gate:
-  owner: borduria
+  owner: http://efti.gate.borduria.eu
   ap:
     url: http://efti.gate.borduria.eu:81/domibus/services/wsplugin
     username: borduria_service_account

@@ -1,8 +1,8 @@
 package com.ingroupe.efti.eftigate.service;
 
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
-import com.ingroupe.efti.eftigate.dto.AuthorityDto;
-import com.ingroupe.efti.eftigate.dto.ContactInformationDto;
+import com.ingroupe.efti.commons.dto.AuthorityDto;
+import com.ingroupe.efti.commons.dto.ContactInformationDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -51,7 +51,7 @@ class UilDtoValidatorTest {
 
         final Set<ConstraintViolation<UilDto>> violations = validator.validate(uilDto);
         assertFalse(violations.isEmpty());
-        assertEquals(9, violations.size());
+        assertEquals(8, violations.size());
         assertTrue(containsError(violations, ErrorCodesEnum.UIL_GATE_INCORRECT_FORMAT));
         assertTrue(containsError(violations, ErrorCodesEnum.UIL_PLATFORM_INCORRECT_FORMAT));
         assertTrue(containsError(violations, ErrorCodesEnum.UIL_UUID_INCORRECT_FORMAT));
@@ -89,7 +89,7 @@ class UilDtoValidatorTest {
 
         final Set<ConstraintViolation<UilDto>> violations = validator.validate(uilDto);
         assertFalse(violations.isEmpty());
-        assertEquals(13, violations.size());
+        assertEquals(8, violations.size());
         assertTrue(containsError(violations, ErrorCodesEnum.AUTHORITY_COUNTRY_TOO_LONG));
         assertTrue(containsError(violations, ErrorCodesEnum.AUTHORITY_COUNTRY_UNKNOWN));
         assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_BUILDING_MISSING));

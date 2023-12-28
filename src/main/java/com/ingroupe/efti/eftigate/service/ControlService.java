@@ -1,6 +1,9 @@
 package com.ingroupe.efti.eftigate.service;
 
+import com.ingroupe.efti.commons.dto.MetadataRequestDto;
+import com.ingroupe.efti.commons.dto.ValidableControl;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
+import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
@@ -10,7 +13,6 @@ import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
-import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -39,23 +41,36 @@ public class ControlService {
         return controlEntity.orElse(null);
     }
 
-    @Transactional
-    public RequestUuidDto createControlEntity(final UilDto uilDto) {
+    @Transactional("controlTransactionManager")
+    public RequestUuidDto createUilControl(final UilDto uilDto) {
+        log.info("create Uil control for uuid : {}", uilDto.getEFTIDataUuid());
+        return createControl(uilDto, ControlDto.fromUilControl(uilDto));
+    }
 
-        final Optional<ErrorDto> errorOptional = this.validateControl(uilDto);
-        log.info("create ControlEntity with uuid : {}", uilDto.getEFTIDataUuid());
-        ControlDto controlDto = new ControlDto(uilDto);
+    @Transactional("controlTransactionManager")
+    public RequestUuidDto createMetadataControl(final MetadataRequestDto metadataRequestDto) {
+        log.info("create metadata control for vehicleId : {}", metadataRequestDto.getVehicleID());
+        return createControl(metadataRequestDto, ControlDto.fromMetadataControl(metadataRequestDto));
+    }
+
+    private RequestUuidDto createControl(final ValidableControl control, ControlDto controlDto) {
+        final Optional<ErrorDto> errorOptional = this.validateControl(control);
+
         errorOptional.ifPresentOrElse(
                 error -> {
                     controlDto.setStatus(StatusEnum.ERROR.name());
                     controlDto.setError(error);
                     log.error(error.getErrorDescription() + ", " + error.getErrorCode());
-        },
+                },
                 () -> {
                     final ControlDto saveControl = this.save(controlDto);
-                    requestService.createAndSendRequest(saveControl);
-                    log.info("control with uil '{}' has been register", uilDto.getEFTIDataUuid());
+                    //temporaire, request pas implémenté pour les metadata
+                    if(control instanceof UilDto) {
+                        requestService.createAndSendRequest(saveControl);
+                    }
+                    log.info("control with request uuid '{}' has been register", saveControl.getRequestUuid());
                 });
+
         return buildResponse(controlDto);
     }
 
@@ -95,14 +110,14 @@ public class ControlService {
             validator = factory.getValidator();
         }
 
-        final Set<ConstraintViolation<UilDto>> violations = validator.validate(uilDto);
+        final Set<ConstraintViolation<ValidableControl>> violations = validator.validate(validable);
 
         if(violations.isEmpty()) {
             return Optional.empty();
         }
 
         //we manage only one error by control
-        final ConstraintViolation<UilDto> constraintViolation = violations.iterator().next();
+        final ConstraintViolation<ValidableControl> constraintViolation = violations.iterator().next();
 
         return  Optional.of(ErrorDto.builder()
                 .errorCode(constraintViolation.getMessage())

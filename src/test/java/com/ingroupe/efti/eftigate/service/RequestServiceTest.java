@@ -1,10 +1,12 @@
 package com.ingroupe.efti.eftigate.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
+import com.ingroupe.efti.commons.enums.RequestStatusEnum;
+import com.ingroupe.efti.commons.enums.RequestTypeEnum;
+import com.ingroupe.efti.commons.enums.StatusEnum;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
-import com.ingroupe.efti.edeliveryapconnector.dto.RetrieveMessageDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
@@ -15,9 +17,6 @@ import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
-import com.ingroupe.efti.eftigate.utils.RequestStatusEnum;
-import com.ingroupe.efti.eftigate.utils.RequestTypeEnum;
-import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +25,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import javax.mail.util.ByteArrayDataSource;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -166,14 +167,19 @@ class RequestServiceTest extends AbstractServceTest {
     }
 
     @Test
-    void shouldUpdateResponse() {
+    void shouldUpdateResponse() throws IOException {
         final String messageId = "messageId";
-        final String eftiData = "<data>vive les datas</data>";
-        final NotificationDto<?> notificationDto = NotificationDto.builder()
+        final String eftiData = """
+                  {
+                    "requestUuid": "test",
+                    "status": "COMPLETE",
+                    "eFTIData": "<data>vive les datas<data>"
+                  }""";
+        final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.RECEIVED)
-                .content(RetrieveMessageDto.builder()
+                .content(NotificationContentDto.builder()
                         .messageId(messageId)
-                        .messageBodyDto(MessageBodyDto.builder().eFTIData(eftiData).status("COMPLETE").build())
+                        .body(new ByteArrayDataSource(eftiData, "osef"))
                         .build())
                 .build();
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
@@ -181,21 +187,26 @@ class RequestServiceTest extends AbstractServceTest {
         when(requestRepository.save(any())).thenReturn(requestEntity);
         requestService.updateWithResponse(notificationDto);
 
-        verify(controlService).setEftiData(controlDto, eftiData.getBytes(StandardCharsets.UTF_8));
+        verify(controlService).setEftiData(controlDto, "<data>vive les datas<data>".getBytes(StandardCharsets.UTF_8));
         verify(requestRepository).save(argumentCaptor.capture());
         assertNotNull(argumentCaptor.getValue());
         assertEquals(RequestStatusEnum.RECEIVED.name(), argumentCaptor.getValue().getStatus());
     }
 
     @Test
-    void shouldUpdateErrorResponse() {
+    void shouldUpdateErrorResponse() throws IOException {
         final String messageId = "messageId";
-        final String eftiData = "<data>vive les datas</data>";
-        final NotificationDto<?> notificationDto = NotificationDto.builder()
+        final String eftiData = """
+                  {
+                    "requestUuid": "test",
+                    "status": "ERROR",
+                    "eFTIData": "<data>vive les datas<data>"
+                  }""";
+        final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.RECEIVED)
-                .content(RetrieveMessageDto.builder()
+                .content(NotificationContentDto.builder()
                         .messageId(messageId)
-                        .messageBodyDto(MessageBodyDto.builder().eFTIData(eftiData).status("ERROR").build())
+                        .body(new ByteArrayDataSource(eftiData, "osef"))
                         .build())
                 .build();
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
@@ -211,9 +222,9 @@ class RequestServiceTest extends AbstractServceTest {
     @Test
     void shouldUpdateResponseSendFailure() {
         final String messageId = "messageId";
-        final NotificationDto<?> notificationDto = NotificationDto.builder()
+        final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.SEND_FAILURE)
-                .content(RetrieveMessageDto.builder()
+                .content(NotificationContentDto.builder()
                         .messageId(messageId)
                         .build())
                 .build();
@@ -229,9 +240,9 @@ class RequestServiceTest extends AbstractServceTest {
     @Test
     void shouldThrowIfMessageNotFound() {
         final String messageId = "messageId";
-        final NotificationDto<?> notificationDto = NotificationDto.builder()
+        final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.SEND_FAILURE)
-                .content(RetrieveMessageDto.builder()
+                .content(NotificationContentDto.builder()
                         .messageId(messageId)
                         .build())
                 .build();
@@ -240,15 +251,19 @@ class RequestServiceTest extends AbstractServceTest {
     }
 
     @Test
-    void shouldReThrowException() {
+    void shouldReThrowException() throws IOException {
         final String messageId = "messageId";
-        final String eftiData = "<data>vive les datas</data>";
+        final String eftiData = """
+                {
+                  "requestUuid": "test",
+                  "status": "toto"
+                }""";
 
-        final NotificationDto<?> notificationDto = NotificationDto.builder()
+        final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.RECEIVED)
-                .content(RetrieveMessageDto.builder()
+                .content(NotificationContentDto.builder()
                         .messageId(messageId)
-                        .messageBodyDto(MessageBodyDto.builder().eFTIData(eftiData).build())
+                        .body(new ByteArrayDataSource(eftiData, "osef"))
                         .build())
                 .build();
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);

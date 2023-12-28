@@ -1,12 +1,16 @@
 package com.ingroupe.efti.eftigate.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
+import com.ingroupe.efti.commons.enums.RequestStatusEnum;
+import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
-import com.ingroupe.efti.edeliveryapconnector.dto.RetrieveMessageDto;
+import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
@@ -20,14 +24,14 @@ import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
-import com.ingroupe.efti.eftigate.utils.RequestStatusEnum;
-import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.cxf.helpers.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -85,12 +89,11 @@ public class RequestService {
         }
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     public void updateWithResponse(final NotificationDto notificationDto) {
         switch (notificationDto.getNotificationType()) {
             case RECEIVED -> manageMessageReceive(notificationDto);
             case SEND_FAILURE -> manageSendFailure(notificationDto);
-            default -> log.warn("unknow notification {} ", notificationDto.getNotificationType());
+            default -> log.warn("unknown notification {} ", notificationDto.getNotificationType());
         }
     }
 
@@ -131,14 +134,23 @@ public class RequestService {
         return Optional.of(nextRetryDate);
     }
 
-    private void manageMessageReceive(final NotificationDto<RetrieveMessageDto> notificationDto) {
-        final RetrieveMessageDto retrieveMessageDto = notificationDto.getContent();
-        final RequestDto requestDto = this.findByRequestUuidOrThrow(retrieveMessageDto.getMessageBodyDto().getRequestUuid());
+    private void manageMessageReceive(final NotificationDto notificationDto) {
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        MessageBodyDto messageBody;
+        try {
+            final String body = IOUtils.toString(notificationDto.getContent().getBody().getInputStream());
+            messageBody = mapper.readValue(body, MessageBodyDto.class);
 
-        if (retrieveMessageDto.getMessageBodyDto().getStatus().equals(StatusEnum.COMPLETE.name())) {
-            this.controlService.setEftiData(requestDto.getControl(), retrieveMessageDto.getMessageBodyDto().getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
+        } catch (final IOException e) {
+            throw new RetrieveMessageException("error while sending retrieve message request", e);
+        }
+
+        final RequestDto requestDto = this.findByRequestUuidOrThrow(messageBody.getRequestUuid());
+        if (messageBody.getStatus().equals(StatusEnum.COMPLETE.name())) {
+            this.controlService.setEftiData(requestDto.getControl(), messageBody.getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
         } else {
-            errorReceived(requestDto, retrieveMessageDto.getMessageBodyDto().getErrorDescription());
+            errorReceived(requestDto, messageBody.getErrorDescription());
         }
         this.updateStatus(requestDto, RequestStatusEnum.RECEIVED);
     }
@@ -161,7 +173,7 @@ public class RequestService {
         controlService.setError(controlDto, errorDto);
     }
 
-    private void manageSendFailure(final NotificationDto<?> notificationDto) {
+    private void manageSendFailure(final NotificationDto notificationDto) {
         final RequestDto requestDto = this.findByMessageIdOrThrow(notificationDto.getMessageId());
         this.updateStatus(requestDto, RequestStatusEnum.SEND_ERROR);
     }

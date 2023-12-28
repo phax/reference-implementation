@@ -12,10 +12,10 @@ import javax.sql.DataSource;
 public class SchedulerConfiguration {
 
     @Value("${spring.jpa.properties.hibernate.default_schema}")
-    String defaultSchemat;
+    String defaultSchema;
 
     @Bean
     public LockProvider lockProvider(DataSource dataSource) {
-        return new JdbcTemplateLockProvider(dataSource, defaultSchemat + ".shedlock");
+        return new JdbcTemplateLockProvider(dataSource, defaultSchema + ".shedlock");
     }
 }

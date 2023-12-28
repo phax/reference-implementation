@@ -20,7 +20,7 @@ public class ApIncomingController {
     private final ApIncomingService apIncomingService;
 
     @PostMapping("/notification")
-    public void getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) {
+    public void incoming(final @RequestBody ReceivedNotificationDto receivedNotificationDto) {
         log.info("receive notification !");
         apIncomingService.manageIncomingNotification(receivedNotificationDto);
     }
