@@ -24,8 +24,8 @@ public class OpenAPISecurityConfig {
         return new OpenAPI().components(new Components()
                         .addSecuritySchemes(OAUTH_SCHEME_NAME, createOAuthScheme()))
                 .addSecurityItem(new SecurityRequirement().addList(OAUTH_SCHEME_NAME))
-                .info(new Info().title("Todos Management Service")
-                        .description("A service providing todos.")
+                .info(new Info().title("Efti Gate")
+                        .description("Efti gate")
                         .version("1.0"));
     }
 

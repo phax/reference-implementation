@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class MetadataController implements MetadataControllerApi {
 
     @Override
-    public MetadataResponseDto createRequest(final @RequestBody MetadataRequestDto metadataRequestDto) {
+    public MetadataResponseDto getMetadata(final @RequestBody MetadataRequestDto metadataRequestDto) {
         return MetadataResponseDto.builder().build();
     }
 }

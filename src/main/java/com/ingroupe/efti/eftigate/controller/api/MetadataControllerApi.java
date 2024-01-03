@@ -4,6 +4,8 @@ import com.ingroupe.efti.eftigate.config.security.Roles;
 import com.ingroupe.efti.eftigate.dto.MetadataRequestDto;
 import com.ingroupe.efti.eftigate.dto.MetadataResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,12 +21,12 @@ public interface MetadataControllerApi {
     @Operation(summary = "Send Search Request", description = "Send a search request to retreive an efti data by metadata")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "OK"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "403", description = "Forbidden"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema()))
     })
     @PostMapping("/getMetadata")
     @Secured(Roles.ROLE_ROAD_CONTROLER)
-    MetadataResponseDto createRequest(final @RequestBody MetadataRequestDto metadataRequestDto);
+    MetadataResponseDto getMetadata(final @RequestBody MetadataRequestDto metadataRequestDto);
 
 }
