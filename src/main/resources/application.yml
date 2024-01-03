@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: efti-platform
+  datasource:
+    url: jdbc:postgresql://localhost:9000/efti
+    username: ingroup
+    password: root
+    driverClassName: org.postgresql.Driver
+
+server:
+  port: 8070
+
+gate:
+  sender: acme
+  receiver: borduria
+  ap:
+    url: http://efti.platform.acme.com:81/domibus/services/wsplugin
+    username: acme_service_account
+    password: Azerty59*1234567
+
