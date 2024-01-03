@@ -37,7 +37,7 @@ public class RequestRetrievingService extends AbstractApService {
 
             return RetrieveMessageDto.builder()
                     .messageBodyDto(getMessageBody(holderResponse.value))
-                    .contentType(holderResponse.value.getBodyload().getContentType())
+                    .contentType(holderResponse.value.getPayload().get(0).getContentType())
                     .messageId(holderMessaging.value.getUserMessage().getMessageInfo().getMessageId())
                     .action(holderMessaging.value.getUserMessage().getCollaborationInfo().getAction())
                     .build();
