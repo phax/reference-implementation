@@ -71,9 +71,9 @@ class ControlControllerTest {
     @WithMockUser
     void requestUilTest() throws Exception {
         UilDto uilDto = new UilDto();
-        uilDto.setPlatform("platform");
-        uilDto.setUuid("uuid");
-        uilDto.setGate("gate");
+        uilDto.setEFTIPlatformUrl("platform");
+        uilDto.setEFTIDataUuid("uuid");
+        uilDto.setEFTIGateUrl("gate");
 
         Mockito.when(controlService.createControlEntity(uilDto)).thenReturn(requestUuidDto);
 

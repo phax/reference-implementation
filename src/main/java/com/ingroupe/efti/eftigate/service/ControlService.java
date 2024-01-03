@@ -1,5 +1,6 @@
 package com.ingroupe.efti.eftigate.service;
 
+import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
@@ -8,7 +9,6 @@ import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
-import com.ingroupe.efti.eftigate.utils.ErrorCodesEnum;
 import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -43,12 +43,12 @@ public class ControlService {
 
         final Optional<ErrorDto> errorOptional = this.validateControl(uilDto);
 
-        log.info("create ControlEntity with uuid : {}", uilDto.getUuid());
+        log.info("create ControlEntity with uuid : {}", uilDto.getEFTIDataUuid());
         ControlDto controlDto = new ControlDto(uilDto);
 
         final ControlDto saveControl = this.save(controlDto, errorOptional);
 
-        log.info("control with uil '{}' has been register", uilDto.getUuid());
+        log.info("control with uil '{}' has been register", uilDto.getEFTIDataUuid());
 
         errorOptional.ifPresentOrElse(a -> {} , () -> requestService.createAndSendRequest(saveControl));
 

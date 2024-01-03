@@ -1,5 +1,6 @@
 package com.ingroupe.efti.eftigate.service;
 
+import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.eftigate.dto.AuthorityDto;
 import com.ingroupe.efti.eftigate.dto.ContactInformationDto;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
@@ -8,7 +9,6 @@ import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
-import com.ingroupe.efti.eftigate.utils.ErrorCodesEnum;
 import com.ingroupe.efti.eftigate.utils.RequestTypeEnum;
 import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import org.junit.jupiter.api.AfterEach;
@@ -60,13 +60,29 @@ class ControlServiceTest extends AbstractServceTest {
         requestUuidDto.setRequestUuid(requestUuid);
         requestUuidDto.setStatus(status);
 
-        this.uilDto.setGate("http://www.gate.com");
-        this.uilDto.setUuid("12345678-ab12-4ab6-8999-123456789abc");
-        this.uilDto.setPlatform("http://www.platform.com");
-        this.uilDto.setAuthority(AuthorityDto.builder().build());
-        this.controlDto.setEftiDataUuid(uilDto.getUuid());
-        this.controlDto.setEftiGateUrl(uilDto.getGate());
-        this.controlDto.setEftiPlatformUrl(uilDto.getPlatform());
+        this.uilDto.setEFTIGateUrl("http://www.gate.com");
+        this.uilDto.setEFTIDataUuid("12345678-ab12-4ab6-8999-123456789abc");
+        this.uilDto.setEFTIPlatformUrl("http://www.platform.com");
+        this.uilDto.setAuthority(AuthorityDto.builder()
+                .nationalUniqueIdentifier("national identifier")
+                .name("Robert")
+                .workingContact(ContactInformationDto.builder()
+                        .email("toto@gmail.com")
+                        .city("Acheville")
+                        .buildingNumber("12")
+                        .postalCode("62320")
+                        .streetName("rue jean luc de la rue").build())
+                .country("FR")
+                .legalContact(ContactInformationDto.builder()
+                        .email("toto@gmail.com")
+                        .city("Acheville")
+                        .buildingNumber("12")
+                        .postalCode("62320")
+                        .streetName("rue jean luc de la rue").build())
+                .isEmergencyService(true).build());
+        this.controlDto.setEftiDataUuid(uilDto.getEFTIDataUuid());
+        this.controlDto.setEftiGateUrl(uilDto.getEFTIGateUrl());
+        this.controlDto.setEftiPlatformUrl(uilDto.getEFTIPlatformUrl());
         this.controlDto.setRequestUuid(requestUuid);
         this.controlDto.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
         this.controlDto.setStatus(status);
@@ -126,7 +142,7 @@ class ControlServiceTest extends AbstractServceTest {
 
     @Test
     void createControlEntityErrorGateNullTest() {
-        uilDto.setGate(null);
+        uilDto.setEFTIGateUrl(null);
         controlDto.setEftiGateUrl(null);
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
@@ -142,7 +158,7 @@ class ControlServiceTest extends AbstractServceTest {
 
     @Test
     void createControlEntityErrorGateFormatTest() {
-        uilDto.setGate("toto");
+        uilDto.setEFTIGateUrl("toto");
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
@@ -157,7 +173,7 @@ class ControlServiceTest extends AbstractServceTest {
 
     @Test
     void createControlEntityErrorPlatformNullTest() {
-        uilDto.setPlatform(null);
+        uilDto.setEFTIPlatformUrl(null);
         controlDto.setEftiPlatformUrl(null);
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
@@ -173,7 +189,7 @@ class ControlServiceTest extends AbstractServceTest {
 
     @Test
     void createControlEntityErrorPlatformFormatTest() {
-        uilDto.setPlatform("toto");
+        uilDto.setEFTIPlatformUrl("toto");
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
@@ -188,7 +204,7 @@ class ControlServiceTest extends AbstractServceTest {
 
     @Test
     void createControlEntityErrorUuidNullTest() {
-        uilDto.setUuid(null);
+        uilDto.setEFTIDataUuid(null);
         controlDto.setRequestUuid(null);
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
@@ -204,7 +220,7 @@ class ControlServiceTest extends AbstractServceTest {
 
     @Test
     void createControlEntityErrorUuidFormatTest() {
-        uilDto.setUuid("toto");
+        uilDto.setEFTIDataUuid("toto");
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
