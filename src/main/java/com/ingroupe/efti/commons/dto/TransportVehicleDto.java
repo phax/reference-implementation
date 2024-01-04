@@ -1,13 +1,13 @@
 package com.ingroupe.efti.commons.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.ingroupe.efti.commons.enums.TransportMode;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
+import org.hibernate.validator.constraints.Length;
 
 @Data
 @Builder
@@ -15,14 +15,16 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class TransportVehicleDto {
     private long id;
-    private TransportMode transportMode;
+    private String transportMode;
+    @Max(value = 999, message = "SEQUENCE_TOO_LONG")
     private int sequence;
+    @NotNull(message = "VEHICLE_ID_MISSING")
+    @Length(max = 17, message = "VEHICLE_ID_TOO_LONG")
+    @Pattern(regexp = "^[A-Za-z0-9]*$", message = "VEHICLE_ID_INCORRECT_FORMAT")
     private String vehicleId;
     private String vehicleCountry;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'+'SSSS")
-    private LocalDateTime journeyStart;
+    private String journeyStart;
     private String countryStart;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'+'SSSS")
-    private LocalDateTime journeyEnd;
+    private String journeyEnd;
     private String countryEnd;
 }

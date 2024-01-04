@@ -51,6 +51,14 @@ public enum ErrorCodesEnum {
     CONTACT_POSTAL_MISSING("Missing parameter postalCode."),
     CONTACT_POSTAL_CODE_TOO_LONG("Contact postal code too long."),
 
+    VEHICLE_ID_MISSING("VehicleId missing."),
+    VEHICLE_ID_TOO_LONG("VehicleId too long"),
+    VEHICLE_ID_INCORRECT_FORMAT("VehicleId incorrect format"),
+
+    VEHICLE_COUNTRY_INCORRECT("VehicleCountry incorrect"),
+    TRANSPORT_MODE_INCORRECT("TransportMode Incorrect"),
+    GATE_INDICATOR_INCORRECT("GateIndicator incorrect"),
+
     AP_SUBMISSION_ERROR("Error during ap submission."),
     REQUEST_BUILDING("Error while building request."),
     UUID_NOT_FOUND(" Uuid not found."),

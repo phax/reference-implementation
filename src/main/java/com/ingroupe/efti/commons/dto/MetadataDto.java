@@ -1,13 +1,13 @@
 package com.ingroupe.efti.commons.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -19,12 +19,13 @@ public class MetadataDto extends AbstractUilDto {
 
     private long id;
     private boolean isDangerousGoods;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'+'SSSS")
-    private LocalDateTime journeyStart;
+    private String journeyStart;
     private String countryStart;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'+'SSSS")
-    private LocalDateTime journeyEnd;
+    private String journeyEnd;
     private String countryEnd;
     private String metadataUUID;
+    @NotEmpty(message = "TRANSPORT_VEHICLES_MISSING")
+    @Valid
     private List<TransportVehicleDto> transportVehicles;
+    private boolean isDisabled;
 }

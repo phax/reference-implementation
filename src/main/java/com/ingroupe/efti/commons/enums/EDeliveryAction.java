@@ -10,4 +10,13 @@ public enum EDeliveryAction {
     GET_UIL("getUIL");
 
     private final String value;
+
+    public static EDeliveryAction getFromValue(final String value) {
+        for (final EDeliveryAction action : EDeliveryAction.values()) {
+            if (action.value.equals(value)) {
+                return action;
+            }
+        }
+        return null;
+    }
 }
