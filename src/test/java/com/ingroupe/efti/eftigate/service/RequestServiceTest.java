@@ -67,12 +67,12 @@ class RequestServiceTest extends AbstractServceTest {
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         String requestUuid = UUID.randomUUID().toString();
 
-        this.uilDto.setGate("gate");
-        this.uilDto.setUuid("uuid");
-        this.uilDto.setPlatform("plateform");
-        this.controlDto.setEftiDataUuid(uilDto.getUuid());
-        this.controlDto.setEftiGateUrl(uilDto.getGate());
-        this.controlDto.setEftiPlatformUrl(uilDto.getPlatform());
+        this.uilDto.setEFTIGateUrl("gate");
+        this.uilDto.setEFTIDataUuid("uuid");
+        this.uilDto.setEFTIPlatformUrl("plateform");
+        this.controlDto.setEftiDataUuid(uilDto.getEFTIDataUuid());
+        this.controlDto.setEftiGateUrl(uilDto.getEFTIGateUrl());
+        this.controlDto.setEftiPlatformUrl(uilDto.getEFTIPlatformUrl());
         this.controlDto.setRequestUuid(requestUuid);
         this.controlDto.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
         this.controlDto.setStatus(StatusEnum.PENDING.toString());

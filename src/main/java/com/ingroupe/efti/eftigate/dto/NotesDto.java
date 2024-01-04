@@ -1,18 +1,19 @@
 package com.ingroupe.efti.eftigate.dto;
 
+import com.ingroupe.efti.commons.dto.AbstractUilDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class NotesDto {
+@EqualsAndHashCode(callSuper = true)
+public class NotesDto extends AbstractUilDto {
+
     private String requestUuid;
-    private String eFTIPlatformUrl;
-    private String eFTIGateUrl;
-    private String eFTIDataUuid;
     private String note;
 }

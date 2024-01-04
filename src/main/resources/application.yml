@@ -16,3 +16,9 @@ batch:
     cron: "*/20 * * * * *"
     time: 20, 120, 300
     size: 10
+
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true

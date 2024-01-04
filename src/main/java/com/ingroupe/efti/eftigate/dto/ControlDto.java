@@ -40,9 +40,9 @@ public class ControlDto {
         final String uuidGenerator = UUID.randomUUID().toString();
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
 
-        this.setEftiDataUuid(uilDto.getUuid());
-        this.setEftiGateUrl(uilDto.getGate());
-        this.setEftiPlatformUrl(uilDto.getPlatform());
+        this.setEftiDataUuid(uilDto.getEFTIDataUuid());
+        this.setEftiGateUrl(uilDto.getEFTIGateUrl());
+        this.setEftiPlatformUrl(uilDto.getEFTIPlatformUrl());
         this.setRequestUuid(uuidGenerator);
         this.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
         this.setStatus(StatusEnum.PENDING.toString());
