@@ -22,7 +22,7 @@ public class ApIncomingController {
 
     @PostMapping("/notification")
     public void getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) throws SendRequestException, IOException {
-        System.out.println("Notif Reçus");
+        log.info("Notification reçus");
         apIncomingService.manageIncomingNotification(receivedNotificationDto);
     }
 }
