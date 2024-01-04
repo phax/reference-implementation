@@ -11,16 +11,6 @@ public class InvalidMetadataException extends RuntimeException {
      * Constructor
      *
      * @param message The exception message
-     * @param cause   The initial cause
-     */
-    public InvalidMetadataException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
-
-    /**
-     * Constructor
-     *
-     * @param message The exception message
      */
     public InvalidMetadataException(final String message) {
         super(message);

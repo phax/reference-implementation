@@ -1,9 +1,9 @@
-package com.ingroupe.efti.metadataregistry.metadataregistry;
+package com.ingroupe.efti.metadataregistry.service;
 
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.metadataregistry.entity.MetadataEntity;
+import com.ingroupe.efti.metadataregistry.exception.InvalidMetadataException;
 import com.ingroupe.efti.metadataregistry.repository.MetadataRepository;
-import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +16,7 @@ import java.util.LinkedList;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -93,6 +94,13 @@ class MetadataServiceTest extends AbstractServiceTest {
         assertEquals(DATA_UUID, argumentCaptor.getValue().getEFTIDataUuid());
         assertEquals(PLATFORM_URL, argumentCaptor.getValue().getEFTIPlatformUrl());
         assertEquals(GATE_URL, argumentCaptor.getValue().getEFTIGateUrl());
+    }
+
+    @Test
+    void shouldThrowIfMetadataNotValid() {
+        metadataDto.setEFTIDataUuid("wrong");
+
+        assertThrows(InvalidMetadataException.class, () -> service.createOrUpdate(metadataDto));
     }
 
     @AfterEach

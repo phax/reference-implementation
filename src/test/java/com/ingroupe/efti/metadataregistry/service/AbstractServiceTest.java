@@ -1,4 +1,4 @@
-package com.ingroupe.efti.metadataregistry.metadataregistry;
+package com.ingroupe.efti.metadataregistry.service;
 
 import com.ingroupe.efti.metadataregistry.MetadataMapper;
 import org.modelmapper.ModelMapper;
