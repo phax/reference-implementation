@@ -10,21 +10,21 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.LinkedList;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class MetadataServiceTest extends AbstractServiceTest {
 
-    public static final String GATE_URL = "gateUrl";
-    public static final String DATA_UUID = "dateUuid";
-    public static final String PLATFORM_URL = "platformUrl";
-    public static final String UUID = "uuid123";
+    public static final String GATE_URL = "http://efti.gate.borduria.eu";
+    public static final String DATA_UUID = "12345678-ab12-4ab6-8999-123456789abc";
+    public static final String PLATFORM_URL = "http://efti.platform.truc.eu";
     AutoCloseable openMocks;
 
     private MetadataService service;
@@ -33,15 +33,18 @@ class MetadataServiceTest extends AbstractServiceTest {
 
     private MetadataDto metadataDto;
     private MetadataEntity metadata;
+
     @BeforeEach
     public void before() {
         openMocks = MockitoAnnotations.openMocks(this);
         service = new MetadataService(repository, mapperUtils);
 
+        ReflectionTestUtils.setField(service, "gateFrom", "http://efti.gate.borduria.eu");
+
         metadataDto = MetadataDto.builder()
-                .eFTIGateUrl(GATE_URL)
                 .eFTIDataUuid(DATA_UUID)
-                .eFTIPlatformUrl(PLATFORM_URL).build();
+                .eFTIPlatformUrl(PLATFORM_URL)
+                .transportVehicles(new LinkedList<>()).build();
 
         metadata =  MetadataEntity.builder()
                 .eFTIGateUrl(GATE_URL)
@@ -57,43 +60,39 @@ class MetadataServiceTest extends AbstractServiceTest {
         service.createOrUpdate(metadataDto);
 
         verify(repository).save(argumentCaptor.capture());
-        verify(repository, never()).findByMetadataUUID(any());
         assertEquals(DATA_UUID, argumentCaptor.getValue().getEFTIDataUuid());
         assertEquals(PLATFORM_URL, argumentCaptor.getValue().getEFTIPlatformUrl());
         assertEquals(GATE_URL, argumentCaptor.getValue().getEFTIGateUrl());
     }
 
     @Test
-    void shouldCreateIfMetadataUuidNotFound() {
-        metadataDto.setMetadataUUID(UUID);
+    void shouldCreateIfUilNotFound() {
         when(repository.save(any())).thenReturn(metadata);
-        when(repository.findByMetadataUUID(UUID)).thenReturn(Optional.empty());
+        when(repository.findByUil(GATE_URL, DATA_UUID, PLATFORM_URL)).thenReturn(Optional.empty());
         ArgumentCaptor<MetadataEntity> argumentCaptor = ArgumentCaptor.forClass(MetadataEntity.class);
 
         service.createOrUpdate(metadataDto);
 
         verify(repository).save(argumentCaptor.capture());
-        verify(repository).findByMetadataUUID(UUID);
+        verify(repository).findByUil(GATE_URL, DATA_UUID, PLATFORM_URL);
         assertEquals(DATA_UUID, argumentCaptor.getValue().getEFTIDataUuid());
         assertEquals(PLATFORM_URL, argumentCaptor.getValue().getEFTIPlatformUrl());
         assertEquals(GATE_URL, argumentCaptor.getValue().getEFTIGateUrl());
     }
 
     @Test
-    void shouldUpdateIfMetadataUuidGiven() {
-        metadataDto.setMetadataUUID(UUID);
+    void shouldUpdateIfUILFound() {
         when(repository.save(any())).thenReturn(metadata);
-        when(repository.findByMetadataUUID(UUID)).thenReturn(Optional.of(MetadataEntity.builder().metadataUUID(UUID).build()));
+        when(repository.findByUil(GATE_URL, DATA_UUID, PLATFORM_URL)).thenReturn(Optional.of(MetadataEntity.builder().build()));
         ArgumentCaptor<MetadataEntity> argumentCaptor = ArgumentCaptor.forClass(MetadataEntity.class);
 
         service.createOrUpdate(metadataDto);
 
         verify(repository).save(argumentCaptor.capture());
-        verify(repository).findByMetadataUUID(UUID);
+        verify(repository).findByUil(GATE_URL, DATA_UUID, PLATFORM_URL);
         assertEquals(DATA_UUID, argumentCaptor.getValue().getEFTIDataUuid());
         assertEquals(PLATFORM_URL, argumentCaptor.getValue().getEFTIPlatformUrl());
         assertEquals(GATE_URL, argumentCaptor.getValue().getEFTIGateUrl());
-        assertEquals(UUID, argumentCaptor.getValue().getMetadataUUID());
     }
 
     @AfterEach

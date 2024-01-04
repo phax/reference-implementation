@@ -1,8 +1,10 @@
 package com.ingroupe.efti.metadataregistry.entity;
 
+import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.enums.TransportMode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -30,15 +32,18 @@ public class TransportVehicle {
     @Id
     @Column(name = "id")
     private int id;
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     private TransportMode transportMode;
     private int sequence;
     private String vehicleId;
-    private String vehicleCountry;
+    @Enumerated(EnumType.STRING)
+    private CountryIndicator vehicleCountry;
     private LocalDateTime journeyStart;
-    private String countryStart;
+    @Enumerated(EnumType.STRING)
+    private CountryIndicator countryStart;
     private LocalDateTime journeyEnd;
-    private String countryEnd;
+    @Enumerated(EnumType.STRING)
+    private CountryIndicator countryEnd;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="metadata")
     MetadataEntity metadata;

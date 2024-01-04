@@ -1,8 +1,11 @@
 package com.ingroupe.efti.metadataregistry.entity;
 
+import com.ingroupe.efti.commons.enums.CountryIndicator;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,9 +39,11 @@ public class MetadataEntity {
     private String eFTIGateUrl;
     private boolean isDangerousGoods;
     private LocalDateTime journeyStart;
-    private String countryStart;
+    @Enumerated(EnumType.STRING)
+    private CountryIndicator countryStart;
     private LocalDateTime journeyEnd;
-    private String countryEnd;
+    @Enumerated(EnumType.STRING)
+    private CountryIndicator countryEnd;
     private String metadataUUID;
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "metadata")
