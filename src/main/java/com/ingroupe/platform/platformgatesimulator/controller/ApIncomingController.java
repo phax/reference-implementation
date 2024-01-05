@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.Random;
+
+import static java.lang.Thread.sleep;
 
 @RestController
 @RequestMapping("/ws")
@@ -20,9 +23,14 @@ public class ApIncomingController {
 
     private final ApIncomingService apIncomingService;
 
+    private final int maxSleep = 20 * 1000;
+    private final int minSleep = 1 * 1000;
+
     @PostMapping("/notification")
-    public void getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) throws SendRequestException, IOException {
+    public void getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) throws IOException, InterruptedException {
         log.info("Notification reçus");
+        int rand = new Random().nextInt(maxSleep-minSleep)+minSleep;
+        sleep(rand);
         apIncomingService.manageIncomingNotification(receivedNotificationDto);
     }
 }

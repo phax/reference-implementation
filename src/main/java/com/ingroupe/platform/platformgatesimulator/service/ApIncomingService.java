@@ -49,9 +49,13 @@ public class ApIncomingService {
         }
         RetrieveMessageDto messageBodyDto = (RetrieveMessageDto) notificationDto.get().getContent();
         String eftidataUuid = messageBodyDto.getMessageBodyDto().getEftidataUuid();
+        if (eftidataUuid.endsWith("1")) {
+            return;
+        }
+        String requestUuid = messageBodyDto.getMessageBodyDto().getRequestUuid();
         String data = readerService.readFromFile(PATH_CAD + eftidataUuid);
         ApRequestDto apRequestDto = ApRequestDto.builder()
-                .requestId(1L).body(buildBody(data, eftidataUuid))
+                .requestId(1L).body(buildBody(data, requestUuid, eftidataUuid))
                 .apConfig(apConfigDto)
                 .receiver("borduria")
                 .sender(gateProperties.getOwner())
@@ -63,12 +67,14 @@ public class ApIncomingService {
         }
     }
 
-    private String buildBody(String eftiData, String requestUuid) throws JsonProcessingException {
-        final BodyDto requestBodyDto = BodyDto.builder()
-                .requestUuid(requestUuid)
-                .eFTIData(eftiData)
-                .status("COMPLETE")
-                .build();
+    private String buildBody(String eftiData, String requestUuid, String eftidataUuid) throws JsonProcessingException {
+        BodyDto requestBodyDto;
+             requestBodyDto = BodyDto.builder()
+                    .requestUuid(requestUuid)
+                    .eFTIData(eftiData)
+                    .status("COMPLETE")
+                    .eftidataUuid(eftidataUuid)
+                    .build();
         return objectMapper.writeValueAsString(requestBodyDto);
     }
 }

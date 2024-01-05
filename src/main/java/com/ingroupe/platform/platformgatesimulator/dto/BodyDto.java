@@ -1,5 +1,6 @@
 package com.ingroupe.platform.platformgatesimulator.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BodyDto {
+    @JsonProperty
     private String eFTIData;
     private String status;
     private String requestUuid;
+    private String eftidataUuid;
 }
