@@ -1,13 +1,13 @@
 package com.ingroupe.platform.platformgatesimulator;
 
+import com.ingroupe.platform.platformgatesimulator.config.GateProperties;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.PropertySource;
+
 
 @SpringBootApplication
-@EnableAutoConfiguration
 public class PlatformGateSimulatorApplication {
 
     public static void main(String[] args) {

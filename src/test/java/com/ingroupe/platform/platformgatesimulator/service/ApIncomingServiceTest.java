@@ -18,7 +18,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
 import java.util.Optional;

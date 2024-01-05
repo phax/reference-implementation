@@ -12,16 +12,16 @@ import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.platform.platformgatesimulator.config.GateProperties;
 import com.ingroupe.platform.platformgatesimulator.dto.BodyDto;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 @Slf4j
 public class ApIncomingService {
 
@@ -29,16 +29,12 @@ public class ApIncomingService {
     private final RequestSendingService requestSendingService;
 
     private final NotificationService notificationService;
+
+    @Autowired
     private final GateProperties gateProperties;
     private final ReaderService readerService;
 
     private final ObjectMapper objectMapper;
-
-    @Value("${gate.receiver}")
-    private String receiver;
-
-    @Value("${gate.sender}")
-    private String sender;
 
     public void manageIncomingNotification(final ReceivedNotificationDto receivedNotificationDto) throws IOException {
         final ApConfigDto apConfigDto = ApConfigDto.builder()
@@ -57,8 +53,8 @@ public class ApIncomingService {
         ApRequestDto apRequestDto = ApRequestDto.builder()
                 .requestId(1L).body(buildBody(data, eftidataUuid))
                 .apConfig(apConfigDto)
-                .receiver(receiver)
-                .sender(sender)
+                .receiver("borduria")
+                .sender(gateProperties.getOwner())
                 .build();
         try {
             requestSendingService.sendRequest(apRequestDto);

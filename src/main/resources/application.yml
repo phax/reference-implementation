@@ -6,13 +6,17 @@ spring:
     username: ingroup
     password: root
     driverClassName: org.postgresql.Driver
+  main:
+    banner-mode: off
+  output:
+    ansi:
+      enabled: always
 
 server:
   port: 8070
 
 gate:
-  sender: acme
-  receiver: borduria
+  owner: acme
   ap:
     url: http://efti.platform.acme.com:81/domibus/services/wsplugin
     username: acme_service_account
