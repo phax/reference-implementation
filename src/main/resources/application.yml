@@ -1,11 +1,6 @@
 spring:
   application:
     name: efti-platform
-  datasource:
-    url: jdbc:postgresql://localhost:9000/efti
-    username: ingroup
-    password: root
-    driverClassName: org.postgresql.Driver
   main:
     banner-mode: off
   output:
