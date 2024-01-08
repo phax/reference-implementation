@@ -57,7 +57,7 @@ public class ApIncomingService {
         ApRequestDto apRequestDto = ApRequestDto.builder()
                 .requestId(1L).body(buildBody(data, requestUuid, eftidataUuid))
                 .apConfig(apConfigDto)
-                .receiver("borduria")
+                .receiver(gateProperties.getGate())
                 .sender(gateProperties.getOwner())
                 .build();
         try {

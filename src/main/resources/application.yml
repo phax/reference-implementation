@@ -11,7 +11,8 @@ server:
   port: 8070
 
 gate:
-  owner: acme
+  owner: http://efti.platform.acme.com
+  gate: http://efti.gate.borduria.eu
   ap:
     url: http://efti.platform.acme.com:81/domibus/services/wsplugin
     username: acme_service_account
