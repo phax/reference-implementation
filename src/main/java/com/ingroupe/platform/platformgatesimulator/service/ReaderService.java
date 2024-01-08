@@ -13,15 +13,18 @@ import java.io.InputStreamReader;
 public class ReaderService {
 
     public String readFromFile(String file) throws IOException {
+        log.info("try to open file : {}", file);
         ClassLoader classLoader = getClass().getClassLoader();
+        log.info("try .json");
         InputStream inputStream = classLoader.getResourceAsStream(file + ".json");
         if (inputStream == null) {
+            log.info("try .xml");
             inputStream = classLoader.getResourceAsStream(file + ".xml");
             if (inputStream == null) {
+                log.info("try test.xml");
                 inputStream = classLoader.getResourceAsStream("test.xml");
             }
         }
-        log.info("try to open file : {}", file);
         return readFromInputStream(inputStream);
     }
 
