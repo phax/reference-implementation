@@ -21,6 +21,7 @@ public class ReaderService {
                 inputStream = classLoader.getResourceAsStream("test.xml");
             }
         }
+        log.info("try to open file : {}", file);
         return readFromInputStream(inputStream);
     }
 
