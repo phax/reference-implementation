@@ -25,7 +25,6 @@ import java.util.Optional;
 @Slf4j
 public class ApIncomingService {
 
-    public static final String PATH_CAD = "cda/";
     private final RequestSendingService requestSendingService;
 
     private final NotificationService notificationService;
@@ -53,7 +52,7 @@ public class ApIncomingService {
             return;
         }
         String requestUuid = messageBodyDto.getMessageBodyDto().getRequestUuid();
-        String data = readerService.readFromFile(PATH_CAD + eftidataUuid);
+        String data = readerService.readFromFile(gateProperties.getCdaPath() + eftidataUuid);
         ApRequestDto apRequestDto = ApRequestDto.builder()
                 .requestId(1L).body(buildBody(data, requestUuid, eftidataUuid))
                 .apConfig(apConfigDto)

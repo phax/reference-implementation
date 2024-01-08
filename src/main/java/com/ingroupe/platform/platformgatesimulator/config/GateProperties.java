@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GateProperties {
     private String owner;
+    private String cdaPath;
     private String gate;
     private ApConfig ap;
 

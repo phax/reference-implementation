@@ -11,6 +11,7 @@ server:
   port: 8070
 
 gate:
+  cda_path: C:\projet\EFTI\platform-gate-simulator\src\main\resources\cda\
   owner: http://efti.platform.acme.com
   gate: http://efti.gate.borduria.eu
   ap:
