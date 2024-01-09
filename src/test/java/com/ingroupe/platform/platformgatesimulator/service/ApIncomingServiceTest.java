@@ -8,6 +8,7 @@ import com.ingroupe.efti.edeliveryapconnector.dto.RetrieveMessageDto;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.platform.platformgatesimulator.config.GateProperties;
+import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,7 +67,7 @@ class ApIncomingServiceTest {
     }
 
     @Test
-    void manageIncomingNotificationTest() throws IOException {
+    void manageIncomingNotificationTest() throws IOException, UuidFileNotFoundException {
         NotificationDto notificationDto = new NotificationDto<>();
         RetrieveMessageDto retrieveMessageDto = new RetrieveMessageDto();
         MessageBodyDto messageBodyDto = new MessageBodyDto("reques", "oki", "oki", "oki", "oki");

@@ -2,6 +2,7 @@ package com.ingroupe.platform.platformgatesimulator.controller;
 
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
+import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
 import com.ingroupe.platform.platformgatesimulator.service.ApIncomingService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ public class ApIncomingController {
     private final int minSleep = 1 * 1000;
 
     @PostMapping("/notification")
-    public void getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) throws IOException, InterruptedException {
+    public void getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) throws IOException, InterruptedException, UuidFileNotFoundException {
         log.info("Notification reçus");
         int rand = new Random().nextInt(maxSleep-minSleep)+minSleep;
         sleep(rand);

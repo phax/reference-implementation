@@ -1,5 +1,6 @@
 package com.ingroupe.platform.platformgatesimulator.service;
 
+import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,14 +27,14 @@ class ReaderServiceTest {
     }
 
     @Test
-    void readFromFileJsonTest() throws IOException {
+    void readFromFileJsonTest() throws IOException, UuidFileNotFoundException {
         String result = readerService.readFromFile("./cda/test");
 
         Assertions.assertNotNull(result);
     }
 
     @Test
-    void readFromFileXmlTest() throws IOException {
+    void readFromFileXmlTest() throws IOException, UuidFileNotFoundException {
         String result = readerService.readFromFile("./cda/teest");
 
         Assertions.assertNotNull(result);

@@ -1,5 +1,6 @@
 package com.ingroupe.platform.platformgatesimulator.service;
 
+import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +13,7 @@ import java.io.InputStreamReader;
 @Slf4j
 public class ReaderService {
 
-    public String readFromFile(String file) throws IOException {
+    public String readFromFile(String file) throws IOException, UuidFileNotFoundException {
         log.info("try to open file : {}", file);
         ClassLoader classLoader = getClass().getClassLoader();
         log.info("try .json");
@@ -21,8 +22,8 @@ public class ReaderService {
             log.info("try .xml");
             inputStream = classLoader.getResourceAsStream(file + ".xml");
             if (inputStream == null) {
-                log.info("try test.xml");
-                inputStream = classLoader.getResourceAsStream("test.xml");
+                log.info("Don't find file");
+                throw new UuidFileNotFoundException("Uuid file not found");
             }
         }
         return readFromInputStream(inputStream);

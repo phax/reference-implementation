@@ -12,6 +12,7 @@ import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.platform.platformgatesimulator.config.GateProperties;
 import com.ingroupe.platform.platformgatesimulator.dto.BodyDto;
+import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,7 @@ public class ApIncomingService {
 
     private final ObjectMapper objectMapper;
 
-    public void manageIncomingNotification(final ReceivedNotificationDto receivedNotificationDto) throws IOException {
+    public void manageIncomingNotification(final ReceivedNotificationDto receivedNotificationDto) throws IOException, UuidFileNotFoundException {
         final ApConfigDto apConfigDto = ApConfigDto.builder()
                 .username(gateProperties.getAp().getUsername())
                 .password(gateProperties.getAp().getPassword())
@@ -53,6 +54,9 @@ public class ApIncomingService {
         }
         String requestUuid = messageBodyDto.getMessageBodyDto().getRequestUuid();
         String data = readerService.readFromFile(gateProperties.getCdaPath() + eftidataUuid);
+        if (data == null) {
+            return;
+        }
         ApRequestDto apRequestDto = ApRequestDto.builder()
                 .requestId(1L).body(buildBody(data, requestUuid, eftidataUuid))
                 .apConfig(apConfigDto)
