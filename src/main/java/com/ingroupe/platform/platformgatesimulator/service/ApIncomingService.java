@@ -20,6 +20,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.Random;
+
+import static java.lang.Thread.sleep;
 
 @Service
 @AllArgsConstructor
@@ -36,7 +39,9 @@ public class ApIncomingService {
 
     private final ObjectMapper objectMapper;
 
-    public void manageIncomingNotification(final ReceivedNotificationDto receivedNotificationDto) throws IOException, UuidFileNotFoundException {
+    public void manageIncomingNotification(final ReceivedNotificationDto receivedNotificationDto) throws IOException, UuidFileNotFoundException, InterruptedException {
+        int rand = new Random().nextInt(gateProperties.getMaxSleep()-gateProperties.getMinSleep())+gateProperties.getMinSleep();
+        sleep(rand);
         final ApConfigDto apConfigDto = ApConfigDto.builder()
                 .username(gateProperties.getAp().getUsername())
                 .password(gateProperties.getAp().getPassword())
@@ -55,8 +60,27 @@ public class ApIncomingService {
         String requestUuid = messageBodyDto.getMessageBodyDto().getRequestUuid();
         String data = readerService.readFromFile(gateProperties.getCdaPath() + eftidataUuid);
         if (data == null) {
-            return;
+            sendError(apConfigDto, eftidataUuid, requestUuid, data);
+        } else {
+            sendSucess(apConfigDto, eftidataUuid, requestUuid, data);
         }
+    }
+
+    private void sendError(ApConfigDto apConfigDto, String eftidataUuid, String requestUuid, String data) throws JsonProcessingException {
+        ApRequestDto apRequestDto = ApRequestDto.builder()
+                .requestId(1L).body(buildBodyError(data, requestUuid, eftidataUuid, "file not found with uuid"))
+                .apConfig(apConfigDto)
+                .receiver(gateProperties.getGate())
+                .sender(gateProperties.getOwner())
+                .build();
+        try {
+            requestSendingService.sendRequest(apRequestDto);
+        } catch (SendRequestException e) {
+            log.error("SendRequestException received : ", e);
+        }
+    }
+
+    private void sendSucess(ApConfigDto apConfigDto, String eftidataUuid, String requestUuid, String data) throws JsonProcessingException {
         ApRequestDto apRequestDto = ApRequestDto.builder()
                 .requestId(1L).body(buildBody(data, requestUuid, eftidataUuid))
                 .apConfig(apConfigDto)
@@ -76,6 +100,18 @@ public class ApIncomingService {
                     .requestUuid(requestUuid)
                     .eFTIData(eftiData)
                     .status("COMPLETE")
+                    .eftidataUuid(eftidataUuid)
+                    .build();
+        return objectMapper.writeValueAsString(requestBodyDto);
+    }
+
+    private String buildBodyError(String eftiData, String requestUuid, String eftidataUuid, String errorDescription) throws JsonProcessingException {
+        BodyDto requestBodyDto;
+             requestBodyDto = BodyDto.builder()
+                    .requestUuid(requestUuid)
+                    .eFTIData(eftiData)
+                    .status("ERROR")
+                     .errorDescription(errorDescription)
                     .eftidataUuid(eftidataUuid)
                     .build();
         return objectMapper.writeValueAsString(requestBodyDto);

@@ -53,6 +53,9 @@ class ApIncomingServiceTest {
     public void before() {
         final GateProperties gateProperties = GateProperties.builder()
                 .owner("france")
+                .minSleep(1000)
+                .maxSleep(2000)
+                .cdaPath("./cda/")
                 .ap(GateProperties.ApConfig.builder()
                         .url("url")
                         .password("password")
@@ -67,13 +70,25 @@ class ApIncomingServiceTest {
     }
 
     @Test
-    void manageIncomingNotificationTest() throws IOException, UuidFileNotFoundException {
+    void manageIncomingNotificationBadFilesTest() throws IOException, UuidFileNotFoundException, InterruptedException {
         NotificationDto notificationDto = new NotificationDto<>();
         RetrieveMessageDto retrieveMessageDto = new RetrieveMessageDto();
         MessageBodyDto messageBodyDto = new MessageBodyDto("reques", "oki", "oki", "oki", "oki");
         retrieveMessageDto.setMessageBodyDto(messageBodyDto);
         notificationDto.setContent(retrieveMessageDto);
         Mockito.when(notificationService.consume(any(), any())).thenReturn(Optional.of(notificationDto));
+        apIncomingService.manageIncomingNotification(new ReceivedNotificationDto());
+    }
+
+    @Test
+    void manageIncomingNotificationTest() throws IOException, UuidFileNotFoundException, InterruptedException {
+        NotificationDto notificationDto = new NotificationDto<>();
+        RetrieveMessageDto retrieveMessageDto = new RetrieveMessageDto();
+        MessageBodyDto messageBodyDto = new MessageBodyDto("12345678-ab12-4ab6-8999-123456789abc", "12345678-ab12-4ab6-8999-123456789abc", "oki", "oki", "oki");
+        retrieveMessageDto.setMessageBodyDto(messageBodyDto);
+        notificationDto.setContent(retrieveMessageDto);
+        Mockito.when(notificationService.consume(any(), any())).thenReturn(Optional.of(notificationDto));
+        Mockito.when(readerService.readFromFile(any())).thenReturn("eftidata");
         apIncomingService.manageIncomingNotification(new ReceivedNotificationDto());
     }
 }

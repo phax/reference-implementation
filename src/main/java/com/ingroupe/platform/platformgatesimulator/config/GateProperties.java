@@ -14,6 +14,8 @@ public class GateProperties {
     private String cdaPath;
     private String gate;
     private ApConfig ap;
+    private int minSleep;
+    private int maxSleep;
 
     @Data
     @Builder

@@ -16,4 +16,5 @@ public class BodyDto {
     private String status;
     private String requestUuid;
     private String eftidataUuid;
+    private String errorDescription;
 }

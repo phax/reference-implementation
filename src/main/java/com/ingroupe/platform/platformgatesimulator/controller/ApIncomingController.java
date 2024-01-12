@@ -24,14 +24,9 @@ public class ApIncomingController {
 
     private final ApIncomingService apIncomingService;
 
-    private final int maxSleep = 20 * 1000;
-    private final int minSleep = 1 * 1000;
-
     @PostMapping("/notification")
     public void getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) throws IOException, InterruptedException, UuidFileNotFoundException {
         log.info("Notification reçus");
-        int rand = new Random().nextInt(maxSleep-minSleep)+minSleep;
-        sleep(rand);
         apIncomingService.manageIncomingNotification(receivedNotificationDto);
     }
 }

@@ -2,6 +2,8 @@ server:
   port: 8072
 
 gate:
+  minSleep: 1000
+  maxSleep: 2000
   owner: http://efti.platform.umbrellainc.com
   cda_path: ./cda/
   gate: http://efti.gate.listenbourg.eu
