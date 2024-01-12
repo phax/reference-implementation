@@ -135,21 +135,21 @@ public class RequestService {
         final RetrieveMessageDto retrieveMessageDto = notificationDto.getContent();
         final RequestDto requestDto = this.findByRequestUuidOrThrow(retrieveMessageDto.getMessageBodyDto().getRequestUuid());
 
-        if (retrieveMessageDto.getMessageBodyDto().getStatus().equals("COMPLETE")) {
+        if (retrieveMessageDto.getMessageBodyDto().getStatus().equals(StatusEnum.COMPLETE.name())) {
             this.controlService.setEftiData(requestDto.getControl(), retrieveMessageDto.getMessageBodyDto().getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
-        } else if (retrieveMessageDto.getMessageBodyDto().getStatus().equals("ERROR")) {
-            errorReceived(requestDto);
+        } else {
+            errorReceived(requestDto, retrieveMessageDto.getMessageBodyDto().getErrorDescription());
         }
         this.updateStatus(requestDto, RequestStatusEnum.RECEIVED);
     }
 
-    private void errorReceived(RequestDto requestDto) {
-        LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
-        ErrorDto errorDto = ErrorDto.builder()
-                .errorDescription(ErrorCodesEnum.UUID_NOT_FOUND.getMessage())
-                .errorCode(ErrorCodesEnum.UUID_NOT_FOUND.toString())
+    private void errorReceived(final RequestDto requestDto, final String errorDescription) {
+        final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
+        final ErrorDto errorDto = ErrorDto.builder()
+                .errorDescription(errorDescription)
+                .errorCode(ErrorCodesEnum.PLATFORM_ERROR.toString())
                 .build();
-        ControlDto controlDto = requestDto.getControl();
+        final ControlDto controlDto = requestDto.getControl();
         controlDto.setStatus(StatusEnum.ERROR.toString());
         controlDto.setLastModifiedDate(localDateTime);
         controlService.setError(controlDto, errorDto);
