@@ -21,6 +21,7 @@ public class ApIncomingController {
 
     @PostMapping("/notification")
     public void getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) {
+        log.info("receive notification !");
         apIncomingService.manageIncomingNotification(receivedNotificationDto);
     }
 }

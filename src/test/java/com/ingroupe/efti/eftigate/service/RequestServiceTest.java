@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -172,7 +173,7 @@ class RequestServiceTest extends AbstractServceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(RetrieveMessageDto.builder()
                         .messageId(messageId)
-                        .messageBodyDto(MessageBodyDto.builder().eFTIData(eftiData).build())
+                        .messageBodyDto(MessageBodyDto.builder().eFTIData(eftiData).status("COMPLETE").build())
                         .build())
                 .build();
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
@@ -182,6 +183,27 @@ class RequestServiceTest extends AbstractServceTest {
 
         verify(controlService).setEftiData(controlDto, eftiData.getBytes(StandardCharsets.UTF_8));
         verify(requestRepository).save(argumentCaptor.capture());
+        assertNotNull(argumentCaptor.getValue());
+        assertEquals(RequestStatusEnum.RECEIVED.name(), argumentCaptor.getValue().getStatus());
+    }
+
+    @Test
+    void shouldUpdateErrorResponse() {
+        final String messageId = "messageId";
+        final String eftiData = "<data>vive les datas</data>";
+        final NotificationDto<?> notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.RECEIVED)
+                .content(RetrieveMessageDto.builder()
+                        .messageId(messageId)
+                        .messageBodyDto(MessageBodyDto.builder().eFTIData(eftiData).status("ERROR").build())
+                        .build())
+                .build();
+        final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
+        when(requestRepository.findByControlRequestUuid(any())).thenReturn(requestEntity);
+        when(requestRepository.save(any())).thenReturn(requestEntity);
+        requestService.updateWithResponse(notificationDto);
+
+        verify(requestRepository, times(2)).save(argumentCaptor.capture());
         assertNotNull(argumentCaptor.getValue());
         assertEquals(RequestStatusEnum.RECEIVED.name(), argumentCaptor.getValue().getStatus());
     }

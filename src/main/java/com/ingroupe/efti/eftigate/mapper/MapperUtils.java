@@ -1,8 +1,10 @@
 package com.ingroupe.efti.eftigate.mapper;
 
 import com.ingroupe.efti.eftigate.dto.ControlDto;
+import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
+import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
