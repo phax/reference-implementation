@@ -20,8 +20,7 @@ public class ReaderService {
         if (inputStream == null) {
             inputStream = classLoader.getResourceAsStream(file + ".xml");
             if (inputStream == null) {
-                log.info("Don't find file");
-                throw new UuidFileNotFoundException("Uuid file not found");
+                return null;
             }
         }
         return readFromInputStream(inputStream);
