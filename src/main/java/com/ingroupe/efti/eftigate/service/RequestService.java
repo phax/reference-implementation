@@ -21,6 +21,7 @@ import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.utils.RequestStatusEnum;
+import com.ingroupe.efti.eftigate.utils.StatusEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -134,9 +135,27 @@ public class RequestService {
         final RetrieveMessageDto retrieveMessageDto = notificationDto.getContent();
         final RequestDto requestDto = this.findByRequestUuidOrThrow(retrieveMessageDto.getMessageBodyDto().getRequestUuid());
 
-        this.controlService.setEftiData(requestDto.getControl(), retrieveMessageDto.getMessageBodyDto().getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
-
+        if (retrieveMessageDto.getMessageBodyDto().getStatus().equals(StatusEnum.COMPLETE.name())) {
+            this.controlService.setEftiData(requestDto.getControl(), retrieveMessageDto.getMessageBodyDto().getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
+        } else {
+            errorReceived(requestDto, retrieveMessageDto.getMessageBodyDto().getErrorDescription());
+        }
         this.updateStatus(requestDto, RequestStatusEnum.RECEIVED);
+    }
+
+    private void errorReceived(final RequestDto requestDto, final String errorDescription) {
+        final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
+        final ErrorDto errorDto = ErrorDto.builder()
+                .errorDescription(errorDescription)
+                .errorCode(ErrorCodesEnum.PLATFORM_ERROR.toString())
+                .build();
+        final ControlDto controlDto = requestDto.getControl();
+        controlDto.setStatus(StatusEnum.ERROR.toString());
+        controlDto.setLastModifiedDate(localDateTime);
+        controlService.setError(controlDto, errorDto);
+        requestDto.setControl(controlDto);
+        requestDto.setLastModifiedDate(localDateTime);
+        this.save(requestDto);
     }
 
     private void manageSendFailure(final NotificationDto<?> notificationDto) {
