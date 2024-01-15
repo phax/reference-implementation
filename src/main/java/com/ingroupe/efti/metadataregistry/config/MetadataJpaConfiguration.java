@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -21,13 +22,13 @@ import java.util.Objects;
 
 @Configuration
 @EnableTransactionManagement
+@EnableJpaAuditing
 @EnableJpaRepositories(
         basePackages = {"com.ingroupe.efti.metadataregistry.repository"},
         entityManagerFactoryRef = "metadataEntityManagerFactory",
         transactionManagerRef = "metadataTransactionManager"
 )
 public class MetadataJpaConfiguration {
-
 
     @Value("${spring.jpa.properties.hibernate.metadata_schema}")
     private String schema;

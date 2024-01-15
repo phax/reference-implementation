@@ -1,9 +1,11 @@
 package com.ingroupe.efti.metadataregistry.entity;
 
 import com.ingroupe.efti.commons.enums.CountryIndicator;
+import com.ingroupe.efti.commons.model.AbstractModel;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -18,6 +20,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,9 +29,11 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "metadata")
-public class MetadataEntity {
+public class MetadataEntity extends AbstractModel {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
@@ -49,4 +54,5 @@ public class MetadataEntity {
     @JoinColumn(name = "metadata")
     @ToString.Exclude @EqualsAndHashCode.Exclude
     private List<TransportVehicle> transportVehicles;
+    private boolean isDisabled;
 }

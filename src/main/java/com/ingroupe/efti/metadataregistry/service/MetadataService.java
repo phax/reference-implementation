@@ -1,6 +1,7 @@
 package com.ingroupe.efti.metadataregistry.service;
 
 import com.ingroupe.efti.commons.dto.MetadataDto;
+import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.metadataregistry.MetadataMapper;
 import com.ingroupe.efti.metadataregistry.entity.MetadataEntity;
 import com.ingroupe.efti.metadataregistry.exception.InvalidMetadataException;
@@ -45,6 +46,15 @@ public class MetadataService {
         metadataDto.setMetadataUUID(UUID.randomUUID().toString());
         log.info("creating new entry for uuid {}", metadataDto.getMetadataUUID());
         return this.save(metadataDto);
+    }
+
+    public MetadataDto disable(final MetadataDto metadataDto) {
+        metadataDto.setDisabled(true);
+        return this.save(metadataDto);
+    }
+
+    public void search(final MetadataRequestDto metadataRequestDto) {
+        this.repository.searchByCriteria(metadataRequestDto);
     }
 
     private void enrichAndValidate(final MetadataDto metadataDto) {

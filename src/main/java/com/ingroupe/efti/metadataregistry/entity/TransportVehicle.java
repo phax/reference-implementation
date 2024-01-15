@@ -2,8 +2,10 @@ package com.ingroupe.efti.metadataregistry.entity;
 
 import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.enums.TransportMode;
+import com.ingroupe.efti.commons.model.AbstractModel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -16,7 +18,9 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -24,9 +28,11 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "transportvehicle")
-public class TransportVehicle {
+public class TransportVehicle extends AbstractModel {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
