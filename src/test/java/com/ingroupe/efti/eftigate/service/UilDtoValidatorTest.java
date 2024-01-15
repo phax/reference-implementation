@@ -29,7 +29,7 @@ class UilDtoValidatorTest {
 
         final Set<ConstraintViolation<UilDto>> violations = validator.validate(uilDto);
         assertFalse(violations.isEmpty());
-        assertEquals(4, violations.size());
+        assertEquals(7, violations.size());
         assertTrue(containsError(violations, ErrorCodesEnum.UIL_GATE_EMPTY));
         assertTrue(containsError(violations, ErrorCodesEnum.UIL_PLATFORM_EMPTY));
         assertTrue(containsError(violations, ErrorCodesEnum.UIL_UUID_EMPTY));
@@ -89,7 +89,7 @@ class UilDtoValidatorTest {
 
         final Set<ConstraintViolation<UilDto>> violations = validator.validate(uilDto);
         assertFalse(violations.isEmpty());
-        assertEquals(8, violations.size());
+        assertEquals(13, violations.size());
         assertTrue(containsError(violations, ErrorCodesEnum.AUTHORITY_COUNTRY_TOO_LONG));
         assertTrue(containsError(violations, ErrorCodesEnum.AUTHORITY_COUNTRY_UNKNOWN));
         assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_BUILDING_NUMBER_EMPTY));

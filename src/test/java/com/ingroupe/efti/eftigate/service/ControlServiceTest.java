@@ -152,8 +152,8 @@ class ControlServiceTest extends AbstractServceTest {
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(0)).save(any());
         Assertions.assertNotNull(requestUuidDtoResult);
-        assertEquals(ErrorCodesEnum.UIL_GATE_EMPTY.name(), requestUuidDtoResult.getErrorCode());
-        assertEquals("Gate should not be empty.", requestUuidDtoResult.getErrorDescription());
+        assertEquals(ErrorCodesEnum.UIL_GATE_MISSING.name(), requestUuidDtoResult.getErrorCode());
+        assertEquals("Missing parameter eFTIGateUrl", requestUuidDtoResult.getErrorDescription());
     }
 
     @Test
@@ -183,8 +183,8 @@ class ControlServiceTest extends AbstractServceTest {
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(0)).save(any());
         Assertions.assertNotNull(requestUuidDtoResult);
-        assertEquals(ErrorCodesEnum.UIL_PLATFORM_EMPTY.name(), requestUuidDtoResult.getErrorCode());
-        assertEquals("Platform should not be empty.", requestUuidDtoResult.getErrorDescription());
+        assertEquals(ErrorCodesEnum.UIL_PLATFORM_MISSING.name(), requestUuidDtoResult.getErrorCode());
+        assertEquals("Missing parameter eFTIPlatformUrl", requestUuidDtoResult.getErrorDescription());
     }
 
     @Test
