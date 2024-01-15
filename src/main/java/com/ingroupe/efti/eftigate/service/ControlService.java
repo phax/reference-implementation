@@ -42,16 +42,19 @@ public class ControlService {
     public RequestUuidDto createControlEntity(final UilDto uilDto) {
 
         final Optional<ErrorDto> errorOptional = this.validateControl(uilDto);
-
         log.info("create ControlEntity with uuid : {}", uilDto.getEFTIDataUuid());
         ControlDto controlDto = new ControlDto(uilDto);
-
-        final ControlDto saveControl = this.save(controlDto, errorOptional);
-
-        log.info("control with uil '{}' has been register", uilDto.getEFTIDataUuid());
-
-        errorOptional.ifPresentOrElse(a -> {} , () -> requestService.createAndSendRequest(saveControl));
-
+        errorOptional.ifPresentOrElse(
+                error -> {
+                    controlDto.setStatus(StatusEnum.ERROR.name());
+                    controlDto.setError(error);
+                    log.error(error.getErrorDescription() + ", " + error.getErrorCode());
+        },
+                () -> {
+                    final ControlDto saveControl = this.save(controlDto, errorOptional);
+                    requestService.createAndSendRequest(saveControl);
+                    log.info("control with uil '{}' has been register", uilDto.getEFTIDataUuid());
+                });
         return buildResponse(controlDto);
     }
 
@@ -85,10 +88,6 @@ public class ControlService {
     }
 
     private ControlDto save(final ControlDto controlDto, final Optional<ErrorDto> errorDto) {
-        errorDto.ifPresent(error -> {
-                controlDto.setError(error);
-                controlDto.setStatus(StatusEnum.ERROR.name());
-        });
         return this.save(controlDto);
     }
 
