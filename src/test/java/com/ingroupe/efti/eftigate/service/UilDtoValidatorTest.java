@@ -51,7 +51,7 @@ class UilDtoValidatorTest {
 
         final Set<ConstraintViolation<UilDto>> violations = validator.validate(uilDto);
         assertFalse(violations.isEmpty());
-        assertEquals(8, violations.size());
+        assertEquals(9, violations.size());
         assertTrue(containsError(violations, ErrorCodesEnum.UIL_GATE_INCORRECT_FORMAT));
         assertTrue(containsError(violations, ErrorCodesEnum.UIL_PLATFORM_INCORRECT_FORMAT));
         assertTrue(containsError(violations, ErrorCodesEnum.UIL_UUID_INCORRECT_FORMAT));
