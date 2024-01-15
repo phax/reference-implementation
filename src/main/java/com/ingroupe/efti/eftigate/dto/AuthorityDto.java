@@ -1,7 +1,7 @@
 package com.ingroupe.efti.eftigate.dto;
 
+import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.validator.ValueOfEnum;
-import com.ingroupe.efti.eftigate.utils.CountryIndicator;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

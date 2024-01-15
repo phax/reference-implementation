@@ -1,6 +1,6 @@
 package com.ingroupe.efti.eftigate.dto;
 
-import com.ingroupe.efti.eftigate.utils.CountryIndicator;
+import com.ingroupe.efti.commons.enums.CountryIndicator;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
