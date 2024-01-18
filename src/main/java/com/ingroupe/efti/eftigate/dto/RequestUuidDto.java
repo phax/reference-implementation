@@ -1,5 +1,6 @@
 package com.ingroupe.efti.eftigate.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,5 +20,6 @@ public class RequestUuidDto {
     private String status;
     private String errorCode;
     private String errorDescription;
+    @JsonProperty("eFTIData")
     private byte[] eFTIData;
 }
