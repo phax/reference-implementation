@@ -1,0 +1,14 @@
+server:
+  port: 8070
+
+gate:
+  minSleep: 1000
+  maxSleep: 2000
+  owner: http://efti.platform.acme.com
+  cda_path: ./cda/
+  gate: http://efti.gate.borduria.eu
+  ap:
+    url: http://efti.platform.acme.com:81/domibus/services/wsplugin
+    username: acme_service_account
+    password: Azerty59*1234567
+
