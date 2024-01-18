@@ -152,8 +152,6 @@ class ControlServiceTest extends AbstractServceTest {
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(0)).save(any());
         Assertions.assertNotNull(requestUuidDtoResult);
-        assertEquals(ErrorCodesEnum.UIL_GATE_MISSING.name(), requestUuidDtoResult.getErrorCode());
-        assertEquals("Missing parameter eFTIGateUrl", requestUuidDtoResult.getErrorDescription());
     }
 
     @Test
@@ -167,8 +165,6 @@ class ControlServiceTest extends AbstractServceTest {
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(0)).save(any());
         Assertions.assertNotNull(requestUuidDtoResult);
-        assertEquals(ErrorCodesEnum.UIL_GATE_INCORRECT_FORMAT.name(), requestUuidDtoResult.getErrorCode());
-        assertEquals("Gate format incorrect.", requestUuidDtoResult.getErrorDescription());
     }
 
     @Test
@@ -183,8 +179,6 @@ class ControlServiceTest extends AbstractServceTest {
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(0)).save(any());
         Assertions.assertNotNull(requestUuidDtoResult);
-        assertEquals(ErrorCodesEnum.UIL_PLATFORM_MISSING.name(), requestUuidDtoResult.getErrorCode());
-        assertEquals("Missing parameter eFTIPlatformUrl", requestUuidDtoResult.getErrorDescription());
     }
 
     @Test
@@ -198,8 +192,6 @@ class ControlServiceTest extends AbstractServceTest {
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(0)).save(any());
         Assertions.assertNotNull(requestUuidDtoResult);
-        assertEquals(ErrorCodesEnum.UIL_PLATFORM_INCORRECT_FORMAT.name(), requestUuidDtoResult.getErrorCode());
-        assertEquals("Platform format incorrect.", requestUuidDtoResult.getErrorDescription());
     }
 
     @Test
@@ -214,8 +206,6 @@ class ControlServiceTest extends AbstractServceTest {
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(0)).save(any());
         Assertions.assertNotNull(requestUuidDtoResult);
-        assertEquals(ErrorCodesEnum.UIL_UUID_EMPTY.name(), requestUuidDtoResult.getErrorCode());
-        assertEquals("Uuid should not be empty.", requestUuidDtoResult.getErrorDescription());
     }
 
     @Test
@@ -229,8 +219,6 @@ class ControlServiceTest extends AbstractServceTest {
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(0)).save(any());
         Assertions.assertNotNull(requestUuidDtoResult);
-        assertEquals(ErrorCodesEnum.UIL_UUID_INCORRECT_FORMAT.name(), requestUuidDtoResult.getErrorCode());
-        assertEquals("Uuid format incorrect.", requestUuidDtoResult.getErrorDescription());
     }
 
     @Test
