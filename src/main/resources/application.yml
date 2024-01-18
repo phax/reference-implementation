@@ -2,11 +2,25 @@ spring:
   application:
     name: efti-gate
   datasource:
-    platform: postgres
-    url: jdbc:postgresql://localhost:8081/efti
+    url: jdbc:postgresql://localhost:9000/efti
     username: ingroup
     password: root
     driverClassName: org.postgresql.Driver
+  jackson:
+    default-property-inclusion: NON_NULL
 
 server:
-  port: 8080
+  port: 9001
+
+
+batch:
+  retry:
+    cron: "*/20 * * * * *"
+    time: 20, 120, 300
+    size: 10
+
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true

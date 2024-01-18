@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: efti-gate
+  datasource:
+    url: jdbc:postgresql://localhost:8081/efti
+    username: ingroup
+    password: root
+    driverClassName: org.postgresql.Driver
