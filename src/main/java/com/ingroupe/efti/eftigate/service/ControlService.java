@@ -73,6 +73,11 @@ public class ControlService {
     public ControlDto setError(final ControlDto controlDto, final ErrorDto errorDto) {
         controlDto.setStatus(StatusEnum.ERROR.name());
         controlDto.setError(errorDto);
+        final ErrorDto errorDtoNew = ErrorDto.builder()
+                .errorDescription(errorDto.getErrorDescription())
+                .errorCode(ErrorCodesEnum.PLATFORM_ERROR.toString())
+                .build();
+        controlDto.setError(errorDtoNew);
         return this.save(controlDto);
     }
 
