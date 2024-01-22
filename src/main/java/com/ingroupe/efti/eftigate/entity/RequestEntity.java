@@ -60,6 +60,6 @@ public class RequestEntity {
     ControlEntity control;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "error")
+    @JoinColumn(name = "error", referencedColumnName = "id")
     ErrorEntity error;
 }
