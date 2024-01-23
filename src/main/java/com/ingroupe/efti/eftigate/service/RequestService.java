@@ -151,11 +151,11 @@ public class RequestService {
                 .errorCode(ErrorCodesEnum.PLATFORM_ERROR.toString())
                 .build();
         final ControlDto controlDto = requestDto.getControl();
-        controlDto.setStatus(StatusEnum.ERROR.toString());
         controlDto.setLastModifiedDate(localDateTime);
-        requestDto.setControl(controlDto);
         requestDto.setLastModifiedDate(localDateTime);
         requestDto.setError(errorDto);
+        controlDto.setStatus(StatusEnum.ERROR.name());
+        controlDto.setError(errorDto);
         requestDto.setControl(controlDto);
         this.save(requestDto);
         controlService.setError(controlDto, errorDto);

@@ -17,10 +17,22 @@ public class MapperUtils {
     private final ModelMapper modelMapper;
 
     public ControlEntity controlDtoToControEntity(final ControlDto controlDto) {
-        return modelMapper.map(controlDto, ControlEntity.class);
+        final ControlEntity controlEntity = modelMapper.map(controlDto, ControlEntity.class);
+
+        //ça marche pas sinon
+        if (controlDto.getError() != null) {
+            final ErrorEntity errorEntity = new ErrorEntity();
+            errorEntity.setErrorCode(controlDto.getError().getErrorCode());
+            errorEntity.setErrorDescription(controlDto.getError().getErrorDescription());
+            errorEntity.setId(controlDto.getError().getId());
+            controlEntity.setError(errorEntity);
+        }
+
+        return controlEntity;
     }
 
     public ControlDto controlEntityToControlDto(final ControlEntity controlEntity) {
+
         return modelMapper.map(controlEntity, ControlDto.class);
     }
 
