@@ -6,7 +6,6 @@ import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
-import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
@@ -104,7 +103,7 @@ public class ControlService {
                 controlRepository.save(mapperUtils. controlDtoToControEntity(controlDto)));
     }
 
-    private Optional<ErrorDto> validateControl(final UilDto uilDto) {
+    private Optional<ErrorDto> validateControl(final ValidableControl validable) {
         final Validator validator;
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
