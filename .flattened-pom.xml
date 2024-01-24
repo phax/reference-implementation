@@ -2,11 +2,22 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.1.4</version>
+  </parent>
   <groupId>com.ingroupe.efti</groupId>
   <artifactId>commons</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>commons</name>
   <description>commons</description>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+    </license>
+  </licenses>
   <scm>
     <connection>scm:git:http://gitlab.imprimerienationale.fr/efti/commons.git</connection>
   </scm>
@@ -32,6 +43,7 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven-project-info-reports-plugin.version>3.4.3</maven-project-info-reports-plugin.version>
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+    <properties-maven-plugin-version>1.1.0</properties-maven-plugin-version>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <flatten-maven-plugin.version>1.5.0</flatten-maven-plugin.version>
     <dependency-check-maven.version>8.3.1</dependency-check-maven.version>
@@ -54,6 +66,30 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
       <version>2.15.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.data</groupId>
+      <artifactId>spring-data-commons</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.2.0</version>
     </dependency>
   </dependencies>
   <build>
@@ -152,6 +188,26 @@
       <plugin>
         <artifactId>maven-project-info-reports-plugin</artifactId>
         <version>${maven-project-info-reports-plugin.version}</version>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>properties-maven-plugin</artifactId>
+        <version>${properties-maven-plugin-version}</version>
+        <executions>
+          <execution>
+            <id>sonar</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>read-project-properties</goal>
+            </goals>
+            <configuration>
+              <files>
+                <file>sonar-project.properties</file>
+              </files>
+            </configuration>
+          </execution>
+        </executions>
+        <inherited>false</inherited>
       </plugin>
     </plugins>
   </build>
