@@ -29,7 +29,7 @@ public class AuthorityDto {
     @NotNull(message = "AUTHORITY_WORKING_CONTACT_MISSING")
     private ContactInformationDto workingContact;
     @NotNull(message = "AUTHORITY_IS_EMERGENCY_MISSING")
-    private boolean isEmergencyService;
+    private Boolean isEmergencyService;
     @NotBlank(message = "AUTHORITY_NAME_MISSING")
     @Length(max = 100, message = "AUTHORITY_NAME_TOO_LONG")
     private String name;
