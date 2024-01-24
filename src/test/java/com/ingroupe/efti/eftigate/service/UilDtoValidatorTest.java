@@ -51,7 +51,7 @@ class UilDtoValidatorTest {
 
         final Set<ConstraintViolation<UilDto>> violations = validator.validate(uilDto);
         assertFalse(violations.isEmpty());
-        assertEquals(8, violations.size());
+        assertEquals(9, violations.size());
         assertTrue(containsError(violations, ErrorCodesEnum.UIL_GATE_INCORRECT_FORMAT));
         assertTrue(containsError(violations, ErrorCodesEnum.UIL_PLATFORM_INCORRECT_FORMAT));
         assertTrue(containsError(violations, ErrorCodesEnum.UIL_UUID_INCORRECT_FORMAT));
@@ -89,9 +89,10 @@ class UilDtoValidatorTest {
 
         final Set<ConstraintViolation<UilDto>> violations = validator.validate(uilDto);
         assertFalse(violations.isEmpty());
-        assertEquals(8, violations.size());
+        assertEquals(13, violations.size());
         assertTrue(containsError(violations, ErrorCodesEnum.AUTHORITY_COUNTRY_TOO_LONG));
         assertTrue(containsError(violations, ErrorCodesEnum.AUTHORITY_COUNTRY_UNKNOWN));
+        assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_BUILDING_MISSING));
         assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_POSTAL_MISSING));
         assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_MAIL_MISSING));
         assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_CITY_MISSING));
