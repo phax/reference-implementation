@@ -49,7 +49,7 @@
     </distributionManagement>
 
     <scm>
-        <connection>scm:git:https://gitlab.imprimerienationale.fr/efti/efti-gate.git</connection>
+        <connection>scm:git:https://gitlab.imprimerienationale.fr/kube/projects/efti/mocks/platform-gate-simulator.git</connection>
     </scm>
 
     <dependencies>
