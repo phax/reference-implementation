@@ -3,6 +3,7 @@ package com.ingroupe.efti.eftigate.service;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
+import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
@@ -51,7 +52,7 @@ public class ControlService {
                     log.error(error.getErrorDescription() + ", " + error.getErrorCode());
         },
                 () -> {
-                    final ControlDto saveControl = this.save(controlDto, errorOptional);
+                    final ControlDto saveControl = this.save(controlDto);
                     requestService.createAndSendRequest(saveControl);
                     log.info("control with uil '{}' has been register", uilDto.getEFTIDataUuid());
                 });
@@ -82,13 +83,10 @@ public class ControlService {
         return this.save(controlDto);
     }
 
+
     private ControlDto save(final ControlDto controlDto) {
         return mapperUtils.controlEntityToControlDto(
-                controlRepository.save(mapperUtils.controlDtoToControEntity(controlDto)));
-    }
-
-    private ControlDto save(final ControlDto controlDto, final Optional<ErrorDto> errorDto) {
-        return this.save(controlDto);
+                controlRepository.save(mapperUtils. controlDtoToControEntity(controlDto)));
     }
 
     private Optional<ErrorDto> validateControl(final UilDto uilDto) {
@@ -118,6 +116,7 @@ public class ControlService {
                 .status(controlDto.getStatus())
                 .eFTIData(controlDto.getEftiData()).build();
         if(controlDto.isError()) {
+            result.setRequestUuid(null);
             result.setErrorDescription(controlDto.getError().getErrorDescription());
             result.setErrorCode(controlDto.getError().getErrorCode());
         }

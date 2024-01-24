@@ -144,18 +144,21 @@ public class RequestService {
     }
 
     private void errorReceived(final RequestDto requestDto, final String errorDescription) {
+        log.error("Error received, change status of requestId : {}", requestDto.getControl().getRequestUuid());
         final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         final ErrorDto errorDto = ErrorDto.builder()
                 .errorDescription(errorDescription)
                 .errorCode(ErrorCodesEnum.PLATFORM_ERROR.toString())
                 .build();
         final ControlDto controlDto = requestDto.getControl();
-        controlDto.setStatus(StatusEnum.ERROR.toString());
         controlDto.setLastModifiedDate(localDateTime);
-        controlService.setError(controlDto, errorDto);
-        requestDto.setControl(controlDto);
         requestDto.setLastModifiedDate(localDateTime);
+        requestDto.setError(errorDto);
+        controlDto.setStatus(StatusEnum.ERROR.name());
+        controlDto.setError(errorDto);
+        requestDto.setControl(controlDto);
         this.save(requestDto);
+        controlService.setError(controlDto, errorDto);
     }
 
     private void manageSendFailure(final NotificationDto<?> notificationDto) {

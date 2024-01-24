@@ -30,9 +30,9 @@ class UilDtoValidatorTest {
         final Set<ConstraintViolation<UilDto>> violations = validator.validate(uilDto);
         assertFalse(violations.isEmpty());
         assertEquals(7, violations.size());
-        assertTrue(containsError(violations, ErrorCodesEnum.UIL_GATE_EMPTY));
-        assertTrue(containsError(violations, ErrorCodesEnum.UIL_PLATFORM_EMPTY));
-        assertTrue(containsError(violations, ErrorCodesEnum.UIL_UUID_EMPTY));
+        assertTrue(containsError(violations, ErrorCodesEnum.UIL_GATE_MISSING));
+        assertTrue(containsError(violations, ErrorCodesEnum.UIL_PLATFORM_MISSING));
+        assertTrue(containsError(violations, ErrorCodesEnum.UIL_UUID_MISSING));
         assertTrue(containsError(violations, ErrorCodesEnum.AUTHORITY_MISSING));
     }
 
@@ -92,12 +92,12 @@ class UilDtoValidatorTest {
         assertEquals(13, violations.size());
         assertTrue(containsError(violations, ErrorCodesEnum.AUTHORITY_COUNTRY_TOO_LONG));
         assertTrue(containsError(violations, ErrorCodesEnum.AUTHORITY_COUNTRY_UNKNOWN));
-        assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_BUILDING_NUMBER_EMPTY));
-        assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_POSTAL_CODE_EMPTY));
-        assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_MAIL_EMPTY));
-        assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_CITY_EMPTY));
+        assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_BUILDING_MISSING));
+        assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_POSTAL_MISSING));
+        assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_MAIL_MISSING));
+        assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_CITY_MISSING));
         assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_MAIL_INCORRECT_FORMAT));
-        assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_STREET_NAME_EMPTY));
+        assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_STREET_NAME_MISSING));
     }
 
     private boolean containsError(final Set<ConstraintViolation<UilDto>> violations, final ErrorCodesEnum error) {
