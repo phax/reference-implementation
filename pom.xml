@@ -32,7 +32,7 @@
 	</scm>
 
 	<properties>
-		<revision>1.0.0-SNAPSHOT</revision>
+		<revision>0.2.0-SNAPSHOT</revision>
 		<!--NEXUS-->
 		<nexus.home>http://nexus.imprimerienationale.fr</nexus.home>
 
