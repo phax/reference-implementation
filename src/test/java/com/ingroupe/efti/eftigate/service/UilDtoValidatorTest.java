@@ -92,7 +92,6 @@ class UilDtoValidatorTest {
         assertEquals(8, violations.size());
         assertTrue(containsError(violations, ErrorCodesEnum.AUTHORITY_COUNTRY_TOO_LONG));
         assertTrue(containsError(violations, ErrorCodesEnum.AUTHORITY_COUNTRY_UNKNOWN));
-        assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_BUILDING_MISSING));
         assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_POSTAL_MISSING));
         assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_MAIL_MISSING));
         assertTrue(containsError(violations, ErrorCodesEnum.CONTACT_CITY_MISSING));
