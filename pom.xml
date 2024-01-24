@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.ingroupe.efti</groupId>
 	<artifactId>edelivery-ap-connector</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>${revision}</version>
 	<name>edelivery-ap-connector</name>
 	<description>edelivery-ap-connector</description>
 
@@ -28,10 +28,11 @@
 	</distributionManagement>
 
 	<scm>
-		<connection>scm:git:http://gitlab.imprimerienationale.fr/efti/edelivery-ap-connector.git</connection>
+		<connection>scm:git:http://gitlab.imprimerienationale.fr/kube/projects/efti/libraries/edelivery-ap-connector.git</connection>
 	</scm>
 
 	<properties>
+		<revision>1.0.0-SNAPSHOT</revision>
 		<!--NEXUS-->
 		<nexus.home>http://nexus.imprimerienationale.fr</nexus.home>
 
