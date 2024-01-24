@@ -20,7 +20,7 @@ public class NotificationService {
 
     private final RequestRetrievingService requestRetrievingService;
 
-    public Optional<NotificationDto<?>> consume(final ApConfigDto apConfigDto, final ReceivedNotificationDto receivedNotificationDto) {
+    public Optional<NotificationDto> consume(final ApConfigDto apConfigDto, final ReceivedNotificationDto receivedNotificationDto) {
         if(receivedNotificationDto.getMessageId().isEmpty()) {
             log.error("no message id found for notification {}", receivedNotificationDto);
             return Optional.empty();
@@ -37,21 +37,20 @@ public class NotificationService {
         return Optional.empty();
     }
 
-    private Optional<NotificationDto<?>> onSendFailure(ReceivedNotificationDto receivedNotificationDto) {
+    private Optional<NotificationDto> onSendFailure(ReceivedNotificationDto receivedNotificationDto) {
         log.info(" sent message {} failed", receivedNotificationDto.getMessageId().orElse(null));
+
         return Optional.of(NotificationDto.builder()
                 .notificationType(NotificationType.SEND_FAILURE)
-                .messageId(receivedNotificationDto.getMessageId().orElse(null))
-                .build());
+                .messageId(receivedNotificationDto.getMessageId().orElse(null)).build());
     }
 
-    private Optional<NotificationDto<?>> onMessageReceived(final ApConfigDto apConfigDto, final ReceivedNotificationDto receivedNotificationDto) {
+    private Optional<NotificationDto> onMessageReceived(final ApConfigDto apConfigDto, final ReceivedNotificationDto receivedNotificationDto) {
         try {
             return Optional.of(NotificationDto.builder()
-                    .notificationType(NotificationType.RECEIVED)
                     .messageId(receivedNotificationDto.getMessageId().orElse(null))
-                    .content(this.requestRetrievingService.retrieveMessage(apConfigDto, receivedNotificationDto.getMessageId().orElse(null)))
-                    .build());
+                    .notificationType(NotificationType.RECEIVED)
+                    .content(this.requestRetrievingService.retrieveMessage(apConfigDto, receivedNotificationDto.getMessageId().orElse(null))).build());
         } catch (SendRequestException | RetrieveMessageFault e) {
             log.error("error while retrieving message " + receivedNotificationDto.getMessageId());
             throw new RetrieveMessageException("error while retrieving message " + receivedNotificationDto.getMessageId().orElse(null), e);

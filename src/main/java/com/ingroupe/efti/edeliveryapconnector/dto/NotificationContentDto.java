@@ -5,13 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.activation.DataSource;
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RetrieveMessageDto {
+public class NotificationContentDto {
     private String messageId;
     private String action;
     private String contentType;
-    private MessageBodyDto messageBodyDto;
+    private DataSource body;
 }

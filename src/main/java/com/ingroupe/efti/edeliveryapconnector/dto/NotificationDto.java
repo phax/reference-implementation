@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class NotificationDto<T> {
+public class NotificationDto {
     private NotificationType notificationType;
     private String messageId;
-    private T content;
+    private NotificationContentDto content;
 }
