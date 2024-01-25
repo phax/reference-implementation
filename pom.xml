@@ -151,13 +151,19 @@
 		<dependency>
 			<groupId>com.ingroupe.efti</groupId>
 			<artifactId>commons</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.2.0-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
 			<groupId>eu.domibus</groupId>
 			<artifactId>domibus-plugin-api</artifactId>
 			<version>5.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.sun.istack</groupId>
+					<artifactId>istack-commons-runtime</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
