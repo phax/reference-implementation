@@ -1,12 +1,15 @@
 package com.ingroupe.platform.platformgatesimulator.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
-import com.ingroupe.efti.edeliveryapconnector.dto.RetrieveMessageDto;
+import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
@@ -15,6 +18,7 @@ import com.ingroupe.platform.platformgatesimulator.dto.BodyDto;
 import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.cxf.helpers.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -48,16 +52,28 @@ public class ApIncomingService {
                 .url(gateProperties.getAp().getUrl())
                 .build();
 
-        Optional<NotificationDto<?>> notificationDto = notificationService.consume(apConfigDto, receivedNotificationDto);
+        Optional<NotificationDto> notificationDto = notificationService.consume(apConfigDto, receivedNotificationDto);
         if (notificationDto.isEmpty()) {
             return;
         }
-        RetrieveMessageDto messageBodyDto = (RetrieveMessageDto) notificationDto.get().getContent();
-        String eftidataUuid = messageBodyDto.getMessageBodyDto().getEftidataUuid();
+        NotificationContentDto notificationContentDto = notificationDto.get().getContent();
+
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        MessageBodyDto messageBody;
+        try {
+            final String body = IOUtils.toString(notificationContentDto.getBody().getInputStream());
+            messageBody = mapper.readValue(body, MessageBodyDto.class);
+
+        } catch (final IOException e) {
+            throw new RetrieveMessageException("error while sending retrieve message request", e);
+        }
+
+        String eftidataUuid = messageBody.getEFTIDataUuid();
         if (eftidataUuid.endsWith("1")) {
             return;
         }
-        String requestUuid = messageBodyDto.getMessageBodyDto().getRequestUuid();
+        String requestUuid = messageBody.getRequestUuid();
         String data = readerService.readFromFile(gateProperties.getCdaPath() + eftidataUuid);
         if (data == null) {
             sendError(apConfigDto, eftidataUuid, requestUuid, data);
