@@ -1,5 +1,6 @@
 package com.ingroupe.efti.eftigate.dto.requestbody;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 public class RequestBodyDto {
     private String requestUuid;
+    @JsonProperty("eFTIDataUuid")
     private String eFTIDataUuid;
     private List<String> subsetEU;
     private List<String> subsetMS;
