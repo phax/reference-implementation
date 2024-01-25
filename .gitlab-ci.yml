@@ -1,0 +1,53 @@
+#########################################################################################################
+################################## IN GROUPE COPYRIGHT  #################################################
+stages:  
+  - build_ms
+
+variables:
+  MAVEN_GROUPEID: com.ingroupe.mesh
+  MAVEN_ARTIFACTID: efti-gate
+  MAVEN_EXTENSION: jar
+  VERSION_ARTEFACT_SNAPSHOT: 0.2.0-SNAPSHOT
+  VERSION_ARTEFACT_RELEASE: 0.1.0
+  SPECIFIC_KEYSTORE: copy
+  DEPLOY_ENVIRONMENT:
+    value: "dev"
+    options:
+      - "dev"
+      - "int"
+    description: "The deployment target. Set to 'dev' by default."
+  REBUILD_COMPONENT_IMAGE:
+    value: "true"
+    options:
+      - "true"
+      - "false"
+    description: "Allow to rebuild or no the component Image. Set to 'true' by default."
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "api"
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      when: never
+    - if: $CI_COMMIT_REF_NAME !~ "develop"
+      when: never
+    - when: always
+
+build_microservices:
+  stage: build_ms
+  rules:
+    - if: $CI_COMMIT_REF_NAME =~ /feat/
+      variables:
+        TAG: PREVIEW
+      when: manual
+    - when: always
+  trigger:
+    include:
+      - project: "kube/build"
+        file: "build_ms.yml"
+        ref: "kustomize"
+    forward:
+      pipeline_variables: true
+    strategy: depend
