@@ -6,10 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
-import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
-
 import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
@@ -66,7 +64,7 @@ public class ApIncomingService {
         } catch (final IOException e) {
             throw new RetrieveMessageException("error while sending retrieve message request", e);
         }
-        String eftidataUuid = messageBody.getEftidataUuid();
+        String eftidataUuid = messageBody.getEFTIDataUuid();
         if (eftidataUuid.endsWith("1")) {
             return;
         }
