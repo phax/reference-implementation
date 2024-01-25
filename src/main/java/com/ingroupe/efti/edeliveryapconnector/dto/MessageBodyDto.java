@@ -12,7 +12,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MessageBodyDto {
     private String requestUuid;
-    private String eftidataUuid;
+    @JsonProperty("eFTIDataUuid")
+    private String eFTIDataUuid;
     private String status;
     private String errorDescription;
     @JsonProperty("eFTIData")
