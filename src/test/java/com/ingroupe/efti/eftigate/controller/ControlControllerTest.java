@@ -75,7 +75,7 @@ class ControlControllerTest {
         uilDto.setEFTIDataUuid("uuid");
         uilDto.setEFTIGateUrl("gate");
 
-        Mockito.when(controlService.createControlEntity(uilDto)).thenReturn(requestUuidDto);
+        Mockito.when(controlService.createUilControl(uilDto)).thenReturn(requestUuidDto);
 
         mockMvc.perform(post("/v1/requestUil")
                         .with(csrf())

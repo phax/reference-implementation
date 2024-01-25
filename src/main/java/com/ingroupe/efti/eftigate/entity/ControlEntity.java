@@ -74,7 +74,7 @@ public class ControlEntity {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "transportmetadata")
-    private Object transportMetadata;
+    private SearchParameter transportMetadata;
 
     @Column(name = "fromgateurl")
     private String fromGateUrl;

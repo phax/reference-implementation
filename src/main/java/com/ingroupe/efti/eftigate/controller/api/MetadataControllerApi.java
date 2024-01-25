@@ -1,14 +1,15 @@
 package com.ingroupe.efti.eftigate.controller.api;
 
+import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.eftigate.config.security.Roles;
-import com.ingroupe.efti.eftigate.dto.MetadataRequestDto;
-import com.ingroupe.efti.eftigate.dto.MetadataResponseDto;
+import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +28,6 @@ public interface MetadataControllerApi {
     })
     @PostMapping("/getMetadata")
     @Secured(Roles.ROLE_ROAD_CONTROLER)
-    MetadataResponseDto getMetadata(final @RequestBody MetadataRequestDto metadataRequestDto);
+    ResponseEntity<RequestUuidDto> getMetadata(final @RequestBody MetadataRequestDto metadataRequestDto);
 
 }

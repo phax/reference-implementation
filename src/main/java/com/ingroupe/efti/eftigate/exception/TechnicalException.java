@@ -2,7 +2,7 @@ package com.ingroupe.efti.eftigate.exception;
 
 import java.io.Serial;
 
-public class TechnicalException extends Exception {
+public class TechnicalException extends RuntimeException {
     @Serial
     private static final long serialVersionUID = -8858301591927593587L;
 

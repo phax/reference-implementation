@@ -2,16 +2,21 @@ spring:
   application:
     name: efti-gate
   datasource:
-    url: jdbc:postgresql://localhost:9000/efti
-    username: ingroup
-    password: root
-    driverClassName: org.postgresql.Driver
+    control:
+      url: jdbc:postgresql://localhost:9000/efti
+      username: ingroup
+      password: root
+      driverClassName: org.postgresql.Driver
+    metadata:
+      url: jdbc:postgresql://localhost:2345/efti
+      username: root
+      password: root
+      driverClassName: org.postgresql.Driver
   jackson:
     default-property-inclusion: NON_NULL
 
 server:
   port: 8880
-
 
 batch:
   retry:

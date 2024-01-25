@@ -1,18 +1,54 @@
 package com.ingroupe.efti.eftigate.config;
 
+import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.AbstractConverter;
+import org.modelmapper.AbstractProvider;
+import org.modelmapper.Converter;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.Provider;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+
 @Configuration
 @ComponentScan(basePackages = "com.ingroupe.efti")
+@Slf4j
 public class EftiConfig {
 
     @Bean(name = "modelMapper")
     public ModelMapper modelMapper() {
-        return new ModelMapper();
+        final ModelMapper mapper = new ModelMapper();
+
+        Provider<LocalDateTime> localDateProvider = new AbstractProvider<>() {
+            @Override
+            public LocalDateTime get() {
+                return LocalDateTime.now();
+            }
+        };
+
+        Converter<String, LocalDateTime> toStringDate = new AbstractConverter<>() {
+            @Override
+            protected LocalDateTime convert(final String source) {
+                DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'+'SSSS");
+                try {
+                    return LocalDateTime.parse(source, format);
+                } catch (DateTimeParseException e) {
+                    log.error("invalid date format {}", source);
+                    return null;
+                }
+            }
+        };
+
+        mapper.createTypeMap(String.class, LocalDateTime.class);
+        mapper.addConverter(toStringDate);
+        mapper.getTypeMap(String.class, LocalDateTime.class).setProvider(localDateProvider);
+
+        return mapper;
     }
 
     @Bean

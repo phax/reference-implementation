@@ -1,7 +1,10 @@
 package com.ingroupe.efti.eftigate.dto;
 
-import com.ingroupe.efti.eftigate.utils.RequestTypeEnum;
-import com.ingroupe.efti.eftigate.utils.StatusEnum;
+import com.ingroupe.efti.commons.dto.AuthorityDto;
+import com.ingroupe.efti.commons.dto.MetadataRequestDto;
+import com.ingroupe.efti.commons.enums.RequestTypeEnum;
+import com.ingroupe.efti.commons.enums.StatusEnum;
+import com.ingroupe.efti.eftigate.entity.SearchParameter;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,27 +33,51 @@ public class ControlDto {
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
     private byte[] eftiData;
-    private Object transportMetaData;
+    private SearchParameter transportMetaData;
     private String fromGateUrl;
     private List<RequestDto> requests;
     private AuthorityDto authority;
     private ErrorDto error;
 
-    public ControlDto(final UilDto uilDto) {
+    public static ControlDto fromUilControl(final UilDto uilDto) {
         final String uuidGenerator = UUID.randomUUID().toString();
-        LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
+        final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
 
-        this.setEftiDataUuid(uilDto.getEFTIDataUuid());
-        this.setEftiGateUrl(uilDto.getEFTIGateUrl());
-        this.setEftiPlatformUrl(uilDto.getEFTIPlatformUrl());
-        this.setRequestUuid(uuidGenerator);
-        this.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
-        this.setStatus(StatusEnum.PENDING.toString());
-        this.setSubsetEuRequested("SubsetEuRequested");
-        this.setSubsetMsRequested("SubsetMsRequested");
-        this.setCreatedDate(localDateTime);
-        this.setLastModifiedDate(localDateTime);
-        this.setAuthority(uilDto.getAuthority());
+        final ControlDto controlDto = new ControlDto();
+        controlDto.setEftiDataUuid(uilDto.getEFTIDataUuid());
+        controlDto.setEftiGateUrl(uilDto.getEFTIGateUrl());
+        controlDto.setEftiPlatformUrl(uilDto.getEFTIPlatformUrl());
+        controlDto.setRequestUuid(uuidGenerator);
+        controlDto.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
+        controlDto.setStatus(StatusEnum.PENDING.toString());
+        controlDto.setSubsetEuRequested("SubsetEuRequested");
+        controlDto.setSubsetMsRequested("SubsetMsRequested");
+        controlDto.setCreatedDate(localDateTime);
+        controlDto.setLastModifiedDate(localDateTime);
+        controlDto.setAuthority(uilDto.getAuthority());
+        return controlDto;
+    }
+
+    public static ControlDto fromMetadataControl(final MetadataRequestDto metadataRequestDto) {
+        final String uuidGenerator = UUID.randomUUID().toString();
+        final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
+
+        final ControlDto controlDto = new ControlDto();
+        controlDto.setRequestUuid(uuidGenerator);
+        controlDto.setRequestType(RequestTypeEnum.METADATA_SEARCH.toString());
+        controlDto.setStatus(StatusEnum.PENDING.toString());
+        controlDto.setSubsetEuRequested("SubsetEuRequested");
+        controlDto.setSubsetMsRequested("SubsetMsRequested");
+        controlDto.setCreatedDate(localDateTime);
+        controlDto.setLastModifiedDate(localDateTime);
+        controlDto.setAuthority(metadataRequestDto.getAuthority());
+        controlDto.setTransportMetaData(SearchParameter.builder()
+                .vehicleId(metadataRequestDto.getVehicleID())
+                .transportMode(metadataRequestDto.getTransportMode())
+                .vehicleCountry(metadataRequestDto.getVehicleCountry())
+                .isDangerousGoods(metadataRequestDto.getIsDangerousGoods())
+                .build());
+        return controlDto;
     }
 
     public boolean isError() {

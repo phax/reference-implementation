@@ -1,19 +1,16 @@
 package com.ingroupe.efti.eftigate.batch;
 
-import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
-import com.ingroupe.efti.eftigate.repository.ControlRepository;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.AbstractServceTest;
 import com.ingroupe.efti.eftigate.service.RequestService;
-import com.ingroupe.efti.eftigate.utils.RequestStatusEnum;
+import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
