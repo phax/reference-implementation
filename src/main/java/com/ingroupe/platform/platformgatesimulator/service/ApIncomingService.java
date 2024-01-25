@@ -9,6 +9,7 @@ import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
+
 import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
@@ -56,20 +57,16 @@ public class ApIncomingService {
         if (notificationDto.isEmpty()) {
             return;
         }
-        NotificationContentDto notificationContentDto = notificationDto.get().getContent();
-
         final ObjectMapper mapper = new ObjectMapper();
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         MessageBodyDto messageBody;
         try {
-            final String body = IOUtils.toString(notificationContentDto.getBody().getInputStream());
+            final String body = IOUtils.toString(notificationDto.get().getContent().getBody().getInputStream());
             messageBody = mapper.readValue(body, MessageBodyDto.class);
-
         } catch (final IOException e) {
             throw new RetrieveMessageException("error while sending retrieve message request", e);
         }
-
-        String eftidataUuid = messageBody.getEFTIDataUuid();
+        String eftidataUuid = messageBody.getEftidataUuid();
         if (eftidataUuid.endsWith("1")) {
             return;
         }

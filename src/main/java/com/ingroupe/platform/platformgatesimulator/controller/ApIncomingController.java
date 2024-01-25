@@ -1,7 +1,6 @@
 package com.ingroupe.platform.platformgatesimulator.controller;
 
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
-import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
 import com.ingroupe.platform.platformgatesimulator.service.ApIncomingService;
 import lombok.AllArgsConstructor;
@@ -12,9 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.util.Random;
-
-import static java.lang.Thread.sleep;
 
 @RestController
 @RequestMapping("/ws")
