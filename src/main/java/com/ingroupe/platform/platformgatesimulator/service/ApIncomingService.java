@@ -53,7 +53,7 @@ public class ApIncomingService {
             return;
         }
         RetrieveMessageDto messageBodyDto = (RetrieveMessageDto) notificationDto.get().getContent();
-        String eftidataUuid = messageBodyDto.getMessageBodyDto().getEftidataUuid();
+        String eftidataUuid = messageBodyDto.getMessageBodyDto().getEFTIDataUuid();
         if (eftidataUuid.endsWith("1")) {
             return;
         }
@@ -100,7 +100,7 @@ public class ApIncomingService {
                     .requestUuid(requestUuid)
                     .eFTIData(eftiData)
                     .status("COMPLETE")
-                    .eftidataUuid(eftidataUuid)
+                    .eFTIDataUuid(eftidataUuid)
                     .build();
         return objectMapper.writeValueAsString(requestBodyDto);
     }
@@ -112,7 +112,7 @@ public class ApIncomingService {
                     .eFTIData(eftiData)
                     .status("ERROR")
                      .errorDescription(errorDescription)
-                    .eftidataUuid(eftidataUuid)
+                    .eFTIDataUuid(eftidataUuid)
                     .build();
         return objectMapper.writeValueAsString(requestBodyDto);
     }
