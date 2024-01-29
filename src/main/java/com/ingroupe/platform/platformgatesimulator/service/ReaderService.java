@@ -1,6 +1,5 @@
 package com.ingroupe.platform.platformgatesimulator.service;
 
-import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +12,7 @@ import java.io.InputStreamReader;
 @Slf4j
 public class ReaderService {
 
-    public String readFromFile(String file) throws IOException, UuidFileNotFoundException {
+    public String readFromFile(String file) throws IOException {
         log.info("try to open file : {}", file);
         ClassLoader classLoader = getClass().getClassLoader();
         InputStream inputStream = classLoader.getResourceAsStream(file + ".json");
