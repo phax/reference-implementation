@@ -1,10 +1,12 @@
+server:
+  port: 8080
 spring:
   application:
-    name: efti-gate
+    name: {{ spring.application.name }}
   datasource:
-    url: #todo
-    username: #todo
-    password: #todo
+    url: {{ datasource.url }}
+    username: {{ datasource.username }}
+    password: {{ datasource.password }}
     driverClassName: org.postgresql.Driver
   jackson:
     default-property-inclusion: NON_NULL
@@ -12,29 +14,26 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://auth.gate.borduria.eu:8080/realms/eFTI_BO
+          issuer-uri: {{ security.oauth2.resourceserver.jwt.issuer-uri}}
   jpa:
     properties:
       hibernate:
-        default_schema: "eftibo"
-server:
-  port: 8880
-
+        default_schema: {{ jpa.properties.hibernate.default_schema }}
 gate:
-  owner: borduria
+  owner: {{ gate.owner }}
   ap:
-    url: http://efti.gate.borduria.eu:81/domibus/services/wsplugin
-    username: borduria_service_account
-    password: Azerty59*1234567
+    url: {{ gate.ap.url }}
+    username: {{ gate.ap.username }}
+    password: {{ gate.ap.password }}
 
 batch:
   retry:
-    cron: "*/20 * * * * *"
-    time: 20, 120, 300
-    size: 10
+    cron: {{ batch.retry.cron }}
+    time: {{ batch.retry.time }}
+    size: {{ batch.retry.size }}
 
 springdoc:
   swagger-ui:
-    enabled: true
+    enabled: {{ springdoc.swagger-ui.enabled }}
   api-docs:
-    enabled: true
+    enabled: {{ springdoc.api-docs.enabled }}
