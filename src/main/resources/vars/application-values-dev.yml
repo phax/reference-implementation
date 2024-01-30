@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: efti-gate
+  datasource:
+    url: dleftidbpg01in.service.groupein.local:5432
+    username: efti
+    password: 64BEt8d1Us4REq43A0z
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://keycloak.efti.dev.k8s.groupein.local/realms/eFTI_FR
+  jpa:
+    properties:
+      hibernate:
+        default_schema: "eftifr"
+
+gate:
+  owner: https://efti-gate.efti.dev.k8s.groupein.local
+  ap:
+    url: http://efti.gate.borduria.eu:81/domibus/services/wsplugin
+    username: borduria_service_account
+    password: Azerty59*1234567
+
+batch:
+  retry:
+    cron: "*/20 * * * * *"
+    time: 20, 120, 300
+    size: 10
+
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true
