@@ -4,7 +4,7 @@ stages:
   - build_ms
 
 variables:
-  MAVEN_GROUPEID: com.ingroupe.mesh
+  MAVEN_GROUPEID: com.ingroupe.efti
   MAVEN_ARTIFACTID: efti-gate
   MAVEN_EXTENSION: jar
   VERSION_ARTEFACT_SNAPSHOT: 0.2.0-SNAPSHOT
