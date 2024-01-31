@@ -4,9 +4,9 @@ spring:
   application:
     name: {{ spring.application.name }}
   datasource:
-    url: {{ datasource.url }}
-    username: {{ datasource.username }}
-    password: {{ datasource.password }}
+    url: {{ spring.datasource.url }}
+    username: {{ spring.datasource.username }}
+    password: {{ spring.datasource.password }}
     driverClassName: org.postgresql.Driver
   jackson:
     default-property-inclusion: NON_NULL
@@ -14,11 +14,11 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: {{ security.oauth2.resourceserver.jwt.issuer-uri}}
+          issuer-uri: {{ spring.security.oauth2.resourceserver.jwt.issuer_uri}}
   jpa:
     properties:
       hibernate:
-        default_schema: {{ jpa.properties.hibernate.default_schema }}
+        default_schema: {{ spring.jpa.properties.hibernate.default_schema }}
 gate:
   owner: {{ gate.owner }}
   ap:
@@ -34,6 +34,6 @@ batch:
 
 springdoc:
   swagger-ui:
-    enabled: {{ springdoc.swagger-ui.enabled }}
+    enabled: {{ springdoc.swagger_ui.enabled }}
   api-docs:
-    enabled: {{ springdoc.api-docs.enabled }}
+    enabled: {{ springdoc.api_docs.enabled }}

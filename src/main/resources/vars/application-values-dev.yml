@@ -9,7 +9,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://keycloak.efti.dev.k8s.groupein.local/realms/eFTI_FR
+          issuer_uri: https://keycloak.efti.dev.k8s.groupein.local/realms/eFTI_FR
   jpa:
     properties:
       hibernate:
@@ -29,7 +29,7 @@ batch:
     size: 10
 
 springdoc:
-  swagger-ui:
+  swagger_ui:
     enabled: true
-  api-docs:
+  api_docs:
     enabled: true
