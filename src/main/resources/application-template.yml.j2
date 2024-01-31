@@ -28,7 +28,7 @@ gate:
 
 batch:
   retry:
-    cron: {{ batch.retry.cron }}
+    cron: "{{ batch.retry.cron }}"
     time: {{ batch.retry.time }}
     size: {{ batch.retry.size }}
 
