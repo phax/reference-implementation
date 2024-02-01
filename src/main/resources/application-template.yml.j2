@@ -19,6 +19,8 @@ spring:
     properties:
       hibernate:
         default_schema: "{{ spring.jpa.properties.hibernate.default_schema }}"
+        control_schema: "{{ spring.jpa.properties.hibernate.default_schema }}"
+        metadata_schema: "{{ spring.jpa.properties.hibernate.default_schema }}"
 gate:
   owner: {{ gate.owner }}
   ap:
