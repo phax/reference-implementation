@@ -1,12 +1,14 @@
 package com.ingroupe.platform.platformgatesimulator.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
-import com.ingroupe.efti.edeliveryapconnector.dto.RetrieveMessageDto;
+import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
@@ -15,6 +17,7 @@ import com.ingroupe.platform.platformgatesimulator.dto.BodyDto;
 import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.cxf.helpers.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +51,7 @@ public class ApIncomingService {
                 .url(gateProperties.getAp().getUrl())
                 .build();
 
-        Optional<NotificationDto<?>> notificationDto = notificationService.consume(apConfigDto, receivedNotificationDto);
+        Optional<NotificationDto> notificationDto = notificationService.consume(apConfigDto, receivedNotificationDto);
         if (notificationDto.isEmpty()) {
             return;
         }
@@ -57,7 +60,7 @@ public class ApIncomingService {
         if (eftidataUuid.endsWith("1")) {
             return;
         }
-        String requestUuid = messageBodyDto.getMessageBodyDto().getRequestUuid();
+        String requestUuid = messageBody.getRequestUuid();
         String data = readerService.readFromFile(gateProperties.getCdaPath() + eftidataUuid);
         if (data == null) {
             sendError(apConfigDto, eftidataUuid, requestUuid, data);
