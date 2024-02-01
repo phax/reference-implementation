@@ -15,6 +15,12 @@ variables:
       - "dev"
       - "int"
     description: "The deployment target. Set to 'dev' by default."
+  CONTEXT:
+    value: "NOT_DEFINED"
+    options:
+      - "NOT_DEFINED"
+      - "dev-efti"
+      - "int-efti"
   REBUILD_COMPONENT_IMAGE:
     value: "true"
     options:
