@@ -21,6 +21,7 @@ variables:
       - "NOT_DEFINED"
       - "dev-efti"
       - "int-efti"
+    description: "Allow to select the current context in kubernetes to deploy the tools."
   REBUILD_COMPONENT_IMAGE:
     value: "true"
     options:
