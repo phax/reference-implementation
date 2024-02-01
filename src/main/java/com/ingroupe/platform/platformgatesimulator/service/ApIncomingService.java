@@ -55,16 +55,8 @@ public class ApIncomingService {
         if (notificationDto.isEmpty()) {
             return;
         }
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        MessageBodyDto messageBody;
-        try {
-            final String body = IOUtils.toString(notificationDto.get().getContent().getBody().getInputStream());
-            messageBody = mapper.readValue(body, MessageBodyDto.class);
-        } catch (final IOException e) {
-            throw new RetrieveMessageException("error while sending retrieve message request", e);
-        }
-        String eftidataUuid = messageBody.getEFTIDataUuid();
+        RetrieveMessageDto messageBodyDto = (RetrieveMessageDto) notificationDto.get().getContent();
+        String eftidataUuid = messageBodyDto.getMessageBodyDto().getEFTIDataUuid();
         if (eftidataUuid.endsWith("1")) {
             return;
         }
@@ -111,7 +103,7 @@ public class ApIncomingService {
                     .requestUuid(requestUuid)
                     .eFTIData(eftiData)
                     .status("COMPLETE")
-                    .eftidataUuid(eftidataUuid)
+                    .eFTIDataUuid(eftidataUuid)
                     .build();
         return objectMapper.writeValueAsString(requestBodyDto);
     }
@@ -123,7 +115,7 @@ public class ApIncomingService {
                     .eFTIData(eftiData)
                     .status("ERROR")
                      .errorDescription(errorDescription)
-                    .eftidataUuid(eftidataUuid)
+                    .eFTIDataUuid(eftidataUuid)
                     .build();
         return objectMapper.writeValueAsString(requestBodyDto);
     }

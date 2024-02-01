@@ -15,6 +15,7 @@ public class BodyDto {
     private String eFTIData;
     private String status;
     private String requestUuid;
-    private String eftidataUuid;
+    @JsonProperty("eFTIDataUuid")
+    private String eFTIDataUuid;
     private String errorDescription;
 }

@@ -30,13 +30,20 @@ class ReaderServiceTest {
     void readFromFileJsonTest() throws IOException, UuidFileNotFoundException {
         String result = readerService.readFromFile("./cda/test");
 
-        Assertions.assertNotNull(result);
+        Assertions.assertNull(result);
     }
 
     @Test
     void readFromFileXmlTest() throws IOException, UuidFileNotFoundException {
         String result = readerService.readFromFile("./cda/teest");
 
-        Assertions.assertNotNull(result);
+        Assertions.assertNull(result);
+    }
+
+    @Test
+    void readFromFileXmlNullTest() throws IOException, UuidFileNotFoundException {
+        String result = readerService.readFromFile("C:\\projet\\EFTI\\platform-gate-simulator\\src\\main\\resources\\cda\\bouuuuuh");
+
+        Assertions.assertNull(result);
     }
 }

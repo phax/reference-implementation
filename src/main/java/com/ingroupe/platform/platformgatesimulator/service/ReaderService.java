@@ -1,32 +1,46 @@
 package com.ingroupe.platform.platformgatesimulator.service;
 
-import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 
 @Service
 @Slf4j
 public class ReaderService {
-
-    public String readFromFile(String file) throws IOException, UuidFileNotFoundException {
+    public String readFromFile(String file) throws IOException {
         log.info("try to open file : {}", file);
-        ClassLoader classLoader = getClass().getClassLoader();
-        InputStream inputStream = classLoader.getResourceAsStream(file + ".json");
-        if (inputStream == null) {
-            inputStream = classLoader.getResourceAsStream(file + ".xml");
-            if (inputStream == null) {
+        FileInputStream fileOpen = tryOpenXmlFile(file);
+        if (fileOpen == null) {
+            fileOpen = tryOpenJsonFile(file);
+            if (fileOpen == null) {
                 return null;
             }
         }
-        return readFromInputStream(inputStream);
+        return readFromInputStream(fileOpen);
     }
 
-    private String readFromInputStream(InputStream inputStream)
+    private static FileInputStream tryOpenXmlFile(String file) {
+        try {
+            return new FileInputStream(file + ".xml");
+        } catch (FileNotFoundException e) {
+            return null;
+        }
+    }
+
+    private static FileInputStream tryOpenJsonFile(String file) {
+        try {
+            return new FileInputStream(file + ".json");
+        } catch (FileNotFoundException e) {
+            return null;
+        }
+    }
+
+    private String readFromInputStream(FileInputStream inputStream)
             throws IOException {
         StringBuilder resultStringBuilder = new StringBuilder();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
