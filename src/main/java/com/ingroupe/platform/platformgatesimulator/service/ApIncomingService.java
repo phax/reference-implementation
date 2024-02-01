@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
@@ -42,7 +43,7 @@ public class ApIncomingService {
 
     private final ObjectMapper objectMapper;
 
-    public void manageIncomingNotification(final ReceivedNotificationDto receivedNotificationDto) throws IOException, UuidFileNotFoundException, InterruptedException {
+    public void manageIncomingNotification(final ReceivedNotificationDto receivedNotificationDto) throws IOException, InterruptedException {
         int rand = new Random().nextInt(gateProperties.getMaxSleep()-gateProperties.getMinSleep())+gateProperties.getMinSleep();
         sleep(rand);
         final ApConfigDto apConfigDto = ApConfigDto.builder()
@@ -55,8 +56,21 @@ public class ApIncomingService {
         if (notificationDto.isEmpty()) {
             return;
         }
-        RetrieveMessageDto messageBodyDto = (RetrieveMessageDto) notificationDto.get().getContent();
-        String eftidataUuid = messageBodyDto.getMessageBodyDto().getEFTIDataUuid();
+        NotificationContentDto notificationContentDto = notificationDto.get().getContent();
+
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        MessageBodyDto messageBody;
+        try {
+            final String body = IOUtils.toString(notificationContentDto.getBody().getInputStream());
+            messageBody = mapper.readValue(body, MessageBodyDto.class);
+
+        } catch (final IOException e) {
+            throw new RetrieveMessageException("error while sending retrieve message request", e);
+        }
+
+        String eftidataUuid = messageBody.getEFTIDataUuid();
+
         if (eftidataUuid.endsWith("1")) {
             return;
         }
