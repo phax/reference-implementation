@@ -4,10 +4,16 @@ spring:
   application:
     name: {{ spring.application.name }}
   datasource:
-    url: {{ spring.datasource.url }}
-    username: {{ spring.datasource.username }}
-    password: {{ spring.datasource.password }}
-    driverClassName: org.postgresql.Driver
+    control:
+      url: {{ spring.datasource.url }}
+      username: {{ spring.datasource.username }}
+      password: {{ spring.datasource.password }}
+      driverClassName: org.postgresql.Driver
+    metadata:
+      url: {{ spring.datasource.url }}
+      username: {{ spring.datasource.username }}
+      password: {{ spring.datasource.password }}
+      driverClassName: org.postgresql.Driver
   jackson:
     default-property-inclusion: NON_NULL
   security:
@@ -19,8 +25,8 @@ spring:
     properties:
       hibernate:
         default_schema: "{{ spring.jpa.properties.hibernate.default_schema }}"
-        control_schema: "{{ spring.jpa.properties.hibernate.default_schema }}"
-        metadata_schema: "{{ spring.jpa.properties.hibernate.default_schema }}"
+        control_schema: "{{ spring.jpa.properties.hibernate.control_schema }}"
+        metadata_schema: "{{ spring.jpa.properties.hibernate.metadata_schema }}"
 gate:
   owner: {{ gate.owner }}
   ap:
