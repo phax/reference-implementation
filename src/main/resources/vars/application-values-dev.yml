@@ -13,7 +13,7 @@ spring:
   jpa:
     properties:
       hibernate:
-        default_schema: "eftifr"
+        default_schema: eftifr
 
 gate:
   owner: https://efti-gate.efti.dev.k8s.groupein.local
