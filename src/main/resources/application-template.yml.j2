@@ -28,6 +28,23 @@ spring:
         default_schema: "{{ spring.jpa.properties.hibernate.default_schema }}"
         control_schema: "{{ spring.jpa.properties.hibernate.control_schema }}"
         metadata_schema: "{{ spring.jpa.properties.hibernate.metadata_schema }}"
+
+management:
+  endpoint:
+    info:
+      enabled: true
+    health:
+      enabled: true
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include: info,health,metrics
+
 gate:
   owner: {{ gate.owner }}
   ap:
