@@ -13,9 +13,9 @@ spring:
   jpa:
     properties:
       hibernate:
-        control_schema: "efti"
+        control_schema: "eftifr"
         metadata_schema: "metadatafr"
-        default_schema: "efti"
+        default_schema: "eftifr"
 
 gate:
   owner: https://efti-gate.efti.dev.k8s.groupein.local
