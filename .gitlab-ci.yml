@@ -20,6 +20,7 @@ variables:
     options:
       - "NOT_DEFINED"
       - "dev-efti"
+      - "dev-efti-mock"
       - "int-efti"
     description: "Allow to select the current context in kubernetes to deploy the tools."
   REBUILD_COMPONENT_IMAGE:
