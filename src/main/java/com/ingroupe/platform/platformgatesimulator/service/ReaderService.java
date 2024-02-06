@@ -1,17 +1,40 @@
 package com.ingroupe.platform.platformgatesimulator.service;
 
+import com.ingroupe.platform.platformgatesimulator.config.GateProperties;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
 @Service
+@AllArgsConstructor
 @Slf4j
 public class ReaderService {
+
+    @Autowired
+    private final GateProperties gateProperties;
+
+    public void uploadFile(MultipartFile file) {
+        try {
+            if (file == null) {
+                throw new NullPointerException("No file send");
+            }
+            log.info("Try to upload file in {} with name {}", gateProperties.getCdaPath(), file.getOriginalFilename());
+            file.transferTo(new File(gateProperties.getCdaPath() + file.getOriginalFilename()));
+            log.info("File uploaded in {}", gateProperties.getCdaPath() + file.getOriginalFilename());
+        } catch (IOException e) {
+            log.error("Error when try to upload file to server", e);
+        }
+    }
+
     public String readFromFile(String file) throws IOException {
         log.info("try to open file : {}", file);
         FileInputStream fileOpen = tryOpenXmlFile(file);

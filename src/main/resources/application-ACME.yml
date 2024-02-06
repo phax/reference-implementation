@@ -1,3 +1,10 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://auth.gate.borduria.eu:8080/realms/eFTI_BO
+
 server:
   port: 8070
 
