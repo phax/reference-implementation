@@ -3,6 +3,7 @@ package com.ingroupe.efti.eftigate.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
@@ -99,7 +100,7 @@ public class RequestService {
 
     private void trySendDomibus(final RequestDto requestDto, final ApRequestDto apRequestDto) {
         try {
-            final String result = this.requestSendingService.sendRequest(apRequestDto);
+            final String result = this.requestSendingService.sendRequest(apRequestDto, EDeliveryAction.GET_UIL);
             requestDto.setEdeliveryMessageId(result);
             this.updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
         } catch (SendRequestException e) {
