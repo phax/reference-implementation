@@ -118,18 +118,18 @@ class RequestServiceTest extends AbstractServceTest {
 
     @Test
     void trySendDomibusSucessTest() throws SendRequestException {
-        when(requestSendingService.sendRequest(any())).thenReturn("result");
+        when(requestSendingService.sendRequest(any(), any())).thenReturn("result");
         when(requestRepository.save(any())).thenReturn(requestEntity);
 
         requestService.sendRequest(requestDto, false);
-        verify(requestSendingService).sendRequest(any());
+        verify(requestSendingService).sendRequest(any(), any());
     }
 
     @Test
     void createRequestEntityTest() throws SendRequestException, InterruptedException {
         final String edeliveryId = "id123";
         when(requestRepository.save(any())).thenReturn(requestEntity);
-        when(requestSendingService.sendRequest(any())).thenReturn(edeliveryId);
+        when(requestSendingService.sendRequest(any(), any())).thenReturn(edeliveryId);
 
         final RequestDto requestDto = requestService.createAndSendRequest(controlDto);
         Thread.sleep(1000);
@@ -142,7 +142,7 @@ class RequestServiceTest extends AbstractServceTest {
     @Test
     void shouldSetSendErrorTest() throws SendRequestException, InterruptedException {
         when(requestRepository.save(any())).thenReturn(requestEntity);
-        when(requestSendingService.sendRequest(any())).thenThrow(SendRequestException.class);
+        when(requestSendingService.sendRequest(any(),any())).thenThrow(SendRequestException.class);
 
         final RequestDto requestDto = requestService.createAndSendRequest(controlDto);
 
