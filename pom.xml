@@ -8,7 +8,7 @@
         <version>3.2.0</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.ingroupe.platform</groupId>
+    <groupId>com.ingroupe.efti</groupId>
     <artifactId>platform-gate-simulator</artifactId>
     <version>${revision}</version>
     <name>platform-gate-simulator</name>
