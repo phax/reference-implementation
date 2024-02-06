@@ -52,8 +52,8 @@ import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 @RequiredArgsConstructor
 public class RequestSendingService extends AbstractApService {
 
-    public String sendRequest(final ApRequestDto requestDto) throws SendRequestException {
-        final Messaging messaging = createMessaging(requestDto);
+    public String sendRequest(final ApRequestDto requestDto, final EDeliveryAction eDeliveryAction) throws SendRequestException {
+        final Messaging messaging = createMessaging(requestDto, eDeliveryAction);
         final SubmitRequest submitRequest = createSubmitRequest(requestDto);
 
         final SubmitResponse submitResponse = sendRequestToAPOrThrow(requestDto, submitRequest, messaging);
@@ -91,13 +91,13 @@ public class RequestSendingService extends AbstractApService {
         return submitRequest;
     }
 
-    private Messaging createMessaging(final ApRequestDto requestDto) {
+    private Messaging createMessaging(final ApRequestDto requestDto, final EDeliveryAction eDeliveryAction) {
         final Messaging messaging = new Messaging();
 
         final UserMessage userMessage = new UserMessage();
         userMessage.setProcessingType(ProcessingType.PUSH);
         userMessage.setPartyInfo(createPartyInfo(requestDto));
-        userMessage.setCollaborationInfo(createCollaborationInfo());
+        userMessage.setCollaborationInfo(createCollaborationInfo(eDeliveryAction));
         userMessage.setPayloadInfo(createPayloadInfo());
         userMessage.setMessageProperties(createMessageProperties());
 
@@ -132,12 +132,12 @@ public class RequestSendingService extends AbstractApService {
         return payloadInfo;
     }
 
-    private CollaborationInfo createCollaborationInfo() {
+    private CollaborationInfo createCollaborationInfo(final EDeliveryAction eDeliveryAction) {
         final CollaborationInfo collaborationInfo = new CollaborationInfo();
         final Service service = new Service();
         service.setType(SERVICE_TYPE);
         service.setValue(SERVICE_VALUE);
-        collaborationInfo.setAction(EDeliveryAction.GET_UIL.getValue());
+        collaborationInfo.setAction(eDeliveryAction.getValue());
         collaborationInfo.setService(service);
 
         return collaborationInfo;

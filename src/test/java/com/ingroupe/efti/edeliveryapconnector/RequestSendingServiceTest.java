@@ -3,6 +3,7 @@ package com.ingroupe.efti.edeliveryapconnector;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
@@ -37,6 +38,7 @@ class RequestSendingServiceTest {
 
     @Test
     void shouldBuildRequest() throws SendRequestException {
+        final EDeliveryAction eDeliveryAction = EDeliveryAction.GET_UIL;
         wireMockServer.stubFor(get(urlEqualTo("/domibus/services/wsplugin?wsdl"))
                 .willReturn(aResponse().withBodyFile("WebServicePlugin.wsdl")));
         wireMockServer.stubFor(post(urlEqualTo("/domibus/services/wsplugin?wsdl"))
@@ -54,12 +56,13 @@ class RequestSendingServiceTest {
                     .password("password")
                     .build()).build();
 
-        final String result = service.sendRequest(requestDto);
+        final String result = service.sendRequest(requestDto, eDeliveryAction);
         assertEquals("fc0e70cf-8d57-11ee-a62e-0242ac13000d@domibus.eu", result);
     }
 
     @Test
     void shouldThrowExceptionIfResponseEmpty() throws SendRequestException {
+        final EDeliveryAction eDeliveryAction = EDeliveryAction.GET_UIL;
         wireMockServer.stubFor(get(urlEqualTo("/domibus/services/wsplugin?wsdl"))
                 .willReturn(aResponse().withBodyFile("WebServicePlugin.wsdl")));
         wireMockServer.stubFor(post(urlEqualTo("/domibus/services/wsplugin?wsdl"))
@@ -76,7 +79,7 @@ class RequestSendingServiceTest {
                     .password("password")
                     .build()).build();
 
-        final String result = service.sendRequest(requestDto);
+        final String result = service.sendRequest(requestDto, eDeliveryAction);
         assertEquals("fc0e70cf-8d57-11ee-a62e-0242ac13000d@domibus.eu", result);
     }
 }
