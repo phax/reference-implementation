@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -53,8 +54,8 @@ public class MetadataService {
         return this.save(metadataDto);
     }
 
-    public void search(final MetadataRequestDto metadataRequestDto) {
-        this.repository.searchByCriteria(metadataRequestDto);
+    public List<MetadataDto> search(final MetadataRequestDto metadataRequestDto) {
+        return mapper.entityListToDtoList(this.repository.searchByCriteria(metadataRequestDto));
     }
 
     private void enrichAndValidate(final MetadataDto metadataDto) {
