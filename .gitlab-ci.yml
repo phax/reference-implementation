@@ -15,20 +15,21 @@ variables:
       - "dev"
       - "int"
     description: "The deployment target. Set to 'dev' by default."
-  CONTEXT:
-    value: "NOT_DEFINED"
-    options:
-      - "NOT_DEFINED"
-      - "dev-efti"
-      - "dev-efti-mock"
-      - "int-efti"
-    description: "Allow to select the current context in kubernetes to deploy the tools."
   REBUILD_COMPONENT_IMAGE:
     value: "true"
     options:
       - "true"
       - "false"
     description: "Allow to rebuild or no the component Image. Set to 'true' by default."
+  LABEL:
+    value: "NONE"
+    options:
+      - "NONE"
+      - "fr"
+      - "bo"
+      - "li"
+      - "sy"
+    description: "The label of component. Set to 'NONE' by default."
 
 workflow:
   rules:
@@ -40,6 +41,14 @@ workflow:
       when: never
     - if: $CI_COMMIT_REF_NAME !~ "develop"
       when: never
+    - if: $DEPLOY_ENVIRONMENT == "dev"
+      variables:
+        NAMESPACE_DEV: app-dev-efti-mock
+        CONTEXT: dev-efti-mock
+    - if: $DEPLOY_ENVIRONMENT == "int"
+      variables:
+        NAMESPACE: app-int-efti-mock
+        CONTEXT: int-efti-mock
     - when: always
 
 build_microservices:
