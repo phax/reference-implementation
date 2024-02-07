@@ -12,7 +12,6 @@ spring:
 server:
   port: 8880
 
-
 batch:
   retry:
     cron: "*/20 * * * * *"
