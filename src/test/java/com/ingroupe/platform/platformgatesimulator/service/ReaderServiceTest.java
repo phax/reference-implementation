@@ -2,16 +2,23 @@ package com.ingroupe.platform.platformgatesimulator.service;
 
 import com.ingroupe.platform.platformgatesimulator.config.GateProperties;
 import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 
 class ReaderServiceTest {
 
@@ -19,19 +26,22 @@ class ReaderServiceTest {
 
     private ReaderService readerService;
 
+    private ResourceLoader resourceLoader;
+
     @BeforeEach
     public void before() {
+        resourceLoader = Mockito.mock(ResourceLoader.class);
         openMocks = MockitoAnnotations.openMocks(this);
         final GateProperties gateProperties = GateProperties.builder()
                 .owner("france")
                 .minSleep(1000)
                 .maxSleep(2000)
-                .cdaPath("C:\\projet\\EFTI\\platform-gate-simulator\\src\\main\\resources\\cda\\")
+                .cdaPath("classpath:cda/")
                 .ap(GateProperties.ApConfig.builder()
                         .url("url")
                         .password("password")
                         .username("username").build()).build();
-        readerService = new ReaderService(gateProperties);
+        readerService = new ReaderService(gateProperties, resourceLoader);
     }
 
     @AfterEach
@@ -45,10 +55,15 @@ class ReaderServiceTest {
     }
 
     @Test
-    void uploadFileTest() {
+    void uploadFileTest() throws IOException {
+        Resource resource = Mockito.mock(Resource.class);
+        URI uri = Mockito.mock(URI.class);
+        Mockito.when(resourceLoader.getResource(any())).thenReturn(resource);
+        Mockito.when(resource.getURI()).thenReturn(uri);
+        Mockito.when(uri.getPath()).thenReturn("./cda/");
         MockMultipartFile mockMultipartFile = new MockMultipartFile(
                 "teest.xml",
-                "fileName",
+                "teest.xml",
                 "text/plain",
                 "content".getBytes());
 
@@ -56,22 +71,36 @@ class ReaderServiceTest {
     }
 
     @Test
-    void readFromFileJsonTest() throws IOException, UuidFileNotFoundException {
-        String result = readerService.readFromFile("C:\\projet\\EFTI\\platform-gate-simulator\\src\\main\\resources\\cda\\test");
+    void readFromFileJsonTest() throws IOException {
+        Resource resource = Mockito.mock(Resource.class);
+        Mockito.when(resourceLoader.getResource(any())).thenReturn(resource);
+        Mockito.when(resource.exists()).thenReturn(false);
+        Mockito.when(resource.exists()).thenReturn(true);
+        Mockito.when(resource.getInputStream()).thenReturn(IOUtils.toInputStream("some data", "UTF-8"));
+        String result = readerService.readFromFile("classpath:cda/test");
 
         Assertions.assertNotNull(result);
     }
 
     @Test
-    void readFromFileXmlTest() throws IOException, UuidFileNotFoundException {
-        String result = readerService.readFromFile("C:\\projet\\EFTI\\platform-gate-simulator\\src\\main\\resources\\cda\\teest");
+    void readFromFileXmlTest() throws IOException {
+        Resource resource = Mockito.mock(Resource.class);
+        Mockito.when(resourceLoader.getResource(any())).thenReturn(resource);
+        Mockito.when(resource.exists()).thenReturn(false);
+        Mockito.when(resource.exists()).thenReturn(true);
+        Mockito.when(resource.getInputStream()).thenReturn(IOUtils.toInputStream("some data", "UTF-8"));
+        String result = readerService.readFromFile("classpath:cda/teest");
 
         Assertions.assertNotNull(result);
     }
 
     @Test
-    void readFromFileXmlNullTest() throws IOException, UuidFileNotFoundException {
-        String result = readerService.readFromFile("C:\\projet\\EFTI\\platform-gate-simulator\\src\\main\\resources\\cda\\bouuuuuh");
+    void readFromFileXmlNullTest() throws IOException {
+        Resource resource = Mockito.mock(Resource.class);
+        Mockito.when(resourceLoader.getResource(any())).thenReturn(resource);
+        Mockito.when(resource.exists()).thenReturn(false);
+        Mockito.when(resource.exists()).thenReturn(false);
+        String result = readerService.readFromFile("classpath:cda/bouuuuuuuuuuuuh");
 
         Assertions.assertNull(result);
     }
