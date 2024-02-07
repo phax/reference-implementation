@@ -82,7 +82,7 @@
         <dependency>
             <groupId>com.ingroupe.efti</groupId>
             <artifactId>edelivery-ap-connector</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1</version>
         </dependency>
         <dependency>
             <groupId>com.ingroupe.efti</groupId>
