@@ -2,15 +2,12 @@ package com.ingroupe.platform.platformgatesimulator.service;
 
 import com.ingroupe.platform.platformgatesimulator.config.GateProperties;
 import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
-import jakarta.servlet.Registration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.mock.web.MockMultipartHttpServletRequest;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
@@ -60,16 +57,16 @@ class ReaderServiceTest {
 
     @Test
     void readFromFileJsonTest() throws IOException, UuidFileNotFoundException {
-        String result = readerService.readFromFile("./cda/test");
+        String result = readerService.readFromFile("C:\\projet\\EFTI\\platform-gate-simulator\\src\\main\\resources\\cda\\test");
 
-        Assertions.assertNull(result);
+        Assertions.assertNotNull(result);
     }
 
     @Test
     void readFromFileXmlTest() throws IOException, UuidFileNotFoundException {
-        String result = readerService.readFromFile("./cda/teest");
+        String result = readerService.readFromFile("C:\\projet\\EFTI\\platform-gate-simulator\\src\\main\\resources\\cda\\teest");
 
-        Assertions.assertNull(result);
+        Assertions.assertNotNull(result);
     }
 
     @Test
