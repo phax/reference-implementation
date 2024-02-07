@@ -1,7 +1,6 @@
 package com.ingroupe.platform.platformgatesimulator.service;
 
 import com.ingroupe.platform.platformgatesimulator.config.GateProperties;
-import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -15,7 +14,6 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
