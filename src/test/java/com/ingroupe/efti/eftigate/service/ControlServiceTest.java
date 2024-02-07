@@ -12,6 +12,7 @@ import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
+import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +44,8 @@ class ControlServiceTest extends AbstractServceTest {
     @Mock
     private RequestService requestService;
     private ControlService controlService;
+    @Mock
+    private MetadataService metadataService;
 
     private final UilDto uilDto = new UilDto();
     private final MetadataRequestDto metadataRequestDto = new MetadataRequestDto();
@@ -54,7 +57,7 @@ class ControlServiceTest extends AbstractServceTest {
     @BeforeEach
     public void before() {
         openMocks = MockitoAnnotations.openMocks(this);
-        controlService = new ControlService(controlRepository, mapperUtils, requestService);
+        controlService = new ControlService(controlRepository, mapperUtils, requestService, metadataService);
 
         final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         final String status = StatusEnum.PENDING.toString();

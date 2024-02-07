@@ -1,5 +1,6 @@
 package com.ingroupe.efti.eftigate.service;
 
+import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.dto.ValidableControl;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
@@ -12,6 +13,7 @@ import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
+import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -22,6 +24,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -34,6 +37,7 @@ public class ControlService {
     private final MapperUtils mapperUtils;
     @Lazy
     private final RequestService requestService;
+    private final MetadataService metadataService;
 
     public ControlEntity getById(long id) {
         Optional<ControlEntity> controlEntity = controlRepository.findById(id);
@@ -66,6 +70,8 @@ public class ControlService {
                     //temporaire, request pas implémenté pour les metadata
                     if(control instanceof UilDto) {
                         requestService.createAndSendRequest(saveControl);
+                    } else if (control instanceof MetadataRequestDto metadataRequestDto) {
+                        checkLocalRepo(metadataRequestDto);
                     }
                     log.info("control with request uuid '{}' has been register", saveControl.getRequestUuid());
                 });
@@ -97,6 +103,9 @@ public class ControlService {
         return this.save(controlDto);
     }
 
+    public List<MetadataDto> checkLocalRepo(final MetadataRequestDto requestDto) {
+        return metadataService.search(requestDto);
+    }
 
     private ControlDto save(final ControlDto controlDto) {
         return mapperUtils.controlEntityToControlDto(

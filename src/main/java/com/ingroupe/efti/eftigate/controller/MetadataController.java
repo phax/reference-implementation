@@ -1,9 +1,11 @@
 package com.ingroupe.efti.eftigate.controller;
 
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
+import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.eftigate.controller.api.MetadataControllerApi;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.service.ControlService;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,5 +26,10 @@ public class MetadataController implements MetadataControllerApi {
     public ResponseEntity<RequestUuidDto> getMetadata(final @RequestBody MetadataRequestDto metadataRequestDto) {
         log.info("POST on /getMetadata with param vehicleId {}", metadataRequestDto.getVehicleID());
         return new ResponseEntity<>(controlService.createMetadataControl(metadataRequestDto), HttpStatus.ACCEPTED);
+    }
+
+    @Override
+    public ResponseEntity<MetadataResponseDto> getMetadataResult(final @Parameter String requestUuid) {
+        return null;
     }
 }
