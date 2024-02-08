@@ -63,7 +63,7 @@ build_microservices:
     include:
       - project: "kube/build"
         file: "build_ms.yml"
-        ref: "kustomize"
+        ref: "mock"
     forward:
       pipeline_variables: true
     strategy: depend
