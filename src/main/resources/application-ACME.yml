@@ -1,3 +1,10 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://auth.gate.borduria.eu:8080/realms/eFTI_BO
+
 server:
   port: 8070
 
@@ -5,7 +12,7 @@ gate:
   minSleep: 1000
   maxSleep: 2000
   owner: http://efti.platform.acme.com
-  cda_path: C:\projet\EFTI\platform-gate-simulator\src\main\resources\cda\
+  cda_path: classpath:cda/
   gate: http://efti.gate.borduria.eu
   ap:
     url: http://efti.platform.acme.com:81/domibus/services/wsplugin
