@@ -1,7 +1,7 @@
 #########################################################################################################
 ################################## IN GROUPE COPYRIGHT  #################################################
 stages:  
-  - build_ms
+  - build_and_deploy
 
 variables:
   MAVEN_GROUPEID: com.ingroupe.efti
@@ -41,8 +41,8 @@ workflow:
       when: never
     - when: always
 
-build_microservices:
-  stage: build_ms
+build_and_deploy_microservice:
+  stage: build_and_deploy
   rules:
     - if: $CI_COMMIT_REF_NAME =~ /feat/
       variables:
