@@ -18,7 +18,7 @@ spring:
         default_schema: "eftifr"
 
 gate:
-  owner: https://efti-gate.efti.dev.k8s.groupein.local
+  owner: https://gate.efti.dev.k8s.groupein.local
   ap:
     url: http://efti.gate.borduria.eu:81/domibus/services/wsplugin
     username: borduria_service_account
