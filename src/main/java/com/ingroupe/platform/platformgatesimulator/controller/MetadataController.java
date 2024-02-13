@@ -27,10 +27,16 @@ public class MetadataController {
     private final ReaderService readerService;
 
     @PostMapping("/upload")
-    public ResponseEntity uploadMetadata(@RequestPart("data") MetadataDto metadataDto, @RequestPart("file") MultipartFile file) throws JsonProcessingException {
+    public ResponseEntity uploadMetadata(@RequestPart(value = "data", required = false) MetadataDto metadataDto, @RequestPart(value = "file", required = false) MultipartFile file) throws JsonProcessingException {
         log.info("/metadata/upload send");
-        apIncomingService.uploadMetadata(metadataDto);
-        readerService.uploadFile(file);
+        if (metadataDto != null) {
+            log.info("send metadata to gate");
+            apIncomingService.uploadMetadata(metadataDto);
+        }
+        if (file != null) {
+            log.info("try to upload file");
+            readerService.uploadFile(file);
+        }
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
