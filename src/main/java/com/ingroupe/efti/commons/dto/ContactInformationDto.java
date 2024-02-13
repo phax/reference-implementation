@@ -19,7 +19,7 @@ public class ContactInformationDto {
     @NotNull(message = "CONTACT_MAIL_MISSING")
     @NotBlank(message = "CONTACT_MAIL_MISSING")
     @Email(message = "CONTACT_MAIL_INCORRECT_FORMAT")
-    @Size(max = 255, message = "CONTACT_EMAIL_TOO_LONG")
+    @Size(max = 255, message = "CONTACT_MAIL_TOO_LONG")
     private String email;
     @NotNull(message = "CONTACT_STREET_NAME_MISSING")
     @NotBlank(message = "CONTACT_STREET_NAME_MISSING")
