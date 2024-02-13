@@ -34,7 +34,7 @@ public enum ErrorCodesEnum {
     CONTACT_MAIL_INCORRECT_FORMAT("Contact mail incorrect."),
     CONTACT_MAIL_TOO_LONG("Contact mail too long."),
     CONTACT_STREET_NAME_MISSING("Missing parameter streetName."),
-    CONTACT_STREET_NAME_TOO_LONG("Contact name too long."),
+    CONTACT_STREET_NAME_TOO_LONG("Contact streetName too long."),
     CONTACT_BUILDING_MISSING("Missing parameter buildingNumber."),
     CONTACT_BUILDING_NUMBER_TOO_LONG("Contact building number too long."),
     CONTACT_CITY_MISSING("Missing parameter city"),
