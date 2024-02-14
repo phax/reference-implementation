@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,17 +27,29 @@ public class MetadataController {
 
     private final ReaderService readerService;
 
-    @PostMapping("/upload")
-    public ResponseEntity uploadMetadata(@RequestPart(value = "data", required = false) MetadataDto metadataDto, @RequestPart(value = "file", required = false) MultipartFile file) throws JsonProcessingException {
-        log.info("/metadata/upload send");
-        if (metadataDto != null) {
-            log.info("send metadata to gate");
+    @PostMapping("/upload/file")
+    public ResponseEntity<String> uploadFile(@RequestPart MultipartFile file) {
+        if (file == null) {
+            log.error("No file send");
+            return new ResponseEntity("Error, no file send", HttpStatus.BAD_REQUEST);
+        }
+        log.info("try to upload file");
+        readerService.uploadFile(file);
+        return new ResponseEntity<>("File saved",HttpStatus.OK);
+    }
+
+    @PostMapping("/upload/metadata")
+    public ResponseEntity<String> uploadMetadata(@RequestBody MetadataDto metadataDto) {
+        if (metadataDto == null) {
+            log.error("Error no metadata send");
+            return new ResponseEntity<>("No metadata send", HttpStatus.BAD_REQUEST);
+        }
+        log.info("send metadata to gate");
+        try {
             apIncomingService.uploadMetadata(metadataDto);
+        } catch (JsonProcessingException e) {
+            log.error("Error when try to send to gate the Metadata", e);
         }
-        if (file != null) {
-            log.info("try to upload file");
-            readerService.uploadFile(file);
-        }
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>("Metadata uploaded", HttpStatus.OK);
     }
 }
