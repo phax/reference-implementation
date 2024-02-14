@@ -38,7 +38,7 @@ public class MetadataController {
         return new ResponseEntity<>("File saved",HttpStatus.OK);
     }
 
-    @PostMapping("/upload/metadata")
+    @PostMapping("/upload")
     public ResponseEntity<String> uploadMetadata(@RequestBody MetadataDto metadataDto) {
         if (metadataDto == null) {
             log.error("Error no metadata send");
@@ -49,6 +49,7 @@ public class MetadataController {
             apIncomingService.uploadMetadata(metadataDto);
         } catch (JsonProcessingException e) {
             log.error("Error when try to send to gate the Metadata", e);
+            return new ResponseEntity<>("No metadata send, error in JSON process", HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>("Metadata uploaded", HttpStatus.OK);
     }
