@@ -6,11 +6,11 @@
                 <constraints nullable="false" primaryKey="true" primaryKeyName="contactinformation_pkey"/>
             </column>
             <column name="email" type="VARCHAR(255)"/>
-            <column name="streetname" type="VARCHAR(255)"/>
-            <column name="buildingnumber" type="VARCHAR(30)"/>
+            <column name="streetname" type="VARCHAR(300)"/>
+            <column name="buildingnumber" type="VARCHAR(50)"/>
             <column name="city" type="VARCHAR(255)"/>
             <column name="additionalline" type="VARCHAR(255)"/>
-            <column name="postalcode" type="VARCHAR(30)"/>
+            <column name="postalcode" type="VARCHAR(50)"/>
         </createTable>
     </changeSet>
     <changeSet author="dfourmaux (generated)" id="1707315732219-2">
