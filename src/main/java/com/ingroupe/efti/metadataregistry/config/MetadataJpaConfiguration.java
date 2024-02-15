@@ -1,13 +1,17 @@
 package com.ingroupe.efti.metadataregistry.config;
 
 import com.ingroupe.efti.metadataregistry.entity.MetadataEntity;
+import liquibase.integration.spring.SpringLiquibase;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -34,16 +38,20 @@ public class MetadataJpaConfiguration {
     private String schema;
 
     @Bean
-    @ConfigurationProperties("spring.datasource.metadata")
-    public DataSourceProperties metadataDataSourceProperties() {
-        return new DataSourceProperties();
+    @ConfigurationProperties(prefix = "spring.datasource.metadata")
+    public DataSource metadataDataSource() {
+        return DataSourceBuilder.create().build();
     }
 
     @Bean
-    public DataSource metadataDataSource() {
-        return metadataDataSourceProperties()
-                .initializeDataSourceBuilder()
-                .build();
+    @ConfigurationProperties(prefix = "spring.datasource.metadata.liquibase")
+    public LiquibaseProperties metadataLiquibaseProperties() {
+        return new LiquibaseProperties();
+    }
+
+    @Bean
+    public SpringLiquibase metadataDataSourceLiquibase() {
+        return springLiquibase(metadataDataSource(), metadataLiquibaseProperties());
     }
 
     @Bean
@@ -66,5 +74,19 @@ public class MetadataJpaConfiguration {
     public PlatformTransactionManager metadataTransactionManager(
             @Qualifier("metadataEntityManagerFactory") LocalContainerEntityManagerFactoryBean metadataEntityManagerFactory) {
         return new JpaTransactionManager(Objects.requireNonNull(metadataEntityManagerFactory.getObject()));
+    }
+
+    private static SpringLiquibase springLiquibase(DataSource dataSource, LiquibaseProperties properties) {
+        SpringLiquibase liquibase = new SpringLiquibase();
+        liquibase.setDataSource(dataSource);
+        liquibase.setChangeLog(properties.getChangeLog());
+        liquibase.setContexts(properties.getContexts());
+        liquibase.setDefaultSchema(properties.getDefaultSchema());
+        liquibase.setDropFirst(properties.isDropFirst());
+        liquibase.setShouldRun(properties.isEnabled());
+        liquibase.setLabels(properties.getLabels());
+        liquibase.setChangeLogParameters(properties.getParameters());
+        liquibase.setRollbackFile(properties.getRollbackFile());
+        return liquibase;
     }
 }
