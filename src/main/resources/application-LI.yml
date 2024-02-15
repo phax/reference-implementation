@@ -8,6 +8,13 @@ spring:
     properties:
       hibernate:
         default_schema: "eftili"
+  #----- Liquibase -----#
+  liquibase:
+    enabled: true
+    defaultSchema: eftili
+    parameters:
+      defaultSchema: ${spring.liquibase.defaultSchema}
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
 gate:
   owner: listenbourg
