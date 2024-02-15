@@ -1,4 +1,11 @@
 spring:
+  datasource:
+    control:
+      liquibase:
+        default-schema: eftibo
+    metadata:
+      liquibase:
+        default-schema: eftibo
   security:
     oauth2:
       resourceserver:
@@ -10,6 +17,13 @@ spring:
         control_schema: "eftibo"
         metadata_schema: "eftibo"
         default_schema: "eftibo"
+  #----- Liquibase -----#
+  liquibase:
+    enabled: true
+    defaultSchema: eftili
+    parameters:
+      defaultSchema: ${spring.liquibase.defaultSchema}
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
 gate:
   owner: http://efti.gate.borduria.eu
