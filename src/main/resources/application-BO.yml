@@ -1,4 +1,11 @@
 spring:
+  datasource:
+    control:
+      liquibase:
+        default-schema: eftibo
+    metadata:
+      liquibase:
+        default-schema: eftibo
   security:
     oauth2:
       resourceserver:

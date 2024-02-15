@@ -1,10 +1,12 @@
 package com.ingroupe.efti.eftigate.config;
 
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
+import liquibase.integration.spring.SpringLiquibase;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,19 +34,24 @@ public class ControlJpaConfiguration {
     @Value("${spring.jpa.properties.hibernate.control_schema}")
     private String schema;
 
+    @Primary
     @Bean
-    @ConfigurationProperties("spring.datasource.control")
-    public DataSourceProperties controlDataSourceProperties() {
-        return new DataSourceProperties();
+    @ConfigurationProperties(prefix = "spring.datasource.control")
+    public DataSource controlDataSource() {
+        return DataSourceBuilder.create().build();
     }
 
     @Bean
-    @Primary
-    public DataSource controlDataSource() {
-        return controlDataSourceProperties()
-                .initializeDataSourceBuilder()
-                .build();
+    @ConfigurationProperties(prefix = "spring.datasource.control.liquibase")
+    public LiquibaseProperties controlDataSourceLiquibaseProperties() {
+        return new LiquibaseProperties();
     }
+
+    @Bean
+    public SpringLiquibase controlDataSourceLiquibase() {
+        return springLiquibase(controlDataSource(), controlDataSourceLiquibaseProperties());
+    }
+
     @Bean
     @Primary
     public LocalContainerEntityManagerFactoryBean controlEntityManagerFactory(
@@ -67,6 +74,20 @@ public class ControlJpaConfiguration {
         Map<String, Object> props = new HashMap<>();
         props.put("spring.datasource.schema", schema);
         return props;
+    }
+
+    private static SpringLiquibase springLiquibase(DataSource dataSource, LiquibaseProperties properties) {
+        SpringLiquibase liquibase = new SpringLiquibase();
+        liquibase.setDataSource(dataSource);
+        liquibase.setChangeLog(properties.getChangeLog());
+        liquibase.setContexts(properties.getContexts());
+        liquibase.setDefaultSchema(properties.getDefaultSchema());
+        liquibase.setDropFirst(properties.isDropFirst());
+        liquibase.setShouldRun(properties.isEnabled());
+        liquibase.setLabels(properties.getLabels());
+        liquibase.setChangeLogParameters(properties.getParameters());
+        liquibase.setRollbackFile(properties.getRollbackFile());
+        return liquibase;
     }
 
 }
