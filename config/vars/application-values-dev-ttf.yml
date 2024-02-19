@@ -1,7 +1,6 @@
 spring:
   application:
     name: efti-platform-ttf
-
   security:
     oauth2:
       resourceserver:
