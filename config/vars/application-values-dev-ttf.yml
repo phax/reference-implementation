@@ -1,6 +1,6 @@
 spring:
   application:
-    name: efti-platform-fr
+    name: efti-platform-ttf
 
   security:
     oauth2:
