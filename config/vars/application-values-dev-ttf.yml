@@ -5,7 +5,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://auth.gate.listenbourg.eu:8080/realms/eFTI_FR
+          issuer_uri: http://auth.gate.listenbourg.eu:8080/realms/eFTI_FR
 
 server:
   port: 8072
