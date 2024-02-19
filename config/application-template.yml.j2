@@ -8,6 +8,22 @@ spring:
   output:
     ansi:
       enabled: always
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: {{ spring.security.oauth2.resourceserver.jwt.issuer_uri}}
+
+gate:
+  minSleep: {{ gate.minSleep }}
+  maxSleep: {{ gate.maxSleep }}
+  owner: {{ gate.owner }}
+  cda_path: {{ gate.file_path }}
+  gate: {{ gate.gate }}
+  ap:
+    url: {{ gate.ap.url }}
+    username: {{ gate.ap.username }}
+    password: {{ gate.ap.password }}
 
 management:
   endpoint:
