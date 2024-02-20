@@ -33,14 +33,9 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class RequestServiceTest extends AbstractServceTest {
 
@@ -140,6 +135,16 @@ class RequestServiceTest extends AbstractServceTest {
     }
 
     @Test
+    void createRequestForMetadataTest() {
+        when(requestRepository.save(any())).thenReturn(requestEntity);
+
+        final RequestDto requestDto = requestService.createRequestForMetadata(controlDto);
+        Mockito.verify(requestRepository, Mockito.times(2)).save(any());
+        assertNotNull(requestDto);
+        assertEquals(RequestStatusEnum.RECEIVED.name(), requestDto.getStatus());
+    }
+
+    @Test
     void shouldSetSendErrorTest() throws SendRequestException, InterruptedException {
         when(requestRepository.save(any())).thenReturn(requestEntity);
         when(requestSendingService.sendRequest(any(),any())).thenThrow(SendRequestException.class);
@@ -147,7 +152,7 @@ class RequestServiceTest extends AbstractServceTest {
         final RequestDto requestDto = requestService.createAndSendRequest(controlDto);
 
         Thread.sleep(1000);
-        Mockito.verify(requestRepository, Mockito.times(2)).save(any());
+        Mockito.verify(requestRepository, Mockito.times(1)).save(any());
         assertNotNull(requestDto);
         assertEquals(RequestStatusEnum.SEND_ERROR.name(), requestDto.getStatus());
         assertNotNull(requestDto.getError());

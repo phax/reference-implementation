@@ -28,6 +28,7 @@ import jakarta.validation.ValidatorFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -122,8 +123,11 @@ public class ControlService {
     private CountryIndicator getEftiGate(ControlDto controlDto) {
         //temporaire en attendant de discuter sur sa place
         MetadataResults metadataResults = controlDto.getMetadataResults();
-        if (CollectionUtils.isNotEmpty(metadataResults.getMetadataResult())){
-            return CountryIndicator.valueOf(metadataResults.getMetadataResult().iterator().next().getCountryStart());
+        if (metadataResults != null && CollectionUtils.isNotEmpty(metadataResults.getMetadataResult())){
+            String countryStart = metadataResults.getMetadataResult().iterator().next().getCountryStart();
+            if (StringUtils.isNotBlank(countryStart)){
+                return CountryIndicator.valueOf(countryStart);
+            }
         }
         return null;
     }
