@@ -5,15 +5,23 @@ spring:
     name: {{ spring.application.name }}
   datasource:
     control:
+      jdbc-url: {{ spring.datasource.url }}
       url: {{ spring.datasource.url }}
       username: {{ spring.datasource.username }}
       password: {{ spring.datasource.password }}
       driverClassName: org.postgresql.Driver
+      liquibase:
+        default-schema: {{ spring.jpa.properties.hibernate.control_schema }}
+        change-log: classpath:db.changelog/db.metadata.changelog-master.xml
     metadata:
+      jdbc-url: {{ spring.datasource.url }}
       url: {{ spring.datasource.url }}
       username: {{ spring.datasource.username }}
       password: {{ spring.datasource.password }}
       driverClassName: org.postgresql.Driver
+      liquibase:
+        default-schema: {{ spring.jpa.properties.hibernate.metadata_schema }}
+        change-log: classpath:db.changelog/db.metadata.changelog-master.xml
   jackson:
     default-property-inclusion: NON_NULL
   security:
