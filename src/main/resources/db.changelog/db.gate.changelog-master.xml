@@ -1,5 +1,7 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
-<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
     <changeSet author="dfourmaux (generated)" id="1707315732219-1">
         <createTable tableName="contactinformation">
             <column autoIncrement="true" name="id" startWith="105" type="INTEGER">
@@ -127,5 +129,10 @@
     </changeSet>
     <changeSet author="dfourmaux (generated)" id="1707315732219-12">
         <addForeignKeyConstraint baseColumnNames="error" baseTableName="request" constraintName="request_error_fkey" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="error" validate="true"/>
+    </changeSet>
+    <changeSet author="osouley" id="1707315732219-13">
+        <addColumn catalogName="efti" tableName="control">
+            <column name="metadatas" type="JSONB"/>
+        </addColumn>
     </changeSet>
 </databaseChangeLog>

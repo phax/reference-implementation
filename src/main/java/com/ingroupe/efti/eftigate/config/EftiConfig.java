@@ -13,7 +13,9 @@ import org.springframework.context.annotation.Configuration;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 
 @Configuration
 @ComponentScan(basePackages = "com.ingroupe.efti")
@@ -34,9 +36,13 @@ public class EftiConfig {
         Converter<String, LocalDateTime> toStringDate = new AbstractConverter<>() {
             @Override
             protected LocalDateTime convert(final String source) {
-                DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'+'SSSS");
+                DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'+'.SSSSSS");
+                DateTimeFormatter toFormatter = new DateTimeFormatterBuilder()
+                        .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
+                        .appendFraction(ChronoField.MILLI_OF_SECOND, 1, 9, true)
+                        .toFormatter();
                 try {
-                    return LocalDateTime.parse(source, format);
+                    return LocalDateTime.parse(source, toFormatter);
                 } catch (DateTimeParseException e) {
                     log.error("invalid date format {}", source);
                     return null;

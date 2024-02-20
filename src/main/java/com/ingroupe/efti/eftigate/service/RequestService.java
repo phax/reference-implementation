@@ -25,6 +25,7 @@ import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
+import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.cxf.helpers.IOUtils;
@@ -54,6 +55,7 @@ public class RequestService {
     private final ObjectMapper objectMapper;
     @Lazy
     private final ControlService controlService;
+    private MetadataService metadataService;
 
     @Value("${batch.retry.time}")
     private final List<Integer> listTime;
@@ -65,6 +67,18 @@ public class RequestService {
         this.sendRequest(result, true);
         return result;
     }
+
+    public RequestDto createRequestForMetadata(ControlDto controlDto) {
+        RequestDto requestDto = RequestDto.builder()
+                .createdDate(LocalDateTime.now(ZoneOffset.UTC))
+                .retry(0)
+                .control(controlDto)
+                .status(RequestStatusEnum.RECEIVED.toString())
+                .build();
+        log.info("Request has been register with controlId : {}", requestDto.getControl().getId());
+        return this.save(requestDto);
+    }
+
 
     public void sendRequest(final RequestDto requestDto, final boolean runAsynch) {
         final ApRequestDto apRequestDto;
@@ -193,7 +207,7 @@ public class RequestService {
         return mapperUtils.requestToRequestDto(requestEntity);
     }
 
-    private RequestDto updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {
+    public RequestDto updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {
         requestDto.setStatus(status.name());
         requestDto.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
         return this.save(requestDto);

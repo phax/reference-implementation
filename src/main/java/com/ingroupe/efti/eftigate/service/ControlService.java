@@ -2,15 +2,22 @@ package com.ingroupe.efti.eftigate.service;
 
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
+import com.ingroupe.efti.commons.dto.MetadataResponseDto;
+import com.ingroupe.efti.commons.dto.MetadataResultDto;
 import com.ingroupe.efti.commons.dto.ValidableControl;
+import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
+import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
+import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
+import com.ingroupe.efti.eftigate.entity.MetadataResult;
+import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
@@ -20,13 +27,17 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
@@ -71,7 +82,12 @@ public class ControlService {
                     if(control instanceof UilDto) {
                         requestService.createAndSendRequest(saveControl);
                     } else if (control instanceof MetadataRequestDto metadataRequestDto) {
-                        checkLocalRepo(metadataRequestDto);
+                        RequestDto requestForMetadata = requestService.createRequestForMetadata(saveControl);
+                        try {
+                            checkLocalRepo(metadataRequestDto, saveControl, requestForMetadata);
+                        } catch (ExecutionException | InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                     log.info("control with request uuid '{}' has been register", saveControl.getRequestUuid());
                 });
@@ -80,32 +96,98 @@ public class ControlService {
     }
 
     public RequestUuidDto getControlEntity(final String requestUuid) {
+        final ControlDto controlDto = getControlDto(requestUuid);
+        return buildResponse(controlDto);
+    }
+
+    public MetadataResponseDto getControlEntityForMetadata(String requestUuid) {
+        final ControlDto controlDto = getControlDto(requestUuid);
+        return buildMetadataResponse(controlDto);
+    }
+
+    private MetadataResponseDto buildMetadataResponse(ControlDto controlDto) {
+        final MetadataResponseDto result = MetadataResponseDto.builder()
+                .requestUuid(controlDto.getRequestUuid())
+                .status(controlDto.getStatus())
+                .eFTIGate(getEftiGate(controlDto))
+                .metadata(getMetadataResultDtos(controlDto)).build();
+        if(controlDto.isError()) {
+            result.setRequestUuid(null);
+            result.setErrorDescription(controlDto.getError().getErrorDescription());
+            result.setErrorCode(controlDto.getError().getErrorCode());
+        }
+        return result;
+    }
+
+    private CountryIndicator getEftiGate(ControlDto controlDto) {
+        //temporaire en attendant de discuter sur sa place
+        MetadataResults metadataResults = controlDto.getMetadataResults();
+        if (CollectionUtils.isNotEmpty(metadataResults.getMetadataResult())){
+            return CountryIndicator.valueOf(metadataResults.getMetadataResult().iterator().next().getCountryStart());
+        }
+        return null;
+    }
+
+    private List<MetadataResultDto> getMetadataResultDtos(ControlDto controlDto) {
+        MetadataResults metadataResults = controlDto.getMetadataResults();
+        if (metadataResults != null){
+            return mapperUtils.metadataResultEntitiesToMetadataResultDtos(metadataResults.getMetadataResult());
+        }
+        return Collections.emptyList();
+    }
+
+    private ControlDto getControlDto(String requestUuid) {
         log.info("get ControlEntity with uuid : {}", requestUuid);
         final Optional<ControlEntity> optionalControlEntity = controlRepository.findByRequestUuid(requestUuid);
-        final ControlDto controlDto = mapperUtils.controlEntityToControlDto(optionalControlEntity.orElse(
+        return mapperUtils.controlEntityToControlDto(optionalControlEntity.orElse(
                 ControlEntity.builder()
                         .status(StatusEnum.ERROR.name())
                         .error(ErrorEntity.builder()
                                 .errorCode(ErrorCodesEnum.UUID_NOT_FOUND.name())
                                 .errorDescription("Error requestUuid not found.").build()).build()));
-        return buildResponse(controlDto);
     }
 
-    public ControlDto setError(final ControlDto controlDto, final ErrorDto errorDto) {
+    public void setError(final ControlDto controlDto, final ErrorDto errorDto) {
         controlDto.setStatus(StatusEnum.ERROR.name());
         controlDto.setError(errorDto);
-        return this.save(controlDto);
+        this.save(controlDto);
     }
 
-    public ControlDto setEftiData(final ControlDto controlDto, final byte[] data) {
+    public void setEftiData(final ControlDto controlDto, final byte[] data) {
         controlDto.setStatus(StatusEnum.COMPLETE.name());
         controlDto.setEftiData(data);
-        return this.save(controlDto);
+        this.save(controlDto);
     }
 
-    public List<MetadataDto> checkLocalRepo(final MetadataRequestDto requestDto) {
-        return metadataService.search(requestDto);
+    @Async
+    public void checkLocalRepo(final MetadataRequestDto metadataRequestDto, ControlDto saveControl, RequestDto requestForMetadata) throws ExecutionException, InterruptedException {
+        List<MetadataDto> metadataDtoList = metadataService.search(metadataRequestDto);
+        if (CollectionUtils.isNotEmpty(metadataDtoList)){
+            updateControlWithMetadataList(metadataDtoList, saveControl, requestForMetadata);
+        }
+        else {
+            requestService.updateStatus(requestForMetadata, RequestStatusEnum.ERROR);
+        }
     }
+
+    private void updateControlWithMetadataList(List<MetadataDto> metadataDtos, ControlDto saveControl, RequestDto metadataRequestDto) {
+        String requestUuid = saveControl.getRequestUuid();
+        Optional<ControlEntity> optionalControlEntity = controlRepository.findByRequestUuid(requestUuid);
+        optionalControlEntity.ifPresent(controlEntity -> {
+            controlEntity.setMetadataResults(buildMetadataResult(metadataDtos));
+            controlEntity.setStatus(StatusEnum.COMPLETE.name());
+            controlRepository.save(controlEntity);
+            requestService.updateStatus(metadataRequestDto, RequestStatusEnum.SUCCESS);
+        });
+    }
+
+    private MetadataResults buildMetadataResult(List<MetadataDto> metadataDtos) {
+        List<MetadataResult> metadataResultList = mapperUtils.metadataDtosToMetadataEntities(metadataDtos);
+        return MetadataResults.builder()
+                .metadataResult(metadataResultList)
+                .build();
+    }
+
 
     private ControlDto save(final ControlDto controlDto) {
         return mapperUtils.controlEntityToControlDto(
@@ -145,5 +227,4 @@ public class ControlService {
         }
         return result;
     }
-
 }
