@@ -2,24 +2,8 @@ package com.ingroupe.efti.metadataregistry.entity;
 
 import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.model.AbstractModel;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import jakarta.persistence.*;
+import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
@@ -54,5 +38,6 @@ public class MetadataEntity extends AbstractModel {
     @JoinColumn(name = "metadata")
     @ToString.Exclude @EqualsAndHashCode.Exclude
     private List<TransportVehicle> transportVehicles;
+
     private boolean isDisabled;
 }

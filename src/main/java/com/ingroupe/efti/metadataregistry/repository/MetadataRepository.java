@@ -1,6 +1,8 @@
 package com.ingroupe.efti.metadataregistry.repository;
 
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
+import com.ingroupe.efti.commons.enums.CountryIndicator;
+import com.ingroupe.efti.commons.enums.TransportMode;
 import com.ingroupe.efti.metadataregistry.entity.MetadataEntity;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -30,10 +32,10 @@ public interface MetadataRepository extends JpaRepository<MetadataEntity, Long>,
                 predicates.add(cb.equal(root.get(IS_DANGEROUS_GOODS), request.getIsDangerousGoods()));
             }
             if(request.getTransportMode() != null) {
-                predicates.add(cb.equal(root.get(TRANSPORT_MODE), request.getTransportMode()));
+                predicates.add(cb.equal(root.join(TRANSPORT_VEHICLES).get(TRANSPORT_MODE), TransportMode.valueOf(request.getTransportMode())));
             }
             if(request.getVehicleCountry() != null) {
-                predicates.add(cb.equal(root.get(VEHICLE_COUNTRY), request.getVehicleCountry()));
+                predicates.add(cb.equal(root.join(TRANSPORT_VEHICLES).get(VEHICLE_COUNTRY), CountryIndicator.valueOf(request.getVehicleCountry())));
             }
             return cb.and(predicates.toArray(new Predicate[] {}));
         });
