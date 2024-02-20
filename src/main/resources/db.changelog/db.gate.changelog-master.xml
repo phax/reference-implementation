@@ -24,7 +24,7 @@
             <column name="legalcontact" type="INTEGER"/>
             <column name="workingcontact" type="INTEGER"/>
             <column name="isemergencyservice" type="BOOLEAN"/>
-            <column name="name" type="VARCHAR(30)"/>
+            <column name="name" type="VARCHAR(100)"/>
             <column name="nationaluniqueidentifier" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>

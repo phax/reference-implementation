@@ -22,6 +22,8 @@ import java.time.temporal.ChronoField;
 @Slf4j
 public class EftiConfig {
 
+    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+
     @Bean(name = "modelMapper")
     public ModelMapper modelMapper() {
         final ModelMapper mapper = new ModelMapper();
@@ -36,9 +38,8 @@ public class EftiConfig {
         Converter<String, LocalDateTime> toStringDate = new AbstractConverter<>() {
             @Override
             protected LocalDateTime convert(final String source) {
-                DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'+'.SSSSSS");
                 DateTimeFormatter toFormatter = new DateTimeFormatterBuilder()
-                        .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
+                        .appendPattern(DATE_FORMAT)
                         .appendFraction(ChronoField.MILLI_OF_SECOND, 1, 9, true)
                         .toFormatter();
                 try {

@@ -20,8 +20,8 @@ spring:
 gate:
   owner: https://gate.efti.dev.k8s.groupein.local
   ap:
-    url: http://efti.gate.borduria.eu:81/domibus/services/wsplugin
-    username: borduria_service_account
+    url: http://172.16.201.114:8080/domibus/services/wsplugin
+    username: france_service_account
     password: Azerty59*1234567
 
 batch:
