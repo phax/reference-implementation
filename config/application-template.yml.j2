@@ -12,7 +12,7 @@ spring:
       driverClassName: org.postgresql.Driver
       liquibase:
         default-schema: {{ spring.jpa.properties.hibernate.control_schema }}
-        change-log: classpath:db.changelog/db.metadata.changelog-master.xml
+        change-log: classpath:db.changelog/db.gate.changelog-master.xml
     metadata:
       jdbc-url: {{ spring.datasource.url }}
       url: {{ spring.datasource.url }}
