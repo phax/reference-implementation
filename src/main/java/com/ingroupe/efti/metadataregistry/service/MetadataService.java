@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -54,6 +55,7 @@ public class MetadataService {
         return this.save(metadataDto);
     }
 
+    @Transactional("metadataTransactionManager")
     public List<MetadataDto> search(final MetadataRequestDto metadataRequestDto) {
         return mapper.entityListToDtoList(this.repository.searchByCriteria(metadataRequestDto));
     }
