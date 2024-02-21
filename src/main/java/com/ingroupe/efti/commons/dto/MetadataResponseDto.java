@@ -15,6 +15,7 @@ public class MetadataResponseDto {
     private CountryIndicator eFTIGate;
     private String requestUuid;
     private String status;
+    private String errorCode;
     private String errorDescription;
-    private List<Object> metadata;
+    private List<MetadataResultDto> metadata;
 }
