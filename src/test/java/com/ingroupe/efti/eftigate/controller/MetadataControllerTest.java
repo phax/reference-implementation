@@ -71,7 +71,7 @@ class MetadataControllerTest {
     void requestUilGetTest() throws Exception {
         Mockito.when(controlService.getControlEntityForMetadata(REQUEST_UUID)).thenReturn(metadataResponseDto);
 
-        MvcResult result = mockMvc.perform(get("/v1/requestMetadata").param("requestUuid", REQUEST_UUID))
+        MvcResult result = mockMvc.perform(get("/v1/getMetadata").param("requestUuid", REQUEST_UUID))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();

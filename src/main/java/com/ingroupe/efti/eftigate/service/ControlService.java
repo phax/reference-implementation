@@ -38,7 +38,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
@@ -84,11 +83,7 @@ public class ControlService {
                         requestService.createAndSendRequest(saveControl);
                     } else if (control instanceof MetadataRequestDto metadataRequestDto) {
                         RequestDto requestForMetadata = requestService.createRequestForMetadata(saveControl);
-                        try {
-                            checkLocalRepo(metadataRequestDto, saveControl, requestForMetadata);
-                        } catch (ExecutionException | InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
+                        checkLocalRepo(metadataRequestDto, saveControl, requestForMetadata);
                     }
                     log.info("control with request uuid '{}' has been register", saveControl.getRequestUuid());
                 });
@@ -122,6 +117,7 @@ public class ControlService {
 
     private CountryIndicator getEftiGate(ControlDto controlDto) {
         //temporaire en attendant de discuter sur sa place
+        List<RequestDto> requests = controlDto.getRequests();
         MetadataResults metadataResults = controlDto.getMetadataResults();
         if (metadataResults != null && CollectionUtils.isNotEmpty(metadataResults.getMetadataResult())){
             String countryStart = metadataResults.getMetadataResult().iterator().next().getCountryStart();
@@ -164,7 +160,7 @@ public class ControlService {
     }
 
     @Async
-    public void checkLocalRepo(final MetadataRequestDto metadataRequestDto, ControlDto saveControl, RequestDto requestForMetadata) throws ExecutionException, InterruptedException {
+    public void checkLocalRepo(final MetadataRequestDto metadataRequestDto, ControlDto saveControl, RequestDto requestForMetadata) {
         List<MetadataDto> metadataDtoList = metadataService.search(metadataRequestDto);
         if (CollectionUtils.isNotEmpty(metadataDtoList)){
             updateControlWithMetadataList(metadataDtoList, saveControl, requestForMetadata);

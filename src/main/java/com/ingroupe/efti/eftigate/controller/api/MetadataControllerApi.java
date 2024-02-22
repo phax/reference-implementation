@@ -40,7 +40,7 @@ public interface MetadataControllerApi {
             @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema()))
     })
-    @GetMapping("/requestMetadata")
+    @GetMapping("/getMetadata")
     @Secured(Roles.ROLE_ROAD_CONTROLER)
     ResponseEntity<MetadataResponseDto> getMetadataResult(final @Parameter String requestUuid);
 
