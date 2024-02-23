@@ -4,6 +4,7 @@ import com.ingroupe.efti.commons.dto.AuthorityDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
+import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.SearchParameter;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,6 +39,8 @@ public class ControlDto {
     private List<RequestDto> requests;
     private AuthorityDto authority;
     private ErrorDto error;
+    private MetadataResults metadataResults;
+
 
     public static ControlDto fromUilControl(final UilDto uilDto) {
         final String uuidGenerator = UUID.randomUUID().toString();

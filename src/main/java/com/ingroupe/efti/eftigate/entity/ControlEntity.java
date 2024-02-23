@@ -92,4 +92,8 @@ public class ControlEntity {
     @JoinColumn(name = "error", referencedColumnName = "id")
     @ToString.Exclude @EqualsAndHashCode.Exclude
     private ErrorEntity error;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadatas")
+    private MetadataResults metadataResults;
 }
