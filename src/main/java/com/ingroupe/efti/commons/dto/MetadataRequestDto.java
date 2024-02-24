@@ -1,5 +1,6 @@
 package com.ingroupe.efti.commons.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.enums.TransportMode;
 import com.ingroupe.efti.commons.validator.ValueOfEnum;
@@ -30,6 +31,7 @@ public class MetadataRequestDto implements ValidableControl {
     @ValueOfEnum(enumClass = CountryIndicator.class, message = "VEHICLE_COUNTRY_INCORRECT")
     private String vehicleCountry;
     private Boolean isDangerousGoods;
+    @JsonProperty("eFTIGateIndicator")
     private List<@Valid @ValueOfEnum(enumClass = CountryIndicator.class, message = "GATE_INDICATOR_INCORRECT") String> eFTIGateIndicator;
     @Valid
     @NotNull(message= "AUTHORITY_MISSING")
