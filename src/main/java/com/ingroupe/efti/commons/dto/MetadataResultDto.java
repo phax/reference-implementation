@@ -1,5 +1,6 @@
 package com.ingroupe.efti.commons.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -15,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MetadataResultDto implements Serializable {
+    @JsonIgnore
     private long id;
     private boolean isDangerousGoods;
     private String journeyStart;
