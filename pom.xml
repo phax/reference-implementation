@@ -5,7 +5,7 @@
 
     <groupId>com.ingroupe.efti</groupId>
     <artifactId>commons</artifactId>
-    <version></version>
+    <version>${revision}</version>
     <name>commons</name>
     <description>commons</description>
 
