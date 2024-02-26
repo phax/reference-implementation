@@ -3,6 +3,8 @@ package com.ingroupe.platform.platformgatesimulator.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingroupe.efti.commons.dto.MetadataDto;
+import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
@@ -15,7 +17,6 @@ import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.platform.platformgatesimulator.config.GateProperties;
 import com.ingroupe.platform.platformgatesimulator.dto.BodyDto;
-import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.cxf.helpers.IOUtils;
@@ -43,6 +44,16 @@ public class ApIncomingService {
 
     private final ObjectMapper objectMapper;
 
+    public void uploadMetadata(final MetadataDto metadataDto) throws JsonProcessingException {
+        String metadataDtoString = objectMapper.writeValueAsString(metadataDto);
+        final ApConfigDto apConfigDto = ApConfigDto.builder()
+                .username(gateProperties.getAp().getUsername())
+                .password(gateProperties.getAp().getPassword())
+                .url(gateProperties.getAp().getUrl())
+                .build();
+        sendUpload(apConfigDto, metadataDtoString, EDeliveryAction.UPLOAD_METADATA);
+    }
+
     public void manageIncomingNotification(final ReceivedNotificationDto receivedNotificationDto) throws IOException, InterruptedException {
         int rand = new Random().nextInt(gateProperties.getMaxSleep()-gateProperties.getMinSleep())+gateProperties.getMinSleep();
         sleep(rand);
@@ -68,22 +79,20 @@ public class ApIncomingService {
         } catch (final IOException e) {
             throw new RetrieveMessageException("error while sending retrieve message request", e);
         }
-
         String eftidataUuid = messageBody.getEFTIDataUuid();
-
         if (eftidataUuid.endsWith("1")) {
             return;
         }
         String requestUuid = messageBody.getRequestUuid();
         String data = readerService.readFromFile(gateProperties.getCdaPath() + eftidataUuid);
         if (data == null) {
-            sendError(apConfigDto, eftidataUuid, requestUuid, data);
+            sendError(apConfigDto, eftidataUuid, requestUuid, data, EDeliveryAction.GET_UIL);
         } else {
-            sendSucess(apConfigDto, eftidataUuid, requestUuid, data);
+            sendSucess(apConfigDto, eftidataUuid, requestUuid, data, EDeliveryAction.GET_UIL);
         }
     }
 
-    private void sendError(ApConfigDto apConfigDto, String eftidataUuid, String requestUuid, String data) throws JsonProcessingException {
+    private void sendError(ApConfigDto apConfigDto, String eftidataUuid, String requestUuid, String data, final EDeliveryAction eDeliveryAction) throws JsonProcessingException {
         ApRequestDto apRequestDto = ApRequestDto.builder()
                 .requestId(1L).body(buildBodyError(data, requestUuid, eftidataUuid, "file not found with uuid"))
                 .apConfig(apConfigDto)
@@ -91,13 +100,27 @@ public class ApIncomingService {
                 .sender(gateProperties.getOwner())
                 .build();
         try {
-            requestSendingService.sendRequest(apRequestDto);
+            requestSendingService.sendRequest(apRequestDto, eDeliveryAction);
         } catch (SendRequestException e) {
             log.error("SendRequestException received : ", e);
         }
     }
 
-    private void sendSucess(ApConfigDto apConfigDto, String eftidataUuid, String requestUuid, String data) throws JsonProcessingException {
+    private void sendUpload(ApConfigDto apConfigDto, String data, final EDeliveryAction eDeliveryAction) throws JsonProcessingException {
+        ApRequestDto apRequestDto = ApRequestDto.builder()
+                .requestId(1L).body(data)
+                .apConfig(apConfigDto)
+                .receiver(gateProperties.getGate())
+                .sender(gateProperties.getOwner())
+                .build();
+        try {
+            requestSendingService.sendRequest(apRequestDto, eDeliveryAction);
+        } catch (SendRequestException e) {
+            log.error("SendRequestException received : ", e);
+        }
+    }
+
+    private void sendSucess(ApConfigDto apConfigDto, String eftidataUuid, String requestUuid, String data, final EDeliveryAction eDeliveryAction) throws JsonProcessingException {
         ApRequestDto apRequestDto = ApRequestDto.builder()
                 .requestId(1L).body(buildBody(data, requestUuid, eftidataUuid))
                 .apConfig(apConfigDto)
@@ -105,7 +128,7 @@ public class ApIncomingService {
                 .sender(gateProperties.getOwner())
                 .build();
         try {
-            requestSendingService.sendRequest(apRequestDto);
+            requestSendingService.sendRequest(apRequestDto, eDeliveryAction);
         } catch (SendRequestException e) {
             log.error("SendRequestException received : ", e);
         }
