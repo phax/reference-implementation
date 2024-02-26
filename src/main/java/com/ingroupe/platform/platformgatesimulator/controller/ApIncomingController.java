@@ -5,6 +5,7 @@ import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundExc
 import com.ingroupe.platform.platformgatesimulator.service.ApIncomingService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,8 +22,9 @@ public class ApIncomingController {
     private final ApIncomingService apIncomingService;
 
     @PostMapping("/notification")
-    public void getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) throws IOException, InterruptedException, UuidFileNotFoundException {
+    public ResponseEntity<Void> getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) throws IOException, InterruptedException, UuidFileNotFoundException {
         log.info("Notification reçus");
         apIncomingService.manageIncomingNotification(receivedNotificationDto);
+        return ResponseEntity.ok().build();
     }
 }
