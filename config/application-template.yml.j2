@@ -33,7 +33,6 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect 
     properties:
       hibernate:
-        default_schema: "{{ spring.jpa.properties.hibernate.default_schema }}"
         control_schema: "{{ spring.jpa.properties.hibernate.control_schema }}"
         metadata_schema: "{{ spring.jpa.properties.hibernate.metadata_schema }}"
 
