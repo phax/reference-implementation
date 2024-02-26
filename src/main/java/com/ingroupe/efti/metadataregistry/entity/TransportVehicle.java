@@ -1,13 +1,7 @@
 package com.ingroupe.efti.metadataregistry.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.enums.TransportMode;
-import com.ingroupe.efti.commons.model.AbstractModel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -26,10 +20,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -39,7 +31,7 @@ import java.time.LocalDateTime;
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "transportvehicle")
-public class TransportVehicle extends AbstractModel implements Serializable {
+public class TransportVehicle extends JourneyEntity implements Serializable {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
@@ -51,18 +43,6 @@ public class TransportVehicle extends AbstractModel implements Serializable {
     private String vehicleId;
     @Enumerated(EnumType.STRING)
     private CountryIndicator vehicleCountry;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'+'SSSS")
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'+'SSSS")
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime journeyStart;
-    @Enumerated(EnumType.STRING)
-    private CountryIndicator countryStart;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'+'SSSS")
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'+'SSSS")
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime journeyEnd;
     @Enumerated(EnumType.STRING)
     private CountryIndicator countryEnd;
     @ManyToOne(fetch = FetchType.LAZY)
