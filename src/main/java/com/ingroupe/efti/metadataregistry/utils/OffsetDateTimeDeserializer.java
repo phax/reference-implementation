@@ -10,9 +10,9 @@ public class OffsetDateTimeDeserializer extends InstantDeserializer<OffsetDateTi
     public OffsetDateTimeDeserializer() {
         super(OffsetDateTime.class, DateTimeFormatter.ISO_OFFSET_DATE_TIME,
                 OffsetDateTime::from,
-                a -> OffsetDateTime.ofInstant(Instant.ofEpochMilli(a.value), a.zoneId),
-                a -> OffsetDateTime.ofInstant(Instant.ofEpochSecond(a.integer, a.fraction), a.zoneId),
-                (d, z) -> d.withOffsetSameInstant(z.getRules().getOffset(d.toLocalDateTime())),
+                fromMilliSeconds -> OffsetDateTime.ofInstant(Instant.ofEpochMilli(fromMilliSeconds.value), fromMilliSeconds.zoneId),
+                fromNanoSeconds -> OffsetDateTime.ofInstant(Instant.ofEpochSecond(fromNanoSeconds.integer, fromNanoSeconds.fraction), fromNanoSeconds.zoneId),
+                (offsetDateTime, zoneId) -> offsetDateTime.withOffsetSameInstant(zoneId.getRules().getOffset(offsetDateTime.toLocalDateTime())),
                 true);
     }
 }
