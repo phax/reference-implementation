@@ -75,6 +75,7 @@ public class ControlJpaConfiguration {
     private Map<String, Object> jpaProperties() {
         Map<String, Object> props = new HashMap<>();
         props.put("spring.datasource.schema", schema);
+        props.put("hibernate.default_schema", schema);
         return props;
     }
 

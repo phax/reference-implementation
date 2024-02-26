@@ -16,7 +16,6 @@ spring:
       hibernate:
         control_schema: "eftibo"
         metadata_schema: "eftibo"
-        default_schema: "eftibo"
 
 gate:
   owner: http://efti.gate.borduria.eu

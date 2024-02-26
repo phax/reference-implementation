@@ -11,7 +11,7 @@ import javax.sql.DataSource;
 @Configuration
 public class SchedulerConfiguration {
 
-    @Value("${spring.jpa.properties.hibernate.default_schema}")
+    @Value("${spring.jpa.properties.hibernate.control_schema}")
     String defaultSchema;
 
     @Bean

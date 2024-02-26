@@ -16,7 +16,6 @@ spring:
       hibernate:
         control_schema: "eftisy"
         metadata_schema: "eftisy"
-        default_schema: "eftisy"
 
 gate:
   owner: http://efti.gate.syldavia.eu
