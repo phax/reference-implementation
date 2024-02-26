@@ -12,5 +12,4 @@ public class EftiGateApplication {
     public static void main(String[] args) {
         SpringApplication.run(EftiGateApplication.class, args);
     }
-
 }

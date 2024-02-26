@@ -2,10 +2,22 @@ spring:
   application:
     name: efti-gate
   datasource:
-    url: jdbc:postgresql://localhost:9000/efti
-    username: ingroup
-    password: root
-    driverClassName: org.postgresql.Driver
+    control:
+      jdbc-url: jdbc:postgresql://localhost:9000/efti
+      url: jdbc:postgresql://localhost:9000/efti
+      username: ingroup
+      password: root
+      driverClassName: org.postgresql.Driver
+      liquibase:
+        change-log: classpath:db.changelog/db.gate.changelog-master.xml
+    metadata:
+      jdbc-url: jdbc:postgresql://localhost:2345/efti
+      url: jdbc:postgresql://localhost:2345/efti
+      username: root
+      password: root
+      driverClassName: org.postgresql.Driver
+      liquibase:
+        change-log: classpath:db.changelog/db.metadata.changelog-master.xml
   jackson:
     default-property-inclusion: NON_NULL
 

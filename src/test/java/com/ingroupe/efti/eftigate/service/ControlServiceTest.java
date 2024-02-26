@@ -1,16 +1,23 @@
 package com.ingroupe.efti.eftigate.service;
 
+import com.ingroupe.efti.commons.dto.AuthorityDto;
+import com.ingroupe.efti.commons.dto.ContactInformationDto;
+import com.ingroupe.efti.commons.dto.MetadataDto;
+import com.ingroupe.efti.commons.dto.MetadataRequestDto;
+import com.ingroupe.efti.commons.dto.MetadataResponseDto;
+import com.ingroupe.efti.commons.dto.TransportVehicleDto;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
-import com.ingroupe.efti.eftigate.dto.AuthorityDto;
-import com.ingroupe.efti.eftigate.dto.ContactInformationDto;
+import com.ingroupe.efti.commons.enums.RequestTypeEnum;
+import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
+import com.ingroupe.efti.eftigate.entity.MetadataResult;
+import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
-import com.ingroupe.efti.eftigate.utils.RequestTypeEnum;
-import com.ingroupe.efti.eftigate.utils.StatusEnum;
+import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,16 +30,13 @@ import org.mockito.MockitoAnnotations;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class ControlServiceTest extends AbstractServceTest {
 
@@ -42,28 +46,30 @@ class ControlServiceTest extends AbstractServceTest {
     @Mock
     private RequestService requestService;
     private ControlService controlService;
+    @Mock
+    private MetadataService metadataService;
 
     private final UilDto uilDto = new UilDto();
+    private final MetadataRequestDto metadataRequestDto = new MetadataRequestDto();
     private final ControlDto controlDto = new ControlDto();
+    MetadataDto metadataDto= new MetadataDto();
+    TransportVehicleDto transportVehicleDto = new TransportVehicleDto();
     private final ControlEntity controlEntity = new ControlEntity();
+
+    MetadataResult metadataResult = new MetadataResult();
+    MetadataResults metadataResults = new MetadataResults();
     private final RequestUuidDto requestUuidDto = new RequestUuidDto();
     private final String requestUuid = UUID.randomUUID().toString();
+    private final String metadataUuid = UUID.randomUUID().toString();
 
     @BeforeEach
     public void before() {
         openMocks = MockitoAnnotations.openMocks(this);
-        controlService = new ControlService(controlRepository, mapperUtils, requestService);
+        controlService = new ControlService(controlRepository, mapperUtils, requestService, metadataService);
 
-        LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
-        String status = StatusEnum.PENDING.toString();
-
-        requestUuidDto.setRequestUuid(requestUuid);
-        requestUuidDto.setStatus(status);
-
-        this.uilDto.setEFTIGateUrl("http://www.gate.com");
-        this.uilDto.setEFTIDataUuid("12345678-ab12-4ab6-8999-123456789abc");
-        this.uilDto.setEFTIPlatformUrl("http://www.platform.com");
-        this.uilDto.setAuthority(AuthorityDto.builder()
+        final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
+        final String status = StatusEnum.PENDING.toString();
+        final AuthorityDto authorityDto = AuthorityDto.builder()
                 .nationalUniqueIdentifier("national identifier")
                 .name("Robert")
                 .workingContact(ContactInformationDto.builder()
@@ -79,7 +85,21 @@ class ControlServiceTest extends AbstractServceTest {
                         .buildingNumber("12")
                         .postalCode("62320")
                         .streetName("rue jean luc de la rue").build())
-                .isEmergencyService(true).build());
+                .isEmergencyService(true).build();
+
+        requestUuidDto.setRequestUuid(requestUuid);
+        requestUuidDto.setStatus(status);
+
+        this.uilDto.setEFTIGateUrl("http://www.gate.com");
+        this.uilDto.setEFTIDataUuid("12345678-ab12-4ab6-8999-123456789abc");
+        this.uilDto.setEFTIPlatformUrl("http://www.platform.com");
+        this.uilDto.setAuthority(authorityDto);
+
+        this.metadataRequestDto.setVehicleID("abc123");
+        this.metadataRequestDto.setVehicleCountry("FR");
+        this.metadataRequestDto.setAuthority(authorityDto);
+        this.metadataRequestDto.setTransportMode("ROAD");
+
         this.controlDto.setEftiDataUuid(uilDto.getEFTIDataUuid());
         this.controlDto.setEftiGateUrl(uilDto.getEFTIGateUrl());
         this.controlDto.setEftiPlatformUrl(uilDto.getEFTIPlatformUrl());
@@ -110,6 +130,23 @@ class ControlServiceTest extends AbstractServceTest {
         this.controlEntity.setEftiData(controlDto.getEftiData());
         this.controlEntity.setTransportMetadata(controlDto.getTransportMetaData());
         this.controlEntity.setFromGateUrl(controlDto.getFromGateUrl());
+
+        metadataResults.setMetadataResult(Collections.singletonList(metadataResult));
+
+
+        transportVehicleDto.setCountryStart("FR");
+        transportVehicleDto.setCountryEnd("FR");
+        transportVehicleDto.setTransportMode("ROAD");
+        transportVehicleDto.setJourneyStart(LocalDateTime.now().toString());
+        transportVehicleDto.setJourneyStart(LocalDateTime.now().plusHours(5L).toString());
+
+        metadataDto.setDangerousGoods(true);
+        metadataDto.setMetadataUUID(metadataUuid);
+        metadataDto.setDisabled(false);
+        metadataDto.setCountryStart("FR");
+        metadataDto.setCountryEnd("FR");
+        metadataDto.setTransportVehicles(Collections.singletonList(transportVehicleDto));
+
     }
 
     @AfterEach
@@ -131,7 +168,7 @@ class ControlServiceTest extends AbstractServceTest {
     void createControlEntityTest() {
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
-        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
+        RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
         verify(requestService, times(1)).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(1)).save(any());
@@ -147,7 +184,7 @@ class ControlServiceTest extends AbstractServceTest {
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
-        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
+        RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(0)).save(any());
@@ -162,7 +199,7 @@ class ControlServiceTest extends AbstractServceTest {
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
-        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
+        RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(0)).save(any());
@@ -178,7 +215,7 @@ class ControlServiceTest extends AbstractServceTest {
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
-        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
+        RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(0)).save(any());
@@ -193,7 +230,7 @@ class ControlServiceTest extends AbstractServceTest {
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
-        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
+        RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(0)).save(any());
@@ -209,7 +246,7 @@ class ControlServiceTest extends AbstractServceTest {
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
-        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
+        RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(0)).save(any());
@@ -224,7 +261,7 @@ class ControlServiceTest extends AbstractServceTest {
         controlEntity.setStatus(StatusEnum.ERROR.name());
         Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
 
-        RequestUuidDto requestUuidDtoResult = controlService.createControlEntity(uilDto);
+        RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
         verify(requestService, never()).createAndSendRequest(any());
         verify(controlRepository, Mockito.times(0)).save(any());
@@ -234,7 +271,7 @@ class ControlServiceTest extends AbstractServceTest {
     }
 
     @Test
-    void getControlEntitySucessTest() {
+    void getControlEntitySuccessTest() {
         Mockito.when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
 
         RequestUuidDto requestUuidDtoResult = controlService.getControlEntity(requestUuid);
@@ -253,7 +290,44 @@ class ControlServiceTest extends AbstractServceTest {
         verify(controlRepository, Mockito.times(1)).findByRequestUuid(any());
         Assertions.assertNotNull(requestUuidDtoResult);
         assertEquals("ERROR", requestUuidDtoResult.getStatus());
-        Assertions.assertNull(requestUuidDtoResult.getEFTIData());
+        assertNull(requestUuidDtoResult.getEFTIData());
+    }
+
+    @Test
+    void getControlEntityForMetadataSuccessTestWithoutMetadata() {
+        Mockito.when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
+
+        MetadataResponseDto metadataResponseDto = controlService.getControlEntityForMetadata(requestUuid);
+
+        verify(controlRepository, Mockito.times(1)).findByRequestUuid(any());
+        Assertions.assertNotNull(metadataResponseDto);
+        assertEquals(metadataResponseDto.getRequestUuid(), controlEntity.getRequestUuid());
+    }
+
+    @Test
+    void getControlEntityForMetadataSuccessTestWithMetadataPresentInRegistry() {
+        controlEntity.setMetadataResults(metadataResults);
+        Mockito.when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
+        Mockito.when(metadataService.search(metadataRequestDto)).thenReturn(Collections.singletonList(metadataDto));
+
+        MetadataResponseDto metadataResponseDto = controlService.getControlEntityForMetadata(requestUuid);
+
+        verify(controlRepository, Mockito.times(1)).findByRequestUuid(any());
+        Assertions.assertNotNull(metadataResponseDto);
+        assertEquals(metadataResponseDto.getRequestUuid(), controlEntity.getRequestUuid());
+    }
+
+    @Test
+    void getControlEntityForMetadataNotFoundTest() {
+        Mockito.when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.empty());
+
+        MetadataResponseDto metadataResponseDto = controlService.getControlEntityForMetadata(requestUuid);
+
+        verify(controlRepository, Mockito.times(1)).findByRequestUuid(any());
+        Assertions.assertNotNull(metadataResponseDto);
+        assertEquals("ERROR", metadataResponseDto.getStatus());
+        assertTrue(metadataResponseDto.getMetadata().isEmpty());
+        assertNull(metadataResponseDto.getEFTIGate());
     }
 
     @Test
@@ -283,5 +357,80 @@ class ControlServiceTest extends AbstractServceTest {
         verify(controlRepository).save(argumentCaptor.capture());
         assertEquals(datas, new String(argumentCaptor.getValue().getEftiData(), StandardCharsets.UTF_8));
         assertEquals(StatusEnum.COMPLETE.name(), argumentCaptor.getValue().getStatus());
+    }
+
+    @Test
+    void createMetadataControlTest() {
+        Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
+
+        RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
+
+        verify(requestService, times(0)).createAndSendRequest(any());
+        verify(requestService, times(1)).createRequestForMetadata(any());
+        verify(metadataService, times(1)).search(any());
+        verify(controlRepository, Mockito.times(1)).save(any());
+        Assertions.assertNotNull(requestUuidDtoResult);
+        assertNull(requestUuidDtoResult.getErrorCode());
+        assertNull(requestUuidDtoResult.getErrorDescription());
+    }
+
+    @Test
+    void createMetadataControlWithMinimumRequiredTest() {
+        metadataRequestDto.setTransportMode(null);
+        metadataRequestDto.setVehicleCountry(null);
+        metadataRequestDto.setEFTIGateIndicator(null);
+        metadataRequestDto.setIsDangerousGoods(null);
+
+        Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
+
+        RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
+
+        verify(requestService, times(0)).createAndSendRequest(any());
+        verify(controlRepository, Mockito.times(1)).save(any());
+        Assertions.assertNotNull(requestUuidDtoResult);
+        assertNull(requestUuidDtoResult.getErrorCode());
+        assertNull(requestUuidDtoResult.getErrorDescription());
+    }
+
+    @Test
+    void createMetadataControlVehicleIDIncorrect() {
+        metadataRequestDto.setVehicleID("fausse plaque");
+        Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
+
+        RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
+
+        verify(requestService, times(0)).createAndSendRequest(any());
+        verify(controlRepository, Mockito.times(0)).save(any());
+        Assertions.assertNotNull(requestUuidDtoResult);
+        assertEquals(ErrorCodesEnum.VEHICLE_ID_INCORRECT_FORMAT.name(), requestUuidDtoResult.getErrorCode());
+        assertEquals(ErrorCodesEnum.VEHICLE_ID_INCORRECT_FORMAT.getMessage(),requestUuidDtoResult.getErrorDescription());
+    }
+
+    @Test
+    void createMetadataControlVehicleCountryIncorrect() {
+        metadataRequestDto.setVehicleCountry("toto");
+        Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
+
+        RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
+
+        verify(requestService, times(0)).createAndSendRequest(any());
+        verify(controlRepository, Mockito.times(0)).save(any());
+        Assertions.assertNotNull(requestUuidDtoResult);
+        assertEquals(ErrorCodesEnum.VEHICLE_COUNTRY_INCORRECT.name(), requestUuidDtoResult.getErrorCode());
+        assertEquals(ErrorCodesEnum.VEHICLE_COUNTRY_INCORRECT.getMessage(),requestUuidDtoResult.getErrorDescription());
+    }
+
+    @Test
+    void createMetadataControlTransportModeIncorrect() {
+        metadataRequestDto.setTransportMode("toto");
+        Mockito.when(controlRepository.save(any())).thenReturn(controlEntity);
+
+        RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
+
+        verify(requestService, times(0)).createAndSendRequest(any());
+        verify(controlRepository, Mockito.times(0)).save(any());
+        Assertions.assertNotNull(requestUuidDtoResult);
+        assertEquals(ErrorCodesEnum.TRANSPORT_MODE_INCORRECT.name(), requestUuidDtoResult.getErrorCode());
+        assertEquals(ErrorCodesEnum.TRANSPORT_MODE_INCORRECT.getMessage(),requestUuidDtoResult.getErrorDescription());
     }
 }

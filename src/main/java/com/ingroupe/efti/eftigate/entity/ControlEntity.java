@@ -74,7 +74,7 @@ public class ControlEntity {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "transportmetadata")
-    private Object transportMetadata;
+    private SearchParameter transportMetadata;
 
     @Column(name = "fromgateurl")
     private String fromGateUrl;
@@ -92,4 +92,8 @@ public class ControlEntity {
     @JoinColumn(name = "error", referencedColumnName = "id")
     @ToString.Exclude @EqualsAndHashCode.Exclude
     private ErrorEntity error;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadatas")
+    private MetadataResults metadataResults;
 }

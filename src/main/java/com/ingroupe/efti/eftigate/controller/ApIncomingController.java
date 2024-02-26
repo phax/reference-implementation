@@ -5,6 +5,7 @@ import com.ingroupe.efti.eftigate.service.ApIncomingService;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,8 +21,9 @@ public class ApIncomingController {
     private final ApIncomingService apIncomingService;
 
     @PostMapping("/notification")
-    public void getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) {
+    public ResponseEntity<Void> incoming(final @RequestBody ReceivedNotificationDto receivedNotificationDto) {
         log.info("receive notification !");
         apIncomingService.manageIncomingNotification(receivedNotificationDto);
+        return ResponseEntity.ok().build();
     }
 }

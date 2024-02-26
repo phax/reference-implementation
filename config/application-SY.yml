@@ -16,6 +16,14 @@ spring:
       hibernate:
         control_schema: "eftisy"
         metadata_schema: "eftisy"
+        default_schema: "eftisy"
+  #----- Liquibase -----#
+  liquibase:
+    enabled: true
+    defaultSchema: eftisy
+    parameters:
+      defaultSchema: ${spring.liquibase.defaultSchema}
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
 gate:
   owner: http://efti.gate.syldavia.eu

@@ -29,7 +29,7 @@ public interface ControlControllerApi {
     @Secured(Roles.ROLE_ROAD_CONTROLER)
     ResponseEntity<ControlEntity> getById(@PathVariable long id);
 
-    @Operation(summary = "Send a request", description = "Allow to send a request for a dataset based on uil")
+    @Operation(summary = "Send a UIL request", description = "Allow to send a request for a dataset based on uil")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "OK"),
             @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema())),
@@ -40,7 +40,7 @@ public interface ControlControllerApi {
     @Secured(Roles.ROLE_ROAD_CONTROLER)
     ResponseEntity<RequestUuidDto> requestUil(@RequestBody UilDto uilDto);
 
-    @Operation(summary = "Get a request", description = "Get a request for a given request uuid")
+    @Operation(summary = "Get an UIL request", description = "Get an UIL request for a given request uuid")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "OK"),
             @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema())),

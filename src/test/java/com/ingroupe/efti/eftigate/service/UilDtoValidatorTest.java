@@ -1,8 +1,8 @@
 package com.ingroupe.efti.eftigate.service;
 
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
-import com.ingroupe.efti.eftigate.dto.AuthorityDto;
-import com.ingroupe.efti.eftigate.dto.ContactInformationDto;
+import com.ingroupe.efti.commons.dto.AuthorityDto;
+import com.ingroupe.efti.commons.dto.ContactInformationDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;

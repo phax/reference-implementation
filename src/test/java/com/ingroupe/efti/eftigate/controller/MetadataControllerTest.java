@@ -1,9 +1,9 @@
 package com.ingroupe.efti.eftigate.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingroupe.efti.commons.dto.MetadataRequestDto;
+import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
-import com.ingroupe.efti.eftigate.dto.UilDto;
-import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -27,76 +26,58 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(ControlController.class)
-@ContextConfiguration(classes= {ControlController.class})
+@WebMvcTest(MetadataController.class)
+@ContextConfiguration(classes= {MetadataController.class})
 @ExtendWith(SpringExtension.class)
-class ControlControllerTest {
+class MetadataControllerTest {
 
     public static final String REQUEST_UUID = "requestUuid";
+
+    private final MetadataResponseDto metadataResponseDto = new MetadataResponseDto();
+
     @Autowired
     protected MockMvc mockMvc;
 
     @MockBean
     ControlService controlService;
 
-    private final RequestUuidDto requestUuidDto = new RequestUuidDto();
-
     @BeforeEach
     void before() {
-        requestUuidDto.setStatus("PENDING");
-        requestUuidDto.setRequestUuid(REQUEST_UUID);
-    }
-
-    @Test
-    @WithMockUser
-    void getByIdTestWithData() throws Exception {
-        Mockito.when(controlService.getById(1L)).thenReturn(new ControlEntity());
-
-        mockMvc.perform(get("/v1/1"))
-                .andExpect(status().isOk())
-                .andReturn();
-    }
-
-    @Test
-    @WithAnonymousUser
-    void getByIdshouldGetAuthent() throws Exception {
-        Mockito.when(controlService.getById(1L)).thenReturn(new ControlEntity());
-
-        mockMvc.perform(get("/control/1"))
-                .andExpect(status().is4xxClientError())
-                .andReturn();
+        metadataResponseDto.setStatus("COMPLETED");
+        metadataResponseDto.setRequestUuid(REQUEST_UUID);
     }
 
     @Test
     @WithMockUser
     void requestUilTest() throws Exception {
-        UilDto uilDto = new UilDto();
-        uilDto.setEFTIPlatformUrl("platform");
-        uilDto.setEFTIDataUuid("uuid");
-        uilDto.setEFTIGateUrl("gate");
+        final MetadataRequestDto metadataRequestDto = MetadataRequestDto.builder().vehicleID("abc123").build();
 
-        Mockito.when(controlService.createUilControl(uilDto)).thenReturn(requestUuidDto);
+        Mockito.when(controlService.createMetadataControl(metadataRequestDto)).thenReturn(
+                RequestUuidDto.builder()
+                .status("PENDING")
+                .requestUuid(REQUEST_UUID)
+                .build());
 
-        mockMvc.perform(post("/v1/requestUil")
+        mockMvc.perform(post("/v1/getMetadata")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsBytes(uilDto)))
+                        .content(new ObjectMapper().writeValueAsBytes(metadataRequestDto)))
                 .andExpect(status().isAccepted())
                 .andReturn();
     }
 
     @Test
     @WithMockUser
-    void getRequestUilTest() throws Exception {
-        Mockito.when(controlService.getControlEntity(REQUEST_UUID)).thenReturn(requestUuidDto);
+    void requestUilGetTest() throws Exception {
+        Mockito.when(controlService.getControlEntityForMetadata(REQUEST_UUID)).thenReturn(metadataResponseDto);
 
-        MvcResult result = mockMvc.perform(get("/v1/requestUil").param("requestUuid", REQUEST_UUID))
+        MvcResult result = mockMvc.perform(get("/v1/getMetadata").param("requestUuid", REQUEST_UUID))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
         String contentAsString = result.getResponse().getContentAsString();
 
-        RequestUuidDto response = new ObjectMapper().readValue(contentAsString, RequestUuidDto.class);
+        MetadataResponseDto response = new ObjectMapper().readValue(contentAsString, MetadataResponseDto.class);
         Assertions.assertNotNull(response);
         Assertions.assertEquals(REQUEST_UUID, response.getRequestUuid());
     }

@@ -1,0 +1,72 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: {{ spring.application.name }}
+  datasource:
+    control:
+      jdbc-url: {{ spring.datasource.url }}
+      url: {{ spring.datasource.url }}
+      username: {{ spring.datasource.username }}
+      password: {{ spring.datasource.password }}
+      driverClassName: org.postgresql.Driver
+      liquibase:
+        default-schema: {{ spring.jpa.properties.hibernate.control_schema }}
+        change-log: classpath:db.changelog/db.gate.changelog-master.xml
+    metadata:
+      jdbc-url: {{ spring.datasource.url }}
+      url: {{ spring.datasource.url }}
+      username: {{ spring.datasource.username }}
+      password: {{ spring.datasource.password }}
+      driverClassName: org.postgresql.Driver
+      liquibase:
+        default-schema: {{ spring.jpa.properties.hibernate.metadata_schema }}
+        change-log: classpath:db.changelog/db.metadata.changelog-master.xml
+  jackson:
+    default-property-inclusion: NON_NULL
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: {{ spring.security.oauth2.resourceserver.jwt.issuer_uri}}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect 
+    properties:
+      hibernate:
+        control_schema: "{{ spring.jpa.properties.hibernate.control_schema }}"
+        metadata_schema: "{{ spring.jpa.properties.hibernate.metadata_schema }}"
+
+management:
+  endpoint:
+    info:
+      enabled: true
+    health:
+      enabled: true
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include: info,health,metrics
+
+gate:
+  owner: {{ gate.owner }}
+  ap:
+    url: {{ gate.ap.url }}
+    username: {{ gate.ap.username }}
+    password: {{ gate.ap.password }}
+
+batch:
+  retry:
+    cron: "{{ batch.retry.cron }}"
+    time: {{ batch.retry.time }}
+    size: {{ batch.retry.size }}
+
+springdoc:
+  swagger-ui:
+    enabled: {{ springdoc.swagger_ui.enabled }}
+  api-docs:
+    enabled: {{ springdoc.api_docs.enabled }}

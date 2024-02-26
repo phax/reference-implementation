@@ -1,14 +1,20 @@
 package com.ingroupe.efti.eftigate.mapper;
 
+import com.ingroupe.efti.commons.dto.MetadataDto;
+import com.ingroupe.efti.commons.dto.MetadataResultDto;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
+import com.ingroupe.efti.eftigate.entity.MetadataResult;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -42,5 +48,18 @@ public class MapperUtils {
 
     public RequestDto requestToRequestDto(final RequestEntity requestEntity) {
         return modelMapper.map(requestEntity, RequestDto.class);
+    }
+
+
+    public List<MetadataResult> metadataDtosToMetadataEntities(final List<MetadataDto> metadataDtoList) {
+        return metadataDtoList.stream()
+                .map(metadataDto -> modelMapper.map(metadataDto, MetadataResult.class))
+                .collect(Collectors.toList());
+    }
+
+    public List<MetadataResultDto> metadataResultEntitiesToMetadataResultDtos(final List<MetadataResult> metadataResultList) {
+        return CollectionUtils.emptyIfNull(metadataResultList).stream()
+                .map(metadataResult -> modelMapper.map(metadataResult, MetadataResultDto.class))
+                .collect(Collectors.toList());
     }
 }

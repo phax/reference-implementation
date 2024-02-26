@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xml>
 <configuration>
-    <springProperty scope="context" name="APPLICATION_NAME"
+
+   <!-- <springProperty scope="context" name="APPLICATION_NAME"
         source="spring.application.name" />
 
     <springProperty scope="context" name="LOG_FILE_NAME"
@@ -18,11 +19,12 @@
 
     <springProperty scope="context" name="LOG_TOTAL_SIZE"
         source="logback.rolling.totalFilesSize" defaultValue="100MB" />
+        -->
 
     <!-- ================================================ -->
     <!-- Internal properties -->
     <!-- ================================================ -->
-    <property name="LOG_ARCHIVE" value="${LOG_PATH}/archive" />
+   <!--  <property name="LOG_ARCHIVE" value="${LOG_PATH}/archive" /> -->
 
     <appender name="Console-Appender"
         class="ch.qos.logback.core.ConsoleAppender">
@@ -31,7 +33,8 @@
             <pattern>%d %-5level %logger : %msg%n</pattern>
         </layout>
     </appender>
-
+    
+    <!--
     <appender name="RollingFile-Appender"
         class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/${LOG_FILE_NAME}.log</file>
@@ -46,12 +49,17 @@
             <pattern>%d %-5level [%thread] %logger : %msg%n</pattern>
         </encoder>
     </appender>
-    <appender name="Async-Appender"
-        class="ch.qos.logback.classic.AsyncAppender">
+    -->
+
+    <!--
+    <appender name="Async-Appender"  class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="RollingFile-Appender" />
     </appender>
+    -->
+
     <root level="INFO" additivity="false">
-        <appender-ref ref="RollingFile-Appender" />
+        <!--  <appender-ref ref="RollingFile-Appender" /> -->
         <appender-ref ref="Console-Appender" />
     </root>
+
 </configuration>
