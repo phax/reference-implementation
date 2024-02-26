@@ -4,14 +4,12 @@ import com.ingroupe.efti.metadataregistry.entity.MetadataEntity;
 import liquibase.integration.spring.SpringLiquibase;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -67,6 +65,7 @@ public class MetadataJpaConfiguration {
     private Map<String, Object> jpaProperties() {
         Map<String, Object> props = new HashMap<>();
         props.put("spring.datasource.schema", schema);
+        props.put("hibernate.default_schema", schema);
         return props;
     }
 
