@@ -3,20 +3,18 @@ package com.ingroupe.efti.commons.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Data
-@SuperBuilder
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class MetadataDto extends AbstractUilDto {
-
+public class MetadataResultDto implements Serializable {
     private long id;
     private boolean isDangerousGoods;
     private String journeyStart;

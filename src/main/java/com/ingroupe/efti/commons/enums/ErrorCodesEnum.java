@@ -34,7 +34,7 @@ public enum ErrorCodesEnum {
     CONTACT_MAIL_INCORRECT_FORMAT("Contact mail incorrect."),
     CONTACT_MAIL_TOO_LONG("Contact mail too long."),
     CONTACT_STREET_NAME_MISSING("Missing parameter streetName."),
-    CONTACT_STREET_NAME_TOO_LONG("Contact name too long."),
+    CONTACT_STREET_NAME_TOO_LONG("Contact streetName too long."),
     CONTACT_BUILDING_MISSING("Missing parameter buildingNumber."),
     CONTACT_BUILDING_NUMBER_TOO_LONG("Contact building number too long."),
     CONTACT_CITY_MISSING("Missing parameter city"),
@@ -42,6 +42,14 @@ public enum ErrorCodesEnum {
     CONTACT_ADDITIONAL_LINE_TOO_LONG("Contact additional line too long."),
     CONTACT_POSTAL_MISSING("Missing parameter postalCode."),
     CONTACT_POSTAL_CODE_TOO_LONG("Contact postal code too long."),
+
+    VEHICLE_ID_MISSING("VehicleId missing."),
+    VEHICLE_ID_TOO_LONG("VehicleId too long"),
+    VEHICLE_ID_INCORRECT_FORMAT("VehicleId incorrect format"),
+
+    VEHICLE_COUNTRY_INCORRECT("VehicleCountry incorrect"),
+    TRANSPORT_MODE_INCORRECT("TransportMode Incorrect"),
+    GATE_INDICATOR_INCORRECT("GateIndicator incorrect"),
 
     AP_SUBMISSION_ERROR("Error during ap submission."),
     REQUEST_BUILDING("Error while building request."),
