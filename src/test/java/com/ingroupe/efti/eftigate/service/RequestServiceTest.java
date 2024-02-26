@@ -139,7 +139,7 @@ class RequestServiceTest extends AbstractServceTest {
         when(requestRepository.save(any())).thenReturn(requestEntity);
 
         final RequestDto requestDto = requestService.createRequestForMetadata(controlDto);
-        Mockito.verify(requestRepository, Mockito.times(2)).save(any());
+        Mockito.verify(requestRepository, Mockito.times(1)).save(any());
         assertNotNull(requestDto);
         assertEquals(RequestStatusEnum.RECEIVED.name(), requestDto.getStatus());
     }
@@ -152,7 +152,7 @@ class RequestServiceTest extends AbstractServceTest {
         final RequestDto requestDto = requestService.createAndSendRequest(controlDto);
 
         Thread.sleep(1000);
-        Mockito.verify(requestRepository, Mockito.times(1)).save(any());
+        Mockito.verify(requestRepository, Mockito.times(2)).save(any());
         assertNotNull(requestDto);
         assertEquals(RequestStatusEnum.SEND_ERROR.name(), requestDto.getStatus());
         assertNotNull(requestDto.getError());
