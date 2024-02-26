@@ -28,11 +28,11 @@
 	</distributionManagement>
 
 	<scm>
-		<connection>scm:git:http://gitlab.imprimerienationale.fr/kube/projects/efti/libraries/edelivery-ap-connector.git</connection>
+		<connection>scm:git:https://gitlab.imprimerienationale.fr/kube/projects/efti/libraries/edelivery-ap-connector.git</connection>
 	</scm>
 
 	<properties>
-		<revision>1.0.0-SNAPSHOT</revision>
+		<revision>0.2.0-SNAPSHOT</revision>
 		<!--NEXUS-->
 		<nexus.home>http://nexus.imprimerienationale.fr</nexus.home>
 
@@ -146,10 +146,24 @@
 			<artifactId>Domibus-default-ws-plugin-client</artifactId>
 			<version>5.1</version>
 		</dependency>
+
+		<!-- efti -->
+		<dependency>
+			<groupId>com.ingroupe.efti</groupId>
+			<artifactId>commons</artifactId>
+			<version>0.2.0-SNAPSHOT</version>
+		</dependency>
+
 		<dependency>
 			<groupId>eu.domibus</groupId>
 			<artifactId>domibus-plugin-api</artifactId>
 			<version>5.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.sun.istack</groupId>
+					<artifactId>istack-commons-runtime</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>

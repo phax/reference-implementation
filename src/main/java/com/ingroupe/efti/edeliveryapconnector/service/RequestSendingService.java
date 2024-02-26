@@ -1,5 +1,6 @@
 package com.ingroupe.efti.edeliveryapconnector.service;
 
+import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.sun.xml.ws.client.ClientTransportException;
@@ -41,7 +42,6 @@ import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.PARTY_F
 import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.PARTY_TO_ROLE;
 import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.PARTY_TYPE;
 import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.PAYLOAD_HREF;
-import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.SERVICE_ACTION;
 import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.SERVICE_TYPE;
 import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.SERVICE_VALUE;
 import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.TEXT_PLAIN;
@@ -52,8 +52,8 @@ import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 @RequiredArgsConstructor
 public class RequestSendingService extends AbstractApService {
 
-    public String sendRequest(final ApRequestDto requestDto) throws SendRequestException {
-        final Messaging messaging = createMessaging(requestDto);
+    public String sendRequest(final ApRequestDto requestDto, final EDeliveryAction eDeliveryAction) throws SendRequestException {
+        final Messaging messaging = createMessaging(requestDto, eDeliveryAction);
         final SubmitRequest submitRequest = createSubmitRequest(requestDto);
 
         final SubmitResponse submitResponse = sendRequestToAPOrThrow(requestDto, submitRequest, messaging);
@@ -91,13 +91,13 @@ public class RequestSendingService extends AbstractApService {
         return submitRequest;
     }
 
-    private Messaging createMessaging(final ApRequestDto requestDto) {
+    private Messaging createMessaging(final ApRequestDto requestDto, final EDeliveryAction eDeliveryAction) {
         final Messaging messaging = new Messaging();
 
         final UserMessage userMessage = new UserMessage();
         userMessage.setProcessingType(ProcessingType.PUSH);
         userMessage.setPartyInfo(createPartyInfo(requestDto));
-        userMessage.setCollaborationInfo(createCollaborationInfo());
+        userMessage.setCollaborationInfo(createCollaborationInfo(eDeliveryAction));
         userMessage.setPayloadInfo(createPayloadInfo());
         userMessage.setMessageProperties(createMessageProperties());
 
@@ -132,13 +132,14 @@ public class RequestSendingService extends AbstractApService {
         return payloadInfo;
     }
 
-    private CollaborationInfo createCollaborationInfo() {
+    private CollaborationInfo createCollaborationInfo(final EDeliveryAction eDeliveryAction) {
         final CollaborationInfo collaborationInfo = new CollaborationInfo();
         final Service service = new Service();
         service.setType(SERVICE_TYPE);
         service.setValue(SERVICE_VALUE);
-        collaborationInfo.setAction(SERVICE_ACTION);
+        collaborationInfo.setAction(eDeliveryAction.getValue());
         collaborationInfo.setService(service);
+
         return collaborationInfo;
     }
 

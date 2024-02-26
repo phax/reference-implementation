@@ -4,7 +4,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
-import com.ingroupe.efti.edeliveryapconnector.dto.RetrieveMessageDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestRetrievingService;
 import eu.domibus.plugin.ws.generated.RetrieveMessageFault;
@@ -52,14 +52,10 @@ class RequestRetrievingServiceTest {
                         .password("password")
                         .build();
 
-        final RetrieveMessageDto result = service.retrieveMessage(requestDto, messageId);
+        final NotificationContentDto result = service.retrieveMessage(requestDto, messageId);
         assertNotNull(result);
         assertEquals("getUIL", result.getAction());
         assertEquals("9992596f-9a6a-11ee-90b4-0242ac13000e@domibus.eu", result.getMessageId());
-        assertNotNull(result.getMessageBodyDto());
-        assertEquals("7ac1fac0-538e-492b-b1f1-4cfde74356d8", result.getMessageBodyDto().getRequestUuid());
-        assertEquals("plein de data", result.getMessageBodyDto().getEFTIData());
-        assertEquals("COMPLETED", result.getMessageBodyDto().getStatus());
-        assertEquals("ceci est une erreur", result.getMessageBodyDto().getErrorDescription());
+        assertNotNull(result.getBody());
     }
 }

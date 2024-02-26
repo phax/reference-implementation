@@ -5,7 +5,7 @@ import java.io.Serial;
 /**
  * Exception thrown when an error occured while sending a request
  */
-public class SendRequestException extends Exception {
+public class SendRequestException extends RuntimeException {
     @Serial
     private static final long serialVersionUID = -8858301591927593587L;
 
