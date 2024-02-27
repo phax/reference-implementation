@@ -1,5 +1,6 @@
 package com.ingroupe.efti.commons.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -14,6 +15,7 @@ import org.hibernate.validator.constraints.Length;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransportVehicleDto {
+    @JsonIgnore
     private long id;
     private String transportMode;
     @Max(value = 999, message = "SEQUENCE_TOO_LONG")
