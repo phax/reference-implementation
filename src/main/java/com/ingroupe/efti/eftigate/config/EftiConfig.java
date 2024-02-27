@@ -87,7 +87,7 @@ public class EftiConfig {
                 try {
                     DateTimeFormatter dateTimeFormatter = new DateTimeFormatterBuilder()
                             .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME) // use the existing formatter for date time
-                            .appendOffset(OFFSET_PATTERN, NO_OFFSET_TEXT) // set 'noOffsetText' to desired '+00:00'
+                            .appendOffset(OFFSET_PATTERN, NO_OFFSET_TEXT)// set 'noOffsetText' to desired '+00:00'
                             .toFormatter();
                     return source.toZonedDateTime().format(dateTimeFormatter);
                 } catch (DateTimeParseException e) {
