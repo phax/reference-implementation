@@ -39,7 +39,7 @@ public class MetadataEntity extends JourneyEntity {
     private String eFTIGateUrl;
     private boolean isDangerousGoods;
     private String metadataUUID;
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true )
     @JoinColumn(name = "metadata")
     @ToString.Exclude @EqualsAndHashCode.Exclude
     private List<TransportVehicle> transportVehicles;
