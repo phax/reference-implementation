@@ -11,7 +11,7 @@
         <java.version>17</java.version>
         <nexus.home>https://nexus.imprimerienationale.fr</nexus.home>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <revision>0.2.0</revision>
+        <revision>0.3.0-SNAPSHOT</revision>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <sonar.coverage.jacoco.xmlReportPaths>
             ${project.basedir}/../coverage-aggregate/target/site/jacoco-aggregate/jacoco.xml
@@ -87,12 +87,12 @@
         <dependency>
             <groupId>com.ingroupe.efti</groupId>
             <artifactId>commons</artifactId>
-            <version>0.2.0</version>
+            <version>0.3.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.ingroupe.efti</groupId>
             <artifactId>metadata-registry</artifactId>
-            <version>0.2.0</version>
+            <version>0.3.0-SNAPSHOT</version>
         </dependency>
 
         <!-- security -->
