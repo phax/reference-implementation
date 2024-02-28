@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: efti-gate
+  datasource:
+    url: jdbc:postgresql://ileftidbpg01in.service.groupein.local:5432/efti
+    username: efti
+    password: j6h6BEjpHIwYly7HA0z
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer_uri: https://auth.efti.int.k8s.groupein.local/realms/eFTI_FR
+  jpa:
+    properties:
+      hibernate:
+        control_schema: "eftifr"
+        metadata_schema: "metadatafr"
+
+gate:
+  owner: https://gate-fr.efti.int.k8s.groupein.local
+  ap:
+    url: http://ileftimicr01in.service.groupein.local:8080/domibus/services/wsplugin
+    username: france_service_account
+    password: Azerty59*1234567
+
+batch:
+  retry:
+    cron: "*/20 * * * * *"
+    time: 20, 120, 300
+    size: 10
+
+springdoc:
+  swagger_ui:
+    enabled: true
+  api_docs:
+    enabled: true
