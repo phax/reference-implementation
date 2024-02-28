@@ -29,5 +29,6 @@ public class MetadataDto extends AbstractUilDto {
     @NotEmpty(message = "TRANSPORT_VEHICLES_MISSING")
     @Valid
     private List<TransportVehicleDto> transportVehicles;
+    @JsonProperty("isDisabled")
     private boolean isDisabled;
 }
