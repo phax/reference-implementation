@@ -1,5 +1,6 @@
 package com.ingroupe.efti.eftigate.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.ser.OffsetDateTimeSerializer;
@@ -22,6 +23,12 @@ import java.util.List;
 @NoArgsConstructor
 public class MetadataResult implements Serializable {
     private long id;
+    @JsonProperty("eFTIGateUrl")
+    private String eFTIGateUrl;
+    @JsonProperty("eFTIDataUuid")
+    private String eFTIDataUuid;
+    @JsonProperty("eFTIPlatformUrl")
+    private String eFTIPlatformUrl;
     private boolean isDangerousGoods;
     @JsonSerialize(using = OffsetDateTimeSerializer.class)
     @JsonDeserialize(using = OffsetDateTimeDeserializer.class)
