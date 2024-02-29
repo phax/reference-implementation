@@ -8,12 +8,16 @@ variables:
   MAVEN_ARTIFACTID: platform-gate-simulator
   MAVEN_EXTENSION: jar
   VERSION_ARTEFACT_SNAPSHOT: 0.3.0-SNAPSHOT
-  VERSION_ARTEFACT_RELEASE: 1.0.0
+  VERSION_ARTEFACT_RELEASE: 0.2.0
   DEPLOY_ENVIRONMENT:
     value: "dev"
     options:
       - "dev"
       - "int"
+      - "qlf"
+      - "crt"
+      - "ppd"
+      - "prd"
     description: "The deployment target. Set to 'dev' by default."
   REBUILD_COMPONENT_IMAGE:
     value: "true"
@@ -39,18 +43,20 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web" && $DEPLOY_ENVIRONMENT == "int"
       variables:
         NAMESPACE: app-int-efti-mock
-        CONTEXT: int-efti-mock
-    - if: $CI_PIPELINE_SOURCE == "push"
-      when: never
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-      when: never
-    - if: $CI_COMMIT_REF_NAME !~ "develop"
+        SA: int-efti-mock-sa
+    - if: $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web" && $DEPLOY_ENVIRONMENT == "qlf"
+      variables:
+        NAMESPACE: app-qlf-efti-mock
+        SA: qlf-efti-mock-sa
+    - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_REF_NAME !~ "develop"
       when: never
     - when: always
 
-build_microservices:
+build_and_deploy_microservices_hors_prod:
   stage: build_and_deploy
   rules:
+    - if: $DEPLOY_ENVIRONMENT == "dev" || $DEPLOY_ENVIRONMENT == "int"
+      when: always
     - if: $CI_COMMIT_REF_NAME =~ /feat/
       variables:
         TAG: PREVIEW
@@ -61,6 +67,21 @@ build_microservices:
       - project: "kube/build"
         file: "build_ms.yml"
         ref: "mock"
+    forward:
+      pipeline_variables: true
+    strategy: depend
+
+build_and_deploy_microservices_prod:
+  stage: build_and_deploy
+  rules:
+    - if: $DEPLOY_ENVIRONMENT == "qlf" || $DEPLOY_ENVIRONMENT == "crt" || $DEPLOY_ENVIRONMENT == "ppd" || $DEPLOY_ENVIRONMENT == "prd"
+      when: always
+    - when: never
+  trigger:
+    include:
+      - project: "kube/build_prod"
+        file: "build_ms.yml"
+        ref: "main"
     forward:
       pipeline_variables: true
     strategy: depend
