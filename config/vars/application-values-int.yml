@@ -9,7 +9,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer_uri: https://auth.efti.int.k8s.groupein.local/realms/eFTI_FR
+          issuer_uri: https://keycloak.efti.int.k8s.groupein.local/realms/eFTI_FR
   jpa:
     properties:
       hibernate:
