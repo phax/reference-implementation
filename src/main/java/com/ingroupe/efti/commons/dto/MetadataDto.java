@@ -1,5 +1,6 @@
 package com.ingroupe.efti.commons.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.List;
 public class MetadataDto extends AbstractUilDto {
 
     private long id;
+    @JsonProperty("isDangerousGoods")
     private boolean isDangerousGoods;
     private String journeyStart;
     private String countryStart;
@@ -27,5 +29,6 @@ public class MetadataDto extends AbstractUilDto {
     @NotEmpty(message = "TRANSPORT_VEHICLES_MISSING")
     @Valid
     private List<TransportVehicleDto> transportVehicles;
+    @JsonProperty("isDisabled")
     private boolean isDisabled;
 }

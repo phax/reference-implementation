@@ -6,6 +6,7 @@ import com.ingroupe.efti.commons.enums.TransportMode;
 import com.ingroupe.efti.commons.validator.ValueOfEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
@@ -24,7 +25,7 @@ public class MetadataRequestDto implements ValidableControl {
 
     @ValueOfEnum(enumClass = TransportMode.class, message = "TRANSPORT_MODE_INCORRECT")
     private String transportMode;
-    @NotNull(message = "VEHICLE_ID_MISSING")
+    @NotBlank(message = "VEHICLE_ID_MISSING")
     @Length(max = 17, message = "VEHICLE_ID_TOO_LONG")
     @Pattern(regexp = "^[A-Za-z0-9]*$", message = "VEHICLE_ID_INCORRECT_FORMAT")
     private String vehicleID;
