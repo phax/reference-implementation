@@ -117,7 +117,6 @@ public class ControlService {
 
     private CountryIndicator getEftiGate(ControlDto controlDto) {
         //temporaire en attendant de discuter sur sa place
-        List<RequestDto> requests = controlDto.getRequests();
         MetadataResults metadataResults = controlDto.getMetadataResults();
         if (metadataResults != null && CollectionUtils.isNotEmpty(metadataResults.getMetadataResult())){
             String countryStart = metadataResults.getMetadataResult().iterator().next().getCountryStart();

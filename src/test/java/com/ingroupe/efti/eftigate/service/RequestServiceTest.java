@@ -44,9 +44,12 @@ class RequestServiceTest extends AbstractServceTest {
     private RequestRepository requestRepository;
     @Mock
     private RequestSendingService requestSendingService;
+
+
     @Mock
     private ControlService controlService;
-    private GateProperties gateProperties;
+    @Mock
+    private RabbitSenderService rabbitSenderService;
     private RequestService requestService;
     private final UilDto uilDto = new UilDto();
     private final ControlDto controlDto = new ControlDto();
@@ -58,8 +61,7 @@ class RequestServiceTest extends AbstractServceTest {
     public void before() {
         openMocks = MockitoAnnotations.openMocks(this);
 
-        gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).build();
-        requestService = new RequestService(requestRepository, requestSendingService, gateProperties, mapperUtils, objectMapper, controlService, List.of(20,120,300));
+        requestService = new RequestService(requestRepository, mapperUtils, controlService, rabbitSenderService);
 
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         String requestUuid = UUID.randomUUID().toString();
@@ -112,25 +114,17 @@ class RequestServiceTest extends AbstractServceTest {
     }
 
     @Test
-    void trySendDomibusSucessTest() throws SendRequestException {
-        when(requestSendingService.sendRequest(any(), any())).thenReturn("result");
-        when(requestRepository.save(any())).thenReturn(requestEntity);
-
-        requestService.sendRequest(requestDto, false);
-        verify(requestSendingService).sendRequest(any(), any());
-    }
-
-    @Test
     void createRequestEntityTest() throws SendRequestException, InterruptedException {
         final String edeliveryId = "id123";
+        requestEntity.setEdeliveryMessageId(edeliveryId);
         when(requestRepository.save(any())).thenReturn(requestEntity);
         when(requestSendingService.sendRequest(any(), any())).thenReturn(edeliveryId);
 
         final RequestDto requestDto = requestService.createAndSendRequest(controlDto);
         Thread.sleep(1000);
-        Mockito.verify(requestRepository, Mockito.times(2)).save(any());
+        Mockito.verify(requestRepository, Mockito.times(1)).save(any());
         assertNotNull(requestDto);
-        assertEquals(RequestStatusEnum.IN_PROGRESS.name(), requestDto.getStatus());
+        assertEquals(RequestStatusEnum.RECEIVED.name(), requestDto.getStatus());
         assertEquals(edeliveryId, requestDto.getEdeliveryMessageId());
     }
 
@@ -152,10 +146,10 @@ class RequestServiceTest extends AbstractServceTest {
         final RequestDto requestDto = requestService.createAndSendRequest(controlDto);
 
         Thread.sleep(1000);
-        Mockito.verify(requestRepository, Mockito.times(2)).save(any());
+        Mockito.verify(requestRepository, Mockito.times(1)).save(any());
         assertNotNull(requestDto);
-        assertEquals(RequestStatusEnum.SEND_ERROR.name(), requestDto.getStatus());
-        assertNotNull(requestDto.getError());
+        assertEquals(RequestStatusEnum.RECEIVED.name(), requestDto.getStatus());
+        assertNull(requestDto.getError());
     }
 
     @Test
@@ -165,10 +159,10 @@ class RequestServiceTest extends AbstractServceTest {
 
         final RequestDto requestDto = requestService.createAndSendRequest(controlDto);
 
-        Mockito.verify(requestRepository, Mockito.times(2)).save(any());
+        Mockito.verify(requestRepository, Mockito.times(1)).save(any());
         assertNotNull(requestDto);
-        assertEquals(RequestStatusEnum.SEND_ERROR.name(), requestDto.getStatus());
-        assertNotNull(requestDto.getError());
+        assertEquals(RequestStatusEnum.RECEIVED.name(), requestDto.getStatus());
+        assertNull(requestDto.getError());
     }
 
     @Test
