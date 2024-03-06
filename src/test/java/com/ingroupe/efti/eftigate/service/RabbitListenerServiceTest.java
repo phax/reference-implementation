@@ -28,6 +28,8 @@ public class RabbitListenerServiceTest {
     private MapperUtils mapperUtils;
     @Mock
     private RequestRepository requestRepository;
+    @Mock
+    private ApIncomingService apIncomingService;
 
     private final static String url = "url";
     private final static String password = "password";
@@ -35,19 +37,44 @@ public class RabbitListenerServiceTest {
 
     private RabbitListenerService rabbitListenerService;
 
-        @BeforeEach
-        public void before() {
+    @BeforeEach
+    void before() {
 
-            final GateProperties gateProperties = GateProperties.builder()
-                    .owner("france")
-                    .ap(GateProperties.ApConfig.builder()
-                            .url(url)
-                            .password(password)
-                            .username(username).build()).build();
-            openMocks = MockitoAnnotations.openMocks(this);
+        final GateProperties gateProperties = GateProperties.builder()
+                .owner("france")
+                .ap(GateProperties.ApConfig.builder()
+                        .url(url)
+                        .password(password)
+                        .username(username).build()).build();
+        openMocks = MockitoAnnotations.openMocks(this);
 
-            rabbitListenerService = new RabbitListenerService(controlService, gateProperties, requestSendingService, mapperUtils, requestRepository);
-        }
+        rabbitListenerService = new RabbitListenerService(controlService, gateProperties, requestSendingService, mapperUtils, requestRepository, apIncomingService);
+    }
+
+    @Test
+    void listenMessageReceiveDeadQueueTest() {
+        String message = "{\"id\":0,\"journeyStart\":\"2024-01-26T10:54:51+01:00\",\"countryStart\":\"FR\",\"journeyEnd\":\"2024-01-27T10:54:51+01:00\",\"countryEnd\":\"FR\",\"metadataUUID\":\"032ad16a-ce1b-4ed2-a943-3b3975be9148\",\"transportVehicles\":[{\"id\":0,\"transportMode\":\"ROAD\",\"sequence\":1,\"vehicleId\":null,\"vehicleCountry\":\"FR\",\"journeyStart\":\"2024-01-26T10:54:51+01:00\",\"countryStart\":\"FR\",\"journeyEnd\":\"2024-01-27T10:54:51+01:00\",\"countryEnd\":\"FRANCE\"}],\"dangerousGoods\":false,\"disabled\":false,\"eFTIGateUrl\":null,\"eFTIDataUuid\":\"032ad16a-ce1b-4ed2-a943-3b3975be9169\",\"eFTIPlatformUrl\":\"http://efti.platform.acme.com\"}";
+
+        rabbitListenerService.listenMessageReceiveDeadQueue(message);
+    }
+
+    @Test
+    void listenReceiveMessageTest() {
+        String message = "{\"id\":0,\"journeyStart\":\"2024-01-26T10:54:51+01:00\",\"countryStart\":\"FR\",\"journeyEnd\":\"2024-01-27T10:54:51+01:00\",\"countryEnd\":\"FR\",\"metadataUUID\":\"032ad16a-ce1b-4ed2-a943-3b3975be9148\",\"transportVehicles\":[{\"id\":0,\"transportMode\":\"ROAD\",\"sequence\":1,\"vehicleId\":null,\"vehicleCountry\":\"FR\",\"journeyStart\":\"2024-01-26T10:54:51+01:00\",\"countryStart\":\"FR\",\"journeyEnd\":\"2024-01-27T10:54:51+01:00\",\"countryEnd\":\"FRANCE\"}],\"dangerousGoods\":false,\"disabled\":false,\"eFTIGateUrl\":null,\"eFTIDataUuid\":\"032ad16a-ce1b-4ed2-a943-3b3975be9169\",\"eFTIPlatformUrl\":\"http://efti.platform.acme.com\"}";
+
+        rabbitListenerService.listenReceiveMessage(message);
+    }
+
+    @Test
+    void listenReceiveMessageExceptiontest() {
+        String message = "ça va pétteeeeer";
+
+        Exception exception = assertThrows(TechnicalException.class, () -> {
+            rabbitListenerService.listenReceiveMessage(message);
+        });
+
+        Assertions.assertEquals("Error when try to map requestDto with message : ça va pétteeeeer", exception.getMessage());
+    }
 
     @Test
     void listenSendMessageTest() {

@@ -17,8 +17,11 @@ spring:
     queues:
       eftiKeySendMessage: EFTI
       eftiSendMessageExchange: efti.send-message.exchange
+      eftiReceiveMessageExchange: efti.receive-message.exchange
       eftiSendMessageQueue: efti.send-messages.q
+      eftiReceiveMessageQueue: efti.receive-messages.q
       messageSendDeadLetterQueue: message-send-dead-letter-queue
+      messageReceiveDeadLetterQueue: message-receive-dead-letter-queue
   application:
     name: efti-gate
   datasource:

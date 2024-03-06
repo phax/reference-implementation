@@ -10,6 +10,7 @@ import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
@@ -21,6 +22,7 @@ import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -40,10 +42,23 @@ public class RabbitListenerService {
     private final RequestSendingService requestSendingService;
     private final MapperUtils mapperUtils;
     private final RequestRepository requestRepository;
+    private final ApIncomingService apIncomingService;
 
-    @org.springframework.amqp.rabbit.annotation.RabbitListener(queues = "${spring.rabbitmq.queues.eftiSendMessageQueue:efti.send-messages.q}")
+    @RabbitListener(queues = "${spring.rabbitmq.queues.eftiReceiveMessageQueue:efti.receive-messages.q}")
+    public void listenReceiveMessage(final String message) {
+        log.info("Receive message from Domibus : {}", message);
+        ReceivedNotificationDto receivedNotificationDto = mapReceivedNotificationDto(message);
+        apIncomingService.manageIncomingNotification(receivedNotificationDto);
+    }
+
+    @RabbitListener(queues = "${spring.rabbitmq.queues.messageReceiveDeadLetterQueue:messageReceiveDeadLetterQueue}")
+    public void listenMessageReceiveDeadQueue(final String message) {
+        log.error("Receive message from dead queue : {}", message);
+    }
+
+    @RabbitListener(queues = "${spring.rabbitmq.queues.eftiSendMessageQueue:efti.send-messages.q}")
     public void listenSendMessage(final String message) {
-        log.info("receive message from rabbimq");
+        log.info("receive message from rabbimq queue");
         RequestDto requestDto = mapRequestDto(message);
         final ApRequestDto apRequestDto;
         try {
@@ -56,11 +71,24 @@ public class RabbitListenerService {
         trySendDomibus(requestDto, apRequestDto);
     }
 
-    @org.springframework.amqp.rabbit.annotation.RabbitListener(queues = "${spring.rabbitmq.queues.messageSendDeadLetterQueue:message-send-dead-letter-queue}")
+    @RabbitListener(queues = "${spring.rabbitmq.queues.messageSendDeadLetterQueue:message-send-dead-letter-queue}")
     public void listenSendMessageDeadLetter(final String message) {
         log.info("Receive message for dead queue");
         RequestDto requestDto = mapRequestDto(message);
         manageSendError(requestDto);
+    }
+
+    private ReceivedNotificationDto mapReceivedNotificationDto(final String message) {
+        try {
+            objectMapper = new ObjectMapper();
+            objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+            objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+            objectMapper.registerModule(new JavaTimeModule());
+            return objectMapper.readValue(message, ReceivedNotificationDto.class);
+        } catch (JsonProcessingException e) {
+            log.error("Error when try to parse message to RequestDto", e);
+            throw new TechnicalException("Error when try to map requestDto with message : " + message);
+        }
     }
 
     private RequestDto mapRequestDto(String message) {
