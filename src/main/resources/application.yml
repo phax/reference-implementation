@@ -11,8 +11,6 @@ spring:
           max-attempts: 6
           max-interval: 10s
           multiplier: 2
-    password: guest
-    username: guest
     port: 5672
     queues:
       eftiKeySendMessage: EFTI
