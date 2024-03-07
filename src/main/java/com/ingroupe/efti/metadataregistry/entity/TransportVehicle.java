@@ -43,8 +43,6 @@ public class TransportVehicle extends JourneyEntity implements Serializable {
     private String vehicleId;
     @Enumerated(EnumType.STRING)
     private CountryIndicator vehicleCountry;
-    @Enumerated(EnumType.STRING)
-    private CountryIndicator countryEnd;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="metadata")
     MetadataEntity metadata;

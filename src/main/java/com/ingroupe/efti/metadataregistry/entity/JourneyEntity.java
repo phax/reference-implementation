@@ -11,11 +11,12 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.OffsetDateTime;
 
 @MappedSuperclass
 @Data
-public abstract class JourneyEntity extends AbstractModel {
+public abstract class JourneyEntity extends AbstractModel implements Serializable {
 
     @JsonSerialize(using = OffsetDateTimeSerializer.class)
     @JsonDeserialize(using = OffsetDateTimeDeserializer.class)

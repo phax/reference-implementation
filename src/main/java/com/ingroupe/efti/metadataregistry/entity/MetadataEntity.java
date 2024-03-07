@@ -4,6 +4,7 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -18,6 +19,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Data
@@ -28,7 +30,7 @@ import java.util.List;
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "metadata")
-public class MetadataEntity extends JourneyEntity {
+public class MetadataEntity extends JourneyEntity implements Serializable {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
@@ -39,10 +41,9 @@ public class MetadataEntity extends JourneyEntity {
     private String eFTIGateUrl;
     private boolean isDangerousGoods;
     private String metadataUUID;
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true )
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true )
     @JoinColumn(name = "metadata")
     @ToString.Exclude @EqualsAndHashCode.Exclude
     private List<TransportVehicle> transportVehicles;
-
     private boolean isDisabled;
 }
