@@ -1,10 +1,12 @@
 package com.ingroupe.efti.eftigate.entity;
 
+import com.ingroupe.efti.commons.model.AbstractModel;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -16,15 +18,18 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "request", catalog = "efti")
 @Getter
 @Setter
+@EntityListeners(AuditingEntityListener.class)
 @Convert(attributeName = "entityAttrName", converter = JsonBinaryType.class)
-public class RequestEntity {
+public class RequestEntity extends AbstractModel implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id")
@@ -45,12 +50,6 @@ public class RequestEntity {
     
     @Column(name = "nextretrydate")
     private LocalDateTime nextRetryDate;
-    
-    @Column(name = "createddate")
-    private LocalDateTime createdDate;
-    
-    @Column(name = "lastmodifieddate")
-    private LocalDateTime lastModifiedDate;
     
     @Column(name = "gateurldest")
     private String gateUrlDest;
