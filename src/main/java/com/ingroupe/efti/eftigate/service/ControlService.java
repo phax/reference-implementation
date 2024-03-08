@@ -39,6 +39,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static com.ingroupe.efti.commons.enums.ErrorCodesEnum.DATA_NOT_FOUND;
+
+
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
 @Slf4j
@@ -139,12 +142,25 @@ public class ControlService {
     private ControlDto getControlDto(String requestUuid) {
         log.info("get ControlEntity with uuid : {}", requestUuid);
         final Optional<ControlEntity> optionalControlEntity = controlRepository.findByRequestUuid(requestUuid);
+        if (optionalControlEntity.isPresent()) {
+            ControlEntity controlEntity = optionalControlEntity.get();
+            if (requestService.allRequestsAreInErrorStatus(controlEntity.getRequests())) {
+                controlEntity.setStatus(StatusEnum.ERROR.name());
+                controlEntity.setError(buildErrorEntity(DATA_NOT_FOUND.name(), "Error data not found."));
+            }
+        }
         return mapperUtils.controlEntityToControlDto(optionalControlEntity.orElse(
                 ControlEntity.builder()
                         .status(StatusEnum.ERROR.name())
                         .error(ErrorEntity.builder()
                                 .errorCode(ErrorCodesEnum.UUID_NOT_FOUND.name())
                                 .errorDescription("Error requestUuid not found.").build()).build()));
+    }
+
+    private static ErrorEntity buildErrorEntity(String errorCode, String errorDescription) {
+        return ErrorEntity.builder()
+                .errorCode(errorCode)
+                .errorDescription(errorDescription).build();
     }
 
     public void setError(final ControlDto controlDto, final ErrorDto errorDto) {

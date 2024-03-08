@@ -28,6 +28,7 @@ import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.cxf.helpers.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -110,6 +111,11 @@ public class RequestService {
             case SEND_FAILURE -> manageSendFailure(notificationDto);
             default -> log.warn("unknown notification {} ", notificationDto.getNotificationType());
         }
+    }
+
+    public boolean allRequestsAreInErrorStatus(List<RequestEntity> controlEntityRequests){
+        return CollectionUtils.emptyIfNull(controlEntityRequests).stream()
+                .allMatch(requestEntity -> RequestStatusEnum.ERROR.name().equalsIgnoreCase(requestEntity.getStatus()));
     }
 
     private void trySendDomibus(final RequestDto requestDto, final ApRequestDto apRequestDto) {
