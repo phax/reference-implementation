@@ -16,6 +16,7 @@ import java.util.List;
         "eFTIGate",
         "requestUuid",
         "status",
+        "errorCode",
         "errorDescription",
         "metadata"
 })
