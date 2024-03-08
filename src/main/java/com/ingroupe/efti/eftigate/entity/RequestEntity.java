@@ -1,9 +1,7 @@
 package com.ingroupe.efti.eftigate.entity;
 
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,7 +21,6 @@ import java.time.LocalDateTime;
 @Table(name = "request", catalog = "efti")
 @Getter
 @Setter
-@Convert(attributeName = "entityAttrName", converter = JsonBinaryType.class)
 public class RequestEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
@@ -39,9 +36,8 @@ public class RequestEntity {
     @Column(name = "retry")
     private Integer retry;
 
-    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "reponsedata")
-    private Object reponseData;
+    private byte[] reponseData;
     
     @Column(name = "nextretrydate")
     private LocalDateTime nextRetryDate;
@@ -62,4 +58,8 @@ public class RequestEntity {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "error", referencedColumnName = "id")
     ErrorEntity error;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadatas")
+    private MetadataResults metadataResults;
 }

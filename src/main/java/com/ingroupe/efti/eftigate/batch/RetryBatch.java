@@ -1,10 +1,10 @@
 package com.ingroupe.efti.eftigate.batch;
 
+import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
-import com.ingroupe.efti.eftigate.service.RequestService;
-import com.ingroupe.efti.commons.enums.RequestStatusEnum;
+import com.ingroupe.efti.eftigate.service.UilSearchRequestService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
@@ -23,7 +23,7 @@ public class RetryBatch {
     @Value("${batch.retry.size:10}")
     private Integer size;
     private final RequestRepository requestRepository;
-    private final RequestService requestService;
+    private final UilSearchRequestService defaultUilSearchRequestService;
     private final MapperUtils mapperUtils;
 
     @Scheduled(cron = "${batch.retry.cron}")
@@ -34,7 +34,7 @@ public class RetryBatch {
         List<RequestEntity> requestEntityList = requestRepository.getRequestEntitiesByStatus(RequestStatusEnum.SEND_ERROR.toString(), size, LocalDateTime.now(ZoneOffset.UTC).plusSeconds(1));
         log.info("number of retry to do {}", requestEntityList.size());
         for (RequestEntity requestEntity: requestEntityList) {
-            this.requestService.sendRequest(mapperUtils.requestToRequestDto(requestEntity), false);
+            this.defaultUilSearchRequestService.sendRequest(mapperUtils.requestToRequestDto(requestEntity), false);
         }
         log.info("BATCH retry finished");
     }

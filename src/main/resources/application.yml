@@ -29,9 +29,17 @@ batch:
     cron: "*/20 * * * * *"
     time: 20, 120, 300
     size: 10
+  update:
+    cron: "0 */1 * ? * *"
 
 springdoc:
   swagger-ui:
     enabled: true
   api-docs:
     enabled: true
+
+efti:
+  control:
+    pending:
+      timeout: 60
+
