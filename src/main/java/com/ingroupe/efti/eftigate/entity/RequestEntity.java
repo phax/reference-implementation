@@ -44,9 +44,8 @@ public class RequestEntity extends AbstractModel implements Serializable {
     @Column(name = "retry")
     private Integer retry;
 
-    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "reponsedata")
-    private Object reponseData;
+    private byte[] reponseData;
     
     @Column(name = "nextretrydate")
     private LocalDateTime nextRetryDate;
@@ -61,4 +60,8 @@ public class RequestEntity extends AbstractModel implements Serializable {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "error", referencedColumnName = "id")
     ErrorEntity error;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadatas")
+    private MetadataResults metadataResults;
 }
