@@ -55,7 +55,10 @@ public enum ErrorCodesEnum {
     REQUEST_BUILDING("Error while building request."),
     UUID_NOT_FOUND(" Uuid not found."),
 
-    PLATFORM_ERROR("Platform error");
+    PLATFORM_ERROR("Platform error"),
+
+    DATA_NOT_FOUND(" Data not found.");
+
 
     private final String message;
 }
