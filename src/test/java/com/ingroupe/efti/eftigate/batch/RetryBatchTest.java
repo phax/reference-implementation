@@ -1,10 +1,10 @@
 package com.ingroupe.efti.eftigate.batch;
 
+import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
-import com.ingroupe.efti.eftigate.service.AbstractServceTest;
-import com.ingroupe.efti.eftigate.service.RequestService;
-import com.ingroupe.efti.commons.enums.RequestStatusEnum;
+import com.ingroupe.efti.eftigate.service.AbstractServiceTest;
+import com.ingroupe.efti.eftigate.service.impl.DefaultUilSearchRequestService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -17,7 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-class RetryBatchTest extends AbstractServceTest {
+class RetryBatchTest extends AbstractServiceTest {
 
     @Mock
     private RetryBatch retryBatch;
@@ -26,13 +26,13 @@ class RetryBatchTest extends AbstractServceTest {
     private RequestRepository requestRepository = Mockito.mock(RequestRepository.class);
 
     @Mock
-    private RequestService requestService = Mockito.mock(RequestService.class);
+    private DefaultUilSearchRequestService defaultUilSearchRequestService = Mockito.mock(DefaultUilSearchRequestService.class);
 
     private List<RequestEntity> requestEntityList;
 
     @BeforeEach
     public void before() {
-        retryBatch = new RetryBatch(requestRepository, requestService, mapperUtils);
+        retryBatch = new RetryBatch(requestRepository, defaultUilSearchRequestService, mapperUtils);
 
         RequestEntity requestEntity = new RequestEntity();
         requestEntityList = List.of(requestEntity);

@@ -26,11 +26,9 @@ import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto
 import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.RECEIVE_SUCCESS;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-class ApIncomingServiceTest extends AbstractServceTest {
+class ApIncomingServiceTest extends AbstractServiceTest {
 
     AutoCloseable openMocks;
 
@@ -38,7 +36,7 @@ class ApIncomingServiceTest extends AbstractServceTest {
     @Mock
     private NotificationService notificationService;
     @Mock
-    private RequestService requestService;
+    private UilSearchRequestService defaultUilSearchRequestService;
     @Mock
     private MetadataService metadataService;
 
@@ -120,7 +118,7 @@ class ApIncomingServiceTest extends AbstractServceTest {
                         .password(password)
                         .username(username).build()).build();
         openMocks = MockitoAnnotations.openMocks(this);
-        service = new ApIncomingService(notificationService, requestService, metadataService, gateProperties);
+        service = new ApIncomingService(notificationService, defaultUilSearchRequestService, metadataService, gateProperties);
     }
 
     @AfterEach
@@ -151,7 +149,7 @@ class ApIncomingServiceTest extends AbstractServceTest {
         service.manageIncomingNotification(receivedNotificationDto);
 
         verify(notificationService).consume(apConfigDto, receivedNotificationDto);
-        verify(requestService).updateWithResponse(notificationDto);
+        verify(defaultUilSearchRequestService).updateWithResponse(notificationDto);
     }
 
     @Test
@@ -271,6 +269,6 @@ class ApIncomingServiceTest extends AbstractServceTest {
         service.manageIncomingNotification(receivedNotificationDto);
 
         verify(notificationService).consume(apConfigDto, receivedNotificationDto);
-        verify(requestService, never()).updateWithResponse(any());
+        verify(defaultUilSearchRequestService, never()).updateWithResponse(any());
     }
 }

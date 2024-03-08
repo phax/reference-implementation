@@ -5,7 +5,7 @@ import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import org.mockito.Mock;
 import org.modelmapper.ModelMapper;
 
-public abstract class AbstractServceTest {
+public abstract class AbstractServiceTest {
 
     public final MapperUtils mapperUtils = new MapperUtils(createModelMapper());
 

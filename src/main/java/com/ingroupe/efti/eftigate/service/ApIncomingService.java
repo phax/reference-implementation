@@ -33,12 +33,12 @@ import java.nio.charset.StandardCharsets;
 public class ApIncomingService {
 
     private final NotificationService notificationService;
-    private final RequestService requestService;
+    private final UilSearchRequestService defaultUilSearchRequestService;
     private final MetadataService metadataService;
     private final GateProperties gateProperties;
 
     public void manageIncomingNotification(final ReceivedNotificationDto receivedNotificationDto) {
-        notificationService.consume(createApConfig(), receivedNotificationDto).ifPresent(this::rootResponse);
+         notificationService.consume(createApConfig(), receivedNotificationDto).ifPresent(this::rootResponse);
     }
 
     private void rootResponse(final NotificationDto notificationDto) {
@@ -48,7 +48,7 @@ public class ApIncomingService {
             throw new TechnicalException("unknown edelivery action " + notificationDto.getContent().getAction());
         }
         switch (action) {
-            case GET_UIL -> requestService.updateWithResponse(notificationDto);
+            case GET_UIL -> defaultUilSearchRequestService.updateWithResponse(notificationDto);
             case UPLOAD_METADATA -> metadataService.createOrUpdate(parseBodyToMetadata(notificationDto.getContent()));
             default -> log.warn("unmanaged notification type {}", notificationDto.getContent().getAction());
         }
