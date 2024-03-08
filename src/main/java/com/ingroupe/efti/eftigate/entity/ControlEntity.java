@@ -1,10 +1,12 @@
 package com.ingroupe.efti.eftigate.entity;
 
+import com.ingroupe.efti.commons.model.AbstractModel;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,19 +23,21 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.List;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "control", catalog = "efti")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 @Convert(attributeName = "entityAttrName", converter = JsonBinaryType.class)
-public class ControlEntity implements Serializable {
+public class ControlEntity extends AbstractModel implements Serializable {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
@@ -63,12 +67,6 @@ public class ControlEntity implements Serializable {
 
     @Column(name = "subsetmsrequested")
     private String subsetMsRequested;
-
-    @Column(name = "createddate")
-    private LocalDateTime createdDate;
-
-    @Column(name = "lastmodifieddate")
-    private LocalDateTime lastModifiedDate;
 
     @Column(name = "eftidata")
     private byte[] eftiData;
