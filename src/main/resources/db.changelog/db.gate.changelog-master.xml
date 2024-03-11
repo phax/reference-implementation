@@ -86,7 +86,7 @@
             </column>
             <column name="edeliverymessageid" type="VARCHAR(72)"/>
             <column defaultValueNumeric="0" name="retry" type="INTEGER"/>
-            <column name="reponsedata" type="JSONB"/>
+            <column name="reponsedata" type="BYTEA"/>
             <column name="nextretrydate" type="TIMESTAMP WITHOUT TIME ZONE"/>
             <column name="createddate" type="TIMESTAMP WITHOUT TIME ZONE">
                 <constraints nullable="false"/>
@@ -132,6 +132,11 @@
     </changeSet>
     <changeSet author="osouley" id="1707315732219-13">
         <addColumn catalogName="efti" tableName="control">
+            <column name="metadatas" type="JSONB"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="osouley" id="1707315732219-14">
+        <addColumn catalogName="efti" tableName="request">
             <column name="metadatas" type="JSONB"/>
         </addColumn>
     </changeSet>

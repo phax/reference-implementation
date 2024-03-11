@@ -33,7 +33,6 @@ public class EftiConfig {
     @Bean(name = "modelMapper")
     public ModelMapper modelMapper() {
         final ModelMapper modelMapper = new ModelMapper();
-
         Provider<LocalDateTime> localDateProvider = new AbstractProvider<>() {
             @Override
             public LocalDateTime get() {
