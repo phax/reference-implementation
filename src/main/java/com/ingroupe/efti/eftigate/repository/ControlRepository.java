@@ -10,6 +10,6 @@ import java.util.Optional;
 public interface ControlRepository extends JpaRepository<ControlEntity, Long> {
     Optional<ControlEntity> findByRequestUuid(String requestUuid);
 
-    @Query(value = "SELECT * FROM control WHERE status =:status AND createddate > now() - make_interval(0,0,0,0,0,0,:timeoutValue)", nativeQuery = true)
+    @Query(value = "SELECT * FROM {h-schema}control WHERE status =:status AND createddate > now() - make_interval(0,0,0,0,0,0,:timeoutValue)", nativeQuery = true)
     List<ControlEntity> findByCriteria(String status, Integer timeoutValue);
 }

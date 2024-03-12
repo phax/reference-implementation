@@ -6,6 +6,7 @@ import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.dto.TransportVehicleDto;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -16,7 +17,7 @@ import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 
-public class EftiAsyncCallsProcessorTest {
+class EftiAsyncCallsProcessorTest {
     AutoCloseable openMocks;
     @Mock
     private MetadataSearchRequestService defaultMetadataSearchRequestService;
@@ -77,5 +78,10 @@ public class EftiAsyncCallsProcessorTest {
 
         //Assert
         verify(defaultMetadataSearchRequestService, times(1)).createRequest(controlDto, "ERROR", null);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        openMocks.close();
     }
 }

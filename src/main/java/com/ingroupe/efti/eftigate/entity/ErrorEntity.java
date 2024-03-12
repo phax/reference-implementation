@@ -11,13 +11,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name = "error", catalog = "efti")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ErrorEntity {
+public class ErrorEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id")
