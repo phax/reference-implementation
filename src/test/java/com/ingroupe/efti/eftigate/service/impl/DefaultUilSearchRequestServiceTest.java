@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
+class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
 
     AutoCloseable openMocks;
     @Mock
@@ -133,16 +133,6 @@ public class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
         assertNotNull(requestDto);
         assertEquals(RequestStatusEnum.IN_PROGRESS.name(), requestDto.getStatus());
         assertEquals(edeliveryId, requestDto.getEdeliveryMessageId());
-    }
-
-    @Test
-    void createRequestForMetadataTest() {
-        when(requestRepository.save(any())).thenReturn(requestEntity);
-
-//        final RequestDto requestDto = requestService.createRequestForMetadata(controlDto);
-//        Mockito.verify(requestRepository, Mockito.times(1)).save(any());
-//        assertNotNull(requestDto);
-//        assertEquals(RequestStatusEnum.RECEIVED.name(), requestDto.getStatus());
     }
 
     @Test
