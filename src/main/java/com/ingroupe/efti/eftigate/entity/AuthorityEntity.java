@@ -12,11 +12,13 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name = "authority", catalog = "efti")
 @Getter
 @Setter
-public class AuthorityEntity {
+public class AuthorityEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id")
