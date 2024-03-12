@@ -2,7 +2,7 @@ spring:
   application:
     name: efti-gate
   datasource:
-    url: jdbc:postgresql://qleftidbpg01in.service.groupein.local:5432/efti
+    url: jdbc:postgresql://qleftidbpg01in.service.groupein.local:5432/efti_qua
     username: efti
     password: j6h6BEjpHIwYly7HA0z # A modifier
   security:
