@@ -4,7 +4,7 @@ spring:
   datasource:
     url: jdbc:postgresql://qleftidbpg01in.service.groupein.local:5432/efti_qua
     username: efti
-    password: j6h6BEjpHIwYly7HA0z # A modifier
+    password: G2fh9sF5sUrTZ5fgA0z # A modifier
   security:
     oauth2:
       resourceserver:
