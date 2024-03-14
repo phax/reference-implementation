@@ -19,7 +19,7 @@ spring:
 gate:
   owner: https://gate-fr.efti.qlf.k8s.groupein.local
   ap:
-    url: http://qleftimicr01in.service.groupein.local:8080/domibus/services/wsplugin
+    url: http://qleftimicr23in.service.groupein.local:8080/domibus/services/wsplugin
     username: france_service_account
     password: Azerty59*1234567
 
