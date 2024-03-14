@@ -94,7 +94,7 @@
 		<dependency>
 			<groupId>com.ingroupe.efti</groupId>
 			<artifactId>commons</artifactId>
-			<version>0.2.2-SNAPSHOT</version>
+			<version>0.2.2</version>
 		</dependency>
 
 		<dependency>
