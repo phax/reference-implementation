@@ -61,7 +61,7 @@ build_and_deploy_microservices_hors_prod:
       variables:
         TAG: PREVIEW
       when: manual
-    - when: always
+    - when: never
   trigger:
     include:
       - project: "kube/build"
