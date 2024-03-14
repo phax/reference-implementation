@@ -79,9 +79,9 @@ build_and_deploy_microservices_prod:
     - when: never
   trigger:
     include:
-      - project: "kube/build_prod"
+      - project: "kube/build"
         file: "build_ms.yml"
-        ref: "main"
+        ref: "mock"
     forward:
       pipeline_variables: true
     strategy: depend
