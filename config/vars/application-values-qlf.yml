@@ -9,7 +9,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer_uri: https://keycloak.efti.qlf.k8s.groupein.local/realms/eFTI_FR
+          issuer_uri: https://auth.qualif.efti-ingroupe.com/realms/eFTI_FR
   jpa:
     properties:
       hibernate:
@@ -19,7 +19,7 @@ spring:
 gate:
   owner: https://gate-fr.efti.qlf.k8s.groupein.local
   ap:
-    url: http://qleftimicr23in.service.groupein.local:8080/domibus/services/wsplugin
+    url: https://edelivery-fr.qlf.efti.service.groupein.local/ap-gate/domibus/services/wsplugin
     username: france_service_account
     password: tq9tQ6ykymK60zjBsDSO+
 
