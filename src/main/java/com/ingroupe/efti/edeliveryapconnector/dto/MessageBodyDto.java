@@ -18,4 +18,6 @@ public class MessageBodyDto {
     private String errorDescription;
     @JsonProperty("eFTIData")
     private Object eFTIData;
+    @JsonProperty("eFTIPlatformUrl")
+    private String eFTIPlatformUrl;
 }
