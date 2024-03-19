@@ -15,5 +15,6 @@ public class NotificationContentDto {
     private String messageId;
     private String action;
     private String contentType;
+    private String fromPartyId;
     private DataSource body;
 }

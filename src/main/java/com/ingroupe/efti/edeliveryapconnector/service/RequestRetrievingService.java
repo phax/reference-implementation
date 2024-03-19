@@ -35,6 +35,7 @@ public class RequestRetrievingService extends AbstractApService {
                     .contentType(holderMessaging.value.getUserMessage().getPayloadInfo().getPartInfo().get(0).getPartProperties().getProperty().get(0).getValue())
                     .messageId(holderMessaging.value.getUserMessage().getMessageInfo().getMessageId())
                     .action(holderMessaging.value.getUserMessage().getCollaborationInfo().getAction())
+                    .fromPartyId(holderMessaging.value.getUserMessage().getPartyInfo().getFrom().getPartyId().getValue())
                     .build();
         } catch (IOException e) {
             throw new SendRequestException("error while sending retrieve message request", e);
