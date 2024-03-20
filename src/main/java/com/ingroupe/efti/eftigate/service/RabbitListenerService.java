@@ -73,7 +73,7 @@ public class RabbitListenerService {
 
     @RabbitListener(queues = "${spring.rabbitmq.queues.messageSendDeadLetterQueue:message-send-dead-letter-queue}")
     public void listenSendMessageDeadLetter(final String message) {
-        log.info("Receive message for dead queue");
+        log.error("Receive message for dead queue");
         RequestDto requestDto = mapRequestDto(message);
         manageSendError(requestDto);
     }
