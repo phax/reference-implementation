@@ -1,4 +1,9 @@
 spring:
+  rabbitmq:
+    password: france
+    username: france
+    virtual-host: france
+    host: https://rabbitmq.efti.dev.k8s.groupein.local
   application:
     name: efti-gate
   datasource:
