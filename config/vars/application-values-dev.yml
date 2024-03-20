@@ -1,4 +1,6 @@
 spring:
+  rabbitmq:
+    host: https://rabbitmq.efti.dev.k8s.groupein.local
   application:
     name: efti-gate
   datasource:
