@@ -84,10 +84,8 @@ gate:
     password: {{ gate.ap.password }}
 
 batch:
-  retry:
-    cron: "{{ batch.retry.cron }}"
-    time: {{ batch.retry.time }}
-    size: {{ batch.retry.size }}
+  update:
+    cron: "0 */1 * ? * *"
 
 springdoc:
   swagger-ui:
