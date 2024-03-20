@@ -18,6 +18,7 @@ import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
+import com.ingroupe.efti.eftigate.service.RabbitSenderService;
 import com.ingroupe.efti.eftigate.service.RequestServiceTest;
 import com.ingroupe.efti.eftigate.service.UilSearchRequestService;
 import org.junit.jupiter.api.AfterEach;
@@ -48,6 +49,8 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
     private RequestSendingService requestSendingService;
     @Mock
     private ControlService controlService;
+    @Mock
+    private RabbitSenderService rabbitSenderService;
     private UilSearchRequestService defaultUilSearchRequestService;
     private final UilDto uilDto = new UilDto();
     private final ControlDto controlDto = new ControlDto();
@@ -60,7 +63,7 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
         openMocks = MockitoAnnotations.openMocks(this);
 
         GateProperties gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).build();
-        defaultUilSearchRequestService = new DefaultUilSearchRequestService(requestRepository, requestSendingService, gateProperties, mapperUtils, objectMapper, controlService, List.of(20,120,300));
+        defaultUilSearchRequestService = new DefaultUilSearchRequestService(requestRepository, mapperUtils, controlService,rabbitSenderService);
 
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         String requestUuid = UUID.randomUUID().toString();
@@ -113,53 +116,41 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
     }
 
     @Test
-    void trySendDomibusSucessTest() throws SendRequestException {
+    void trySendDomibusSucessTest() throws SendRequestException, JsonProcessingException {
         when(requestSendingService.sendRequest(any(), any())).thenReturn("result");
         when(requestRepository.save(any())).thenReturn(requestEntity);
 
-        defaultUilSearchRequestService.sendRequest(requestDto, false);
-        verify(requestSendingService).sendRequest(any(), any());
+        defaultUilSearchRequestService.sendRequest(requestDto);
+        verify(rabbitSenderService).sendMessageToRabbit(any(), any(), any());
     }
 
     @Test
     void createRequestEntityTest() throws SendRequestException, InterruptedException {
         final String edeliveryId = "id123";
+        requestEntity.setEdeliveryMessageId(edeliveryId);
         when(requestRepository.save(any())).thenReturn(requestEntity);
         when(requestSendingService.sendRequest(any(), any())).thenReturn(edeliveryId);
 
         final RequestDto requestDto = defaultUilSearchRequestService.createAndSendRequest(controlDto);
         Thread.sleep(1000);
-        Mockito.verify(requestRepository, Mockito.times(2)).save(any());
+        Mockito.verify(requestRepository, Mockito.times(1)).save(any());
         assertNotNull(requestDto);
-        assertEquals(RequestStatusEnum.IN_PROGRESS.name(), requestDto.getStatus());
+        assertEquals(RequestStatusEnum.RECEIVED.name(), requestDto.getStatus());
         assertEquals(edeliveryId, requestDto.getEdeliveryMessageId());
     }
 
     @Test
-    void shouldSetSendErrorTest() throws SendRequestException, InterruptedException {
+    void sendTest() throws SendRequestException, InterruptedException {
         when(requestRepository.save(any())).thenReturn(requestEntity);
         when(requestSendingService.sendRequest(any(),any())).thenThrow(SendRequestException.class);
 
         final RequestDto requestDto = defaultUilSearchRequestService.createAndSendRequest(controlDto);
 
         Thread.sleep(1000);
-        Mockito.verify(requestRepository, Mockito.times(2)).save(any());
+        Mockito.verify(requestRepository, Mockito.times(1)).save(any());
         assertNotNull(requestDto);
-        assertEquals(RequestStatusEnum.SEND_ERROR.name(), requestDto.getStatus());
-        assertNotNull(requestDto.getError());
-    }
-
-    @Test
-    void shouldSetErrorTest() throws JsonProcessingException {
-        when(requestRepository.save(any())).thenReturn(requestEntity);
-        when(objectMapper.writeValueAsString(any())).thenThrow(JsonProcessingException.class);
-
-        final RequestDto requestDto = defaultUilSearchRequestService.createAndSendRequest(controlDto);
-
-        Mockito.verify(requestRepository, Mockito.times(2)).save(any());
-        assertNotNull(requestDto);
-        assertEquals(RequestStatusEnum.SEND_ERROR.name(), requestDto.getStatus());
-        assertNotNull(requestDto.getError());
+        assertEquals(RequestStatusEnum.RECEIVED.name(), requestDto.getStatus());
+        assertNull(requestDto.getError());
     }
 
     @Test

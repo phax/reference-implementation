@@ -3,31 +3,22 @@ package com.ingroupe.efti.eftigate.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
-import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
-import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
-import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
-import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
-import com.ingroupe.efti.eftigate.config.GateProperties;
-import com.ingroupe.efti.eftigate.config.MyForkJoinWorkerThreadFactory;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
-import com.ingroupe.efti.eftigate.dto.requestbody.RequestBodyDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
-import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
+import com.ingroupe.efti.eftigate.service.RabbitSenderService;
 import com.ingroupe.efti.eftigate.service.UilSearchRequestService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,12 +33,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
@@ -55,22 +43,25 @@ import java.util.concurrent.ForkJoinPool;
 public class DefaultUilSearchRequestService implements UilSearchRequestService {
 
     private final RequestRepository requestRepository;
-    private final RequestSendingService requestSendingService;
-    private final GateProperties gateProperties;
     private final MapperUtils mapperUtils;
-    private final ObjectMapper objectMapper;
     @Lazy
     private final ControlService controlService;
+    private final RabbitSenderService rabbitSenderService;
 
-    @Value("${batch.retry.time}")
-    private final List<Integer> listTime;
+    @Value("${spring.rabbitmq.queues.eftiSendMessageExchange:efti.send-message.exchange}")
+    private String eftiSendMessageExchange;
+
+    @Value("${spring.rabbitmq.queues.eftiKeySendMessage:EFTI}")
+    private String eftiKeySendMessage;
+
+
 
     @Override
     public RequestDto createAndSendRequest(final ControlDto controlDto) {
         RequestDto requestDto = new RequestDto(controlDto);
         log.info("Request has been register with controlId : {}", requestDto.getControl().getId());
         final RequestDto result = this.save(requestDto);
-        this.sendRequest(result, true);
+        this.sendRequest(result);
         return result;
     }
 
@@ -89,27 +80,11 @@ public class DefaultUilSearchRequestService implements UilSearchRequestService {
     }
 
     @Override
-    public void sendRequest(final RequestDto requestDto, final boolean runAsynch) {
-        final ApRequestDto apRequestDto;
+    public void sendRequest(final RequestDto requestDto) {
         try {
-            apRequestDto = buildApRequestDto(requestDto);
-        } catch (TechnicalException e) {
-            log.error("error while building request", e);
-            requestDto.setError(ErrorDto.builder().errorCode(ErrorCodesEnum.REQUEST_BUILDING.name()).build());
-            this.updateStatus(requestDto, RequestStatusEnum.SEND_ERROR);
-            return;
-        }
-
-        if(runAsynch) {
-            //see https://stackoverflow.com/questions/49113207/completablefuture-forkjoinpool-set-class-loader/59444016#59444016
-            final ForkJoinPool myCommonPool = new ForkJoinPool(
-                    Runtime.getRuntime().availableProcessors(),
-                    new MyForkJoinWorkerThreadFactory()
-                    , null, false);
-
-            CompletableFuture.runAsync(() -> trySendDomibus(requestDto, apRequestDto), myCommonPool);
-        } else {
-            trySendDomibus(requestDto, apRequestDto);
+            rabbitSenderService.sendMessageToRabbit(eftiSendMessageExchange, eftiKeySendMessage, requestDto);
+        } catch (JsonProcessingException e) {
+            log.error("Error when try to parse object to json/string", e);
         }
     }
 
@@ -120,43 +95,6 @@ public class DefaultUilSearchRequestService implements UilSearchRequestService {
             case SEND_FAILURE -> manageSendFailure(notificationDto);
             default -> log.warn("unknown notification {} ", notificationDto.getNotificationType());
         }
-    }
-
-    private void trySendDomibus(final RequestDto requestDto, final ApRequestDto apRequestDto) {
-        try {
-            final String result = this.requestSendingService.sendRequest(apRequestDto, EDeliveryAction.GET_UIL);
-            requestDto.setEdeliveryMessageId(result);
-            this.updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
-        } catch (SendRequestException e) {
-            log.error("error while sending request");
-            manageSendError(requestDto);
-        }
-    }
-
-    private void manageSendError(final RequestDto requestDto) {
-        final ErrorDto errorDto = ErrorDto.builder()
-                .errorCode(ErrorCodesEnum.AP_SUBMISSION_ERROR.name())
-                .errorDescription(ErrorCodesEnum.AP_SUBMISSION_ERROR.getMessage()).build();
-        requestDto.setError(errorDto);
-
-        final Optional<LocalDateTime> optionalDate = setNextRetryDate(requestDto);
-        optionalDate.ifPresentOrElse(requestDto::setNextRetryDate,
-                () -> controlService.setError(requestDto.getControl(), errorDto));
-        requestDto.setRetry(requestDto.getRetry() + 1);
-        this.updateStatus(requestDto, optionalDate.isPresent() ? RequestStatusEnum.SEND_ERROR : RequestStatusEnum.ERROR);
-    }
-
-    private Optional<LocalDateTime> setNextRetryDate(final RequestDto requestDto) {
-        LocalDateTime nextRetryDate = LocalDateTime.now(ZoneOffset.UTC);
-        try {
-            if (listTime.get(requestDto.getRetry()) != null) {
-                nextRetryDate = nextRetryDate.plusSeconds(listTime.get(requestDto.getRetry()));
-            }
-        } catch (IndexOutOfBoundsException e) {
-            log.info("Request with id {} have reach the maximal number of retry", requestDto.getId());
-            return Optional.empty();
-        }
-        return Optional.of(nextRetryDate);
     }
 
     private void manageMessageReceive(final NotificationDto notificationDto) {
@@ -232,32 +170,5 @@ public class DefaultUilSearchRequestService implements UilSearchRequestService {
 
     private RequestDto save(final RequestDto requestDto) {
         return mapperUtils.requestToRequestDto(requestRepository.save(mapperUtils.requestDtoToRequestEntity(requestDto)));
-    }
-
-    private ApRequestDto buildApRequestDto(final RequestDto requestDto) throws TechnicalException {
-        return ApRequestDto.builder()
-                .sender(requestDto.getControl().getEftiGateUrl())
-                .receiver(requestDto.getControl().getEftiPlatformUrl())
-                .body(buildBody(requestDto))
-                .apConfig(ApConfigDto.builder()
-                        .username(gateProperties.getAp().getUsername())
-                        .password(gateProperties.getAp().getPassword())
-                        .url(gateProperties.getAp().getUrl())
-                        .build())
-                .build();
-    }
-
-    private String buildBody(final RequestDto requestDto) throws TechnicalException {
-        final RequestBodyDto requestBodyDto = RequestBodyDto.builder()
-                .requestUuid(requestDto.getControl().getRequestUuid())
-                .eFTIDataUuid(requestDto.getControl().getEftiDataUuid())
-                .subsetEU(new LinkedList<>())
-                .subsetMS(new LinkedList<>())
-                .build();
-        try {
-            return objectMapper.writeValueAsString(requestBodyDto);
-        } catch (JsonProcessingException e) {
-            throw new TechnicalException("error while building request body", e);
-        }
     }
 }

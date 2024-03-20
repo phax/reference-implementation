@@ -10,7 +10,7 @@ public interface UilSearchRequestService extends RequestService {
 
     RequestDto createAndSendRequest(final ControlDto controlDto);
 
-    void sendRequest(final RequestDto requestDto, final boolean runAsynch);
+    void sendRequest(final RequestDto requestDto);
 
     void updateWithResponse(final NotificationDto notificationDto);
 
