@@ -2,6 +2,9 @@ server:
   port: 8080
 spring:
   rabbitmq:
+      password: france
+      username: france
+      virtual-host: france
     host: {{ spring.rabbitmq.host }}
     listener:
       default-requeue-rejected: false
