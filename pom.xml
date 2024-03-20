@@ -259,6 +259,13 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
+
+        <!-- Test Logs -->
+        <dependency>
+            <groupId>com.ingroupe.common</groupId>
+            <artifactId>common-test</artifactId>
+            <version>2.0.0</version>
+        </dependency>
     </dependencies>
 
     <build>
