@@ -6,9 +6,9 @@ spring:
     username: {{ spring.rabbitmq.username }}
     virtual-host: {{ spring.rabbitmq.virtual_host }}
     host: {{ spring.rabbitmq.host }}
-    port: 5671
-    ssl:
-      enabled: true
+    port: 5672
+    # ssl:
+    #   enabled: true
     listener:
       default-requeue-rejected: false
       simple:
