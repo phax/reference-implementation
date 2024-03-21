@@ -92,7 +92,7 @@
         <dependency>
             <groupId>com.ingroupe.efti</groupId>
             <artifactId>metadata-registry</artifactId>
-            <version>0.2.2</version>
+            <version>0.2.3</version>
         </dependency>
 
         <!-- security -->
