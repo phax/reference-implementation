@@ -6,6 +6,10 @@ spring:
     username: {{ spring.rabbitmq.username }}
     virtual-host: {{ spring.rabbitmq.virtual_host }}
     host: {{ spring.rabbitmq.host }}
+    port: 5671
+    ssl:
+      enabled: true
+      algorithm: TLSv1.2
     listener:
       default-requeue-rejected: false
       simple:
@@ -16,7 +20,6 @@ spring:
           max-attempts: 6
           max-interval: 10s
           multiplier: 2
-    port: 5671
     queues:
       eftiKeySendMessage: EFTI
       eftiSendMessageExchange: efti.send-message.exchange
