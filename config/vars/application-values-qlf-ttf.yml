@@ -17,7 +17,7 @@ gate:
   cda_path: file:/opt/javapp/config/cda
   gate: http://efti.gate.france.eu
   ap:
-    url: https://edelivery-fr.qlf.efti.service.groupein.local/ap-mock/domibus/services/wsplugin
+    url: https://qleftimicr24in.service.groupein.local:8443/domibus/services/wsplugin
     username: ttf_service_account
     password: tq9tQ6ykymK60zjBsDSO+
 
