@@ -3,11 +3,12 @@ package com.ingroupe.efti.eftigate.service;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.commons.dto.MetadataResultDto;
-import com.ingroupe.efti.commons.dto.ValidableControl;
+import com.ingroupe.efti.commons.dto.ValidableDto;
 import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
+import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
@@ -18,6 +19,9 @@ import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
+import com.ingroupe.efti.eftigate.service.gate.EftiGateUrlResolver;
+import com.ingroupe.efti.eftigate.service.request.RequestService;
+import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -25,7 +29,6 @@ import jakarta.validation.ValidatorFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -39,6 +42,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import static com.ingroupe.efti.commons.enums.ErrorCodesEnum.DATA_NOT_FOUND;
 
@@ -48,15 +52,20 @@ import static com.ingroupe.efti.commons.enums.ErrorCodesEnum.DATA_NOT_FOUND;
 public class ControlService {
 
     private final ControlRepository controlRepository;
+    private final EftiGateUrlResolver eftiGateUrlResolver;
     private final MapperUtils mapperUtils;
-    @Lazy
-    private final UilSearchRequestService defaultUilSearchRequestService;
-    @Lazy
-    private final List<RequestService> requestServices;
+
+
+    private final RequestServiceFactory requestServiceFactory;
+
     @Value("${efti.control.pending.timeout:60}")
     private Integer timeoutValue;
 
+    private final Function<List<String>, RequestTypeEnum> gateToRequestTypeFunction;
+
     private final EftiAsyncCallsProcessor eftiAsyncCallsProcessor;
+
+    private final GateProperties gateProperties;
 
     public ControlEntity getById(long id) {
         Optional<ControlEntity> controlEntity = controlRepository.findById(id);
@@ -75,26 +84,42 @@ public class ControlService {
         return createControl(metadataRequestDto, ControlDto.fromMetadataControl(metadataRequestDto));
     }
 
-    private RequestUuidDto createControl(final ValidableControl control, ControlDto controlDto) {
-        final Optional<ErrorDto> errorOptional = this.validateControl(control);
-
-        errorOptional.ifPresentOrElse(
-                error -> {
-                    controlDto.setStatus(StatusEnum.ERROR.name());
-                    controlDto.setError(error);
-                    log.error(error.getErrorDescription() + ", " + error.getErrorCode());
-                },
-                () -> {
-                    final ControlDto saveControl = this.save(controlDto);
-                    if(control instanceof UilDto) {
-                        defaultUilSearchRequestService.createAndSendRequest(saveControl);
-                    } else if (control instanceof MetadataRequestDto metadataRequestDto) {
-                        eftiAsyncCallsProcessor.checkLocalRepoAsync(metadataRequestDto, saveControl);
-                    }
-                    log.info("control with request uuid '{}' has been register", saveControl.getRequestUuid());
-                });
-
+    private <T extends ValidableDto> RequestUuidDto createControl(final T searchDto, ControlDto controlDto) {
+        final Optional<ErrorDto> errorOptional = this.validateControl(searchDto);
+        errorOptional.ifPresentOrElse(error -> createErrorControl(controlDto, error), () -> {
+            if(searchDto instanceof UilDto) {
+                createUilControl(controlDto);
+            } else if (searchDto instanceof MetadataRequestDto metadataRequestDto) {
+                createMetadataControl(controlDto, metadataRequestDto);
+            }
+        });
         return buildResponse(controlDto);
+    }
+
+    private void createUilControl(ControlDto controlDto) {
+        final ControlDto saveControl = this.save(controlDto);
+        getRequestService(controlDto.getRequestType()).createAndSendRequest(saveControl, null);
+        log.info("Uil control with request uuid '{}' has been register", saveControl.getRequestUuid());
+    }
+
+    private static void createErrorControl(ControlDto controlDto, ErrorDto error) {
+        controlDto.setStatus(StatusEnum.ERROR.name());
+        controlDto.setError(error);
+        log.error(error.getErrorDescription() + ", " + error.getErrorCode());
+    }
+
+    private void createMetadataControl(ControlDto controlDto, MetadataRequestDto metadataRequestDto) {
+        List<String> destinationGatesUrls = eftiGateUrlResolver.resolve(metadataRequestDto);
+        controlDto.setRequestType(gateToRequestTypeFunction.apply(destinationGatesUrls).name());
+        final ControlDto saveControl = this.save(controlDto);
+            CollectionUtils.emptyIfNull(destinationGatesUrls).forEach(destinationUrl -> {
+                if (destinationUrl.equalsIgnoreCase(gateProperties.getOwner())){
+                    eftiAsyncCallsProcessor.checkLocalRepoAsync(metadataRequestDto, saveControl);
+                } else {
+                    getRequestService(saveControl.getRequestType()).createAndSendRequest(saveControl, destinationUrl);
+                }
+            });
+        log.info("Metadata control with request uuid '{}' has been register", saveControl.getRequestUuid());
     }
 
     public RequestUuidDto getControlEntity(final String requestUuid) {
@@ -166,7 +191,7 @@ public class ControlService {
     }
 
     public ControlDto updatePendingControl(ControlEntity controlEntity) {
-        final RequestService requestService = this.getRequestService(controlEntity);
+        final RequestService requestService = this.getRequestService(controlEntity.getRequestType());
         List<RequestEntity> controlEntityRequests = controlEntity.getRequests();
         if (requestService.allRequestsContainsData(controlEntityRequests)){
             requestService.setDataFromRequests(controlEntity);
@@ -178,7 +203,7 @@ public class ControlService {
     }
 
     private ControlDto handleExistingControlWithoutData(ControlEntity controlEntity) {
-        if (getRequestService(controlEntity).allRequestsAreInErrorStatus(controlEntity.getRequests())){
+        if (getRequestService(controlEntity.getRequestType()).allRequestsAreInErrorStatus(controlEntity.getRequests())){
             controlEntity.setStatus(StatusEnum.ERROR.name());
             controlEntity.setError(buildErrorEntity(DATA_NOT_FOUND.name(), "Error data not found."));
         } else {
@@ -228,20 +253,20 @@ public class ControlService {
                 controlRepository.save(mapperUtils. controlDtoToControEntity(controlDto)));
     }
 
-    private Optional<ErrorDto> validateControl(final ValidableControl validable) {
+    private Optional<ErrorDto> validateControl(final ValidableDto validable) {
         final Validator validator;
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
 
-        final Set<ConstraintViolation<ValidableControl>> violations = validator.validate(validable);
+        final Set<ConstraintViolation<ValidableDto>> violations = validator.validate(validable);
 
         if(violations.isEmpty()) {
             return Optional.empty();
         }
 
         //we manage only one error by control
-        final ConstraintViolation<ValidableControl> constraintViolation = violations.iterator().next();
+        final ConstraintViolation<ValidableDto> constraintViolation = violations.iterator().next();
 
         return  Optional.of(ErrorDto.builder()
                 .errorCode(constraintViolation.getMessage())
@@ -262,13 +287,7 @@ public class ControlService {
         return result;
     }
 
-    private RequestService getRequestService(final ControlEntity controlEntity) {
-        final RequestTypeEnum requestType = Optional.ofNullable(EnumUtils.getEnum(RequestTypeEnum.class, controlEntity.getRequestType())).orElseThrow();
-        return getRequestService(requestType);
-    }
-
-    private RequestService getRequestService(final RequestTypeEnum requestType) {
-        return requestServices.stream().filter(service -> service.support(requestType)).findFirst()
-                .orElseThrow();
+    private RequestService getRequestService(final String requestType) {
+        return  requestServiceFactory.getRequestServiceByRequestType(requestType);
     }
 }

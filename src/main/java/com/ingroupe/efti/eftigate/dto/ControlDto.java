@@ -67,7 +67,7 @@ public class ControlDto {
 
         final ControlDto controlDto = new ControlDto();
         controlDto.setRequestUuid(uuidGenerator);
-        controlDto.setRequestType(RequestTypeEnum.METADATA_SEARCH.toString());
+        controlDto.setRequestType(RequestTypeEnum.LOCAL_METADATA_SEARCH.toString());
         controlDto.setStatus(StatusEnum.PENDING.toString());
         controlDto.setSubsetEuRequested("SubsetEuRequested");
         controlDto.setSubsetMsRequested("SubsetMsRequested");

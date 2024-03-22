@@ -1,4 +1,4 @@
-package com.ingroupe.efti.eftigate.service.impl;
+package com.ingroupe.efti.eftigate.service.request;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
@@ -20,7 +20,6 @@ import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
 import com.ingroupe.efti.eftigate.service.RequestServiceTest;
-import com.ingroupe.efti.eftigate.service.UilSearchRequestService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
+class UilRequestServiceTest extends RequestServiceTest {
 
     AutoCloseable openMocks;
     @Mock
@@ -51,7 +50,7 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
     private ControlService controlService;
     @Mock
     private RabbitSenderService rabbitSenderService;
-    private UilSearchRequestService defaultUilSearchRequestService;
+    private UilRequestService uilRequestService;
     private final UilDto uilDto = new UilDto();
     private final ControlDto controlDto = new ControlDto();
     private final ControlEntity controlEntity = new ControlEntity();
@@ -63,7 +62,7 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
         openMocks = MockitoAnnotations.openMocks(this);
 
         GateProperties gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).build();
-        defaultUilSearchRequestService = new DefaultUilSearchRequestService(requestRepository, mapperUtils, controlService,rabbitSenderService);
+        uilRequestService = new UilRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService);
 
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         String requestUuid = UUID.randomUUID().toString();
@@ -120,23 +119,8 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
         when(requestSendingService.sendRequest(any(), any())).thenReturn("result");
         when(requestRepository.save(any())).thenReturn(requestEntity);
 
-        defaultUilSearchRequestService.sendRequest(requestDto);
+        uilRequestService.sendRequest(requestDto);
         verify(rabbitSenderService).sendMessageToRabbit(any(), any(), any());
-    }
-
-    @Test
-    void createRequestEntityTest() throws SendRequestException, InterruptedException {
-        final String edeliveryId = "id123";
-        requestEntity.setEdeliveryMessageId(edeliveryId);
-        when(requestRepository.save(any())).thenReturn(requestEntity);
-        when(requestSendingService.sendRequest(any(), any())).thenReturn(edeliveryId);
-
-        final RequestDto requestDto = defaultUilSearchRequestService.createAndSendRequest(controlDto);
-        Thread.sleep(1000);
-        Mockito.verify(requestRepository, Mockito.times(1)).save(any());
-        assertNotNull(requestDto);
-        assertEquals(RequestStatusEnum.RECEIVED.name(), requestDto.getStatus());
-        assertEquals(edeliveryId, requestDto.getEdeliveryMessageId());
     }
 
     @Test
@@ -144,13 +128,10 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
         when(requestRepository.save(any())).thenReturn(requestEntity);
         when(requestSendingService.sendRequest(any(),any())).thenThrow(SendRequestException.class);
 
-        final RequestDto requestDto = defaultUilSearchRequestService.createAndSendRequest(controlDto);
+        uilRequestService.createAndSendRequest(controlDto, null);
 
         Thread.sleep(1000);
-        Mockito.verify(requestRepository, Mockito.times(1)).save(any());
-        assertNotNull(requestDto);
-        assertEquals(RequestStatusEnum.RECEIVED.name(), requestDto.getStatus());
-        assertNull(requestDto.getError());
+        verify(requestRepository, Mockito.times(1)).save(any());
     }
 
     @Test
@@ -172,7 +153,7 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
         when(requestRepository.findByControlRequestUuid(any())).thenReturn(requestEntity);
         when(requestRepository.save(any())).thenReturn(requestEntity);
-        defaultUilSearchRequestService.updateWithResponse(notificationDto);
+        uilRequestService.updateWithResponse(notificationDto);
 
         //verify(controlService).setEftiData(controlDto, "<data>vive les datas<data>".getBytes(StandardCharsets.UTF_8));
         verify(requestRepository).save(argumentCaptor.capture());
@@ -199,7 +180,7 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
         when(requestRepository.findByControlRequestUuid(any())).thenReturn(requestEntity);
         when(requestRepository.save(any())).thenReturn(requestEntity);
-        defaultUilSearchRequestService.updateWithResponse(notificationDto);
+        uilRequestService.updateWithResponse(notificationDto);
 
         verify(requestRepository, times(2)).save(argumentCaptor.capture());
         assertNotNull(argumentCaptor.getValue());
@@ -218,7 +199,7 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
         when(requestRepository.findByEdeliveryMessageId(any())).thenReturn(requestEntity);
         when(requestRepository.save(any())).thenReturn(requestEntity);
-        defaultUilSearchRequestService.updateWithResponse(notificationDto);
+        uilRequestService.updateWithResponse(notificationDto);
         verify(requestRepository).save(argumentCaptor.capture());
         assertNotNull(argumentCaptor.getValue());
         assertEquals(RequestStatusEnum.SEND_ERROR.name(), argumentCaptor.getValue().getStatus());
@@ -234,7 +215,7 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
                         .build())
                 .build();
         when(requestRepository.findByEdeliveryMessageId(any())).thenReturn(null);
-        assertThrows(RequestNotFoundException.class, () -> defaultUilSearchRequestService.updateWithResponse(notificationDto));
+        assertThrows(RequestNotFoundException.class, () -> uilRequestService.updateWithResponse(notificationDto));
     }
 
     @Test
@@ -256,7 +237,7 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
         when(requestRepository.findByControlRequestUuid(any())).thenReturn(null);
 
-        assertThrows(RequestNotFoundException.class, () -> defaultUilSearchRequestService.updateWithResponse(notificationDto));
+        assertThrows(RequestNotFoundException.class, () -> uilRequestService.updateWithResponse(notificationDto));
 
         verify(requestRepository, never()).save(argumentCaptor.capture());
     }
@@ -266,7 +247,7 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
         //Arrange
         when(getRequestRepository().save(any())).thenReturn(getRequestEntity());
         //Act and Assert
-        assertFalse(defaultUilSearchRequestService.allRequestsContainsData(List.of(getRequestEntity())));
+        assertFalse(uilRequestService.allRequestsContainsData(List.of(getRequestEntity())));
     }
 
     @Test
@@ -276,7 +257,7 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
         requestEntity.setReponseData(data);
         getRequestEntity().setReponseData(data);
         //Act and Assert
-        assertTrue(defaultUilSearchRequestService.allRequestsContainsData(List.of(getRequestEntity())));
+        assertTrue(uilRequestService.allRequestsContainsData(List.of(getRequestEntity())));
     }
 
     @Test
@@ -289,7 +270,7 @@ class DefaultUilSearchRequestServiceTest extends RequestServiceTest {
         getSecondRequestEntity().setReponseData(data2);
         final ControlEntity controlEntity = ControlEntity.builder().requests(List.of(getRequestEntity(), getSecondRequestEntity())).build();
         //Act
-        defaultUilSearchRequestService.setDataFromRequests(controlEntity);
+        uilRequestService.setDataFromRequests(controlEntity);
 
         //Assert
         assertNotNull(controlEntity.getEftiData());

@@ -11,13 +11,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name = "contactinformation")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ContactInformationEntity {
+public class ContactInformationEntity implements Serializable {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id

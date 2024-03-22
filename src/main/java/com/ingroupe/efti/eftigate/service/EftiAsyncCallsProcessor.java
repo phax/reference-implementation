@@ -4,6 +4,7 @@ import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
+import com.ingroupe.efti.eftigate.service.request.MetadataLocalRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,17 +19,17 @@ import java.util.List;
 @RequiredArgsConstructor()
 @Slf4j
 public class EftiAsyncCallsProcessor {
-    private final MetadataSearchRequestService defaultMetadataSearchRequestService;
+    private final MetadataLocalRequestService metadataLocalRequestService;
     private final MetadataService metadataService;
     @Async
     @Transactional("metadataTransactionManager")
     public void checkLocalRepoAsync(final MetadataRequestDto metadataRequestDto, ControlDto saveControl) {
         List<MetadataDto> metadataDtoList = metadataService.search(metadataRequestDto);
         if (CollectionUtils.isNotEmpty(metadataDtoList)){
-            defaultMetadataSearchRequestService.createRequest(saveControl, RequestStatusEnum.SUCCESS.name(), metadataDtoList);
+            metadataLocalRequestService.createRequest(saveControl, RequestStatusEnum.SUCCESS.name(), metadataDtoList);
         }
         else {
-            defaultMetadataSearchRequestService.createRequest(saveControl, RequestStatusEnum.ERROR.name(), null);
+            metadataLocalRequestService.createRequest(saveControl, RequestStatusEnum.ERROR.name(), null);
         }
     }
 }

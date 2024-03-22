@@ -9,6 +9,7 @@ import com.ingroupe.efti.commons.dto.TransportVehicleDto;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
+import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
@@ -18,11 +19,16 @@ import com.ingroupe.efti.eftigate.entity.MetadataResult;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
+import com.ingroupe.efti.eftigate.service.gate.EftiGateUrlResolver;
+import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
+import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
+import com.ingroupe.efti.eftigate.service.request.UilRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -33,6 +39,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,16 +52,27 @@ class ControlServiceTest extends AbstractServiceTest {
     @Mock
     private ControlRepository controlRepository;
     @Mock
-    private UilSearchRequestService defaultUilSearchRequestService;
+    private UilRequestService uilRequestService;
 
     @Mock
-    private MetadataSearchRequestService defaultMetadataSearchRequestService;
+    private MetadataRequestService metadataRequestService;
+    @InjectMocks
     private ControlService controlService;
     @Mock
     private MetadataService metadataService;
 
     @Mock
+    private EftiGateUrlResolver eftiGateUrlResolver;
+
+    @Mock
+    private RequestServiceFactory requestServiceFactory;
+
+    @Mock
     private EftiAsyncCallsProcessor eftiAsyncCallsProcessor;
+
+    @Mock
+    private Function<List<String>, RequestTypeEnum> gateToRequestTypeFunction;
+
 
     private final UilDto uilDto = new UilDto();
     private final MetadataRequestDto metadataRequestDto = new MetadataRequestDto();
@@ -73,8 +91,11 @@ class ControlServiceTest extends AbstractServiceTest {
     @BeforeEach
     public void before() {
         openMocks = MockitoAnnotations.openMocks(this);
-        controlService = new ControlService(controlRepository, mapperUtils, defaultUilSearchRequestService, List.of(defaultMetadataSearchRequestService, defaultUilSearchRequestService), eftiAsyncCallsProcessor);
+        final GateProperties gateProperties = GateProperties.builder()
+                .owner("france").build();
+        controlService = new ControlService(controlRepository, eftiGateUrlResolver, mapperUtils, requestServiceFactory, gateToRequestTypeFunction, eftiAsyncCallsProcessor, gateProperties);
 
+        //gateToRequestTypeFunction = mock(Function.class);
         final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         final String status = StatusEnum.PENDING.toString();
         final AuthorityDto authorityDto = AuthorityDto.builder()
@@ -183,10 +204,11 @@ class ControlServiceTest extends AbstractServiceTest {
     @Test
     void createControlEntityTest() {
         when(controlRepository.save(any())).thenReturn(controlEntity);
+        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
 
         RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
-        verify(defaultUilSearchRequestService, times(1)).createAndSendRequest(any());
+        verify(uilRequestService, times(1)).createAndSendRequest(any(), any());
         verify(controlRepository, times(1)).save(any());
         assertNotNull(requestUuidDtoResult);
         assertNull(requestUuidDtoResult.getErrorCode());
@@ -202,7 +224,7 @@ class ControlServiceTest extends AbstractServiceTest {
 
         RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
-        verify(defaultUilSearchRequestService, never()).createAndSendRequest(any());
+        verify(uilRequestService, never()).createAndSendRequest(any(), any());
         verify(controlRepository, times(0)).save(any());
         assertNotNull(requestUuidDtoResult);
         assertEquals(ErrorCodesEnum.UIL_GATE_MISSING.name(), requestUuidDtoResult.getErrorCode());
@@ -217,7 +239,7 @@ class ControlServiceTest extends AbstractServiceTest {
 
         RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
-        verify(defaultUilSearchRequestService, never()).createAndSendRequest(any());
+        verify(uilRequestService, never()).createAndSendRequest(any(), any());
         verify(controlRepository, times(0)).save(any());
         assertNotNull(requestUuidDtoResult);
         assertEquals(ErrorCodesEnum.UIL_GATE_INCORRECT_FORMAT.name(), requestUuidDtoResult.getErrorCode());
@@ -233,7 +255,7 @@ class ControlServiceTest extends AbstractServiceTest {
 
         RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
-        verify(defaultUilSearchRequestService, never()).createAndSendRequest(any());
+        verify(uilRequestService, never()).createAndSendRequest(any(), any());
         verify(controlRepository, times(0)).save(any());
         assertNotNull(requestUuidDtoResult);
         assertEquals(ErrorCodesEnum.UIL_PLATFORM_MISSING.name(), requestUuidDtoResult.getErrorCode());
@@ -248,7 +270,7 @@ class ControlServiceTest extends AbstractServiceTest {
 
         RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
-        verify(defaultUilSearchRequestService, never()).createAndSendRequest(any());
+        verify(uilRequestService, never()).createAndSendRequest(any(), any());
         verify(controlRepository, times(0)).save(any());
         assertNotNull(requestUuidDtoResult);
         assertEquals(ErrorCodesEnum.UIL_PLATFORM_INCORRECT_FORMAT.name(), requestUuidDtoResult.getErrorCode());
@@ -264,7 +286,7 @@ class ControlServiceTest extends AbstractServiceTest {
 
         RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
-        verify(defaultUilSearchRequestService, never()).createAndSendRequest(any());
+        verify(uilRequestService, never()).createAndSendRequest(any(), any());
         verify(controlRepository, times(0)).save(any());
         assertNotNull(requestUuidDtoResult);
         assertEquals(ErrorCodesEnum.UIL_UUID_MISSING.name(), requestUuidDtoResult.getErrorCode());
@@ -276,11 +298,11 @@ class ControlServiceTest extends AbstractServiceTest {
         uilDto.setEFTIDataUuid("toto");
         controlEntity.setStatus(StatusEnum.ERROR.name());
         when(controlRepository.save(any())).thenReturn(controlEntity);
-        when(defaultUilSearchRequestService.support(any())).thenReturn(true);
+        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
 
         RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
-        verify(defaultUilSearchRequestService, never()).createAndSendRequest(any());
+        verify(uilRequestService, never()).createAndSendRequest(any(), any());
         verify(controlRepository, times(0)).save(any());
         assertNotNull(requestUuidDtoResult);
         assertEquals(ErrorCodesEnum.UIL_UUID_INCORRECT_FORMAT.name(), requestUuidDtoResult.getErrorCode());
@@ -291,7 +313,7 @@ class ControlServiceTest extends AbstractServiceTest {
     void getControlEntitySuccessTest() {
         setField(controlService,"timeoutValue", 60);
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
-        when(defaultMetadataSearchRequestService.support(any())).thenReturn(true);
+        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
 
         RequestUuidDto requestUuidDtoResult = controlService.getControlEntity(requestUuid);
 
@@ -308,8 +330,8 @@ class ControlServiceTest extends AbstractServiceTest {
         RequestUuidDto requestUuidDtoResult = controlService.getControlEntity(requestUuid);
 
         verify(controlRepository, times(1)).findByRequestUuid(any());
-        verify(defaultMetadataSearchRequestService, never()).setDataFromRequests(any());
-        verify(defaultUilSearchRequestService, never()).setDataFromRequests(any());
+        verify(metadataRequestService, never()).setDataFromRequests(any());
+        verify(uilRequestService, never()).setDataFromRequests(any());
 
         assertNotNull(requestUuidDtoResult);
         assertEquals(requestUuidDtoResult.getRequestUuid(), controlEntity.getRequestUuid());
@@ -318,15 +340,15 @@ class ControlServiceTest extends AbstractServiceTest {
     @Test
     void shouldUpdatePendingControl_whenMetadataSearchAndRequestsContainsData() {
         //Arrange
-        controlEntity.setRequestType(RequestTypeEnum.METADATA_SEARCH.name());
+        controlEntity.setRequestType(RequestTypeEnum.LOCAL_METADATA_SEARCH.name());
         controlEntity.setRequests(Collections.singletonList(requestEntity));
 
         requestEntity.setMetadataResults(metadataResults);
 
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
-        when(defaultMetadataSearchRequestService.allRequestsContainsData(any())).thenReturn(true);
+        when(metadataRequestService.allRequestsContainsData(any())).thenReturn(true);
         when(controlRepository.save(controlEntity)).thenReturn(controlEntity);
-        when(defaultMetadataSearchRequestService.support(any())).thenReturn(true);
+        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(metadataRequestService);
 
         //Act
         controlService.getControlEntity(requestUuid);
@@ -335,8 +357,8 @@ class ControlServiceTest extends AbstractServiceTest {
 
         verify(controlRepository, times(1)).save(controlEntity);
         verify(controlRepository, times(1)).findByRequestUuid(any());
-        verify(defaultMetadataSearchRequestService, times(1)).allRequestsContainsData(controlEntity.getRequests());
-        verify(defaultUilSearchRequestService, never()).allRequestsContainsData(any());
+        verify(metadataRequestService, times(1)).allRequestsContainsData(controlEntity.getRequests());
+        verify(uilRequestService, never()).allRequestsContainsData(any());
     }
 
     @Test
@@ -349,9 +371,9 @@ class ControlServiceTest extends AbstractServiceTest {
         requestEntity.setReponseData(data);
 
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
-        when(defaultUilSearchRequestService.allRequestsContainsData(any())).thenReturn(true);
+        when(uilRequestService.allRequestsContainsData(any())).thenReturn(true);
         when(controlRepository.save(controlEntity)).thenReturn(controlEntity);
-        when(defaultUilSearchRequestService.support(any())).thenReturn(true);
+        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
 
         //Act
         controlService.getControlEntity(requestUuid);
@@ -361,8 +383,8 @@ class ControlServiceTest extends AbstractServiceTest {
 
         verify(controlRepository, times(1)).save(controlEntity);
         verify(controlRepository, times(1)).findByRequestUuid(any());
-        verify(defaultUilSearchRequestService, times(1)).allRequestsContainsData(controlEntity.getRequests());
-        verify(defaultMetadataSearchRequestService, never()).allRequestsContainsData(any());
+        verify(uilRequestService, times(1)).allRequestsContainsData(controlEntity.getRequests());
+        verify(metadataRequestService, never()).allRequestsContainsData(any());
     }
 
 
@@ -383,7 +405,7 @@ class ControlServiceTest extends AbstractServiceTest {
     void getControlEntityForMetadataSuccessTestWithoutMetadata() {
         setField(controlService,"timeoutValue", 60);
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
-        when(defaultMetadataSearchRequestService.support(any())).thenReturn(true);
+        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(metadataRequestService);
 
         MetadataResponseDto metadataResponseDto = controlService.getControlEntityForMetadata(requestUuid);
 
@@ -398,7 +420,7 @@ class ControlServiceTest extends AbstractServiceTest {
         controlEntity.setMetadataResults(metadataResults);
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
         when(metadataService.search(metadataRequestDto)).thenReturn(Collections.singletonList(metadataDto));
-        when(defaultMetadataSearchRequestService.support(any())).thenReturn(true);
+        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(metadataRequestService);
         MetadataResponseDto metadataResponseDto = controlService.getControlEntityForMetadata(requestUuid);
 
         verify(controlRepository, times(1)).findByRequestUuid(any());
@@ -451,12 +473,15 @@ class ControlServiceTest extends AbstractServiceTest {
     @Test
     void createMetadataControlTest() {
         when(controlRepository.save(any())).thenReturn(controlEntity);
-        when(defaultMetadataSearchRequestService.support(any())).thenReturn(true);
+        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(metadataRequestService);
+        when(gateToRequestTypeFunction.apply(any())).thenReturn(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);
+        when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of("http://efti.gate.borduria.eu"));
+
 
         RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
-
-        verify(defaultUilSearchRequestService, times(0)).createAndSendRequest(any());
-        verify(eftiAsyncCallsProcessor, times(1)).checkLocalRepoAsync(any(), any());
+        verify(uilRequestService, never()).createAndSendRequest(any(), any());
+        verify(metadataRequestService, times(1)).createAndSendRequest(any(), any());
+        verify(eftiAsyncCallsProcessor, never()).checkLocalRepoAsync(any(), any());
         verify(controlRepository, times(1)).save(any());
         assertNotNull(requestUuidDtoResult);
         assertNull(requestUuidDtoResult.getErrorCode());
@@ -471,10 +496,15 @@ class ControlServiceTest extends AbstractServiceTest {
         metadataRequestDto.setIsDangerousGoods(null);
 
         when(controlRepository.save(any())).thenReturn(controlEntity);
+        when(gateToRequestTypeFunction.apply(any())).thenReturn(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);
+        when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of("http://efti.gate.borduria.eu"));
+        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(metadataRequestService);
+
 
         RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
 
-        verify(defaultUilSearchRequestService, times(0)).createAndSendRequest(any());
+        verify(metadataRequestService, times(1)).createAndSendRequest(any(), any());
+        verify(uilRequestService, times(0)).createAndSendRequest(any(), any());
         verify(controlRepository, times(1)).save(any());
         assertNotNull(requestUuidDtoResult);
         assertNull(requestUuidDtoResult.getErrorCode());
@@ -488,7 +518,7 @@ class ControlServiceTest extends AbstractServiceTest {
 
         RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
 
-        verify(defaultUilSearchRequestService, times(0)).createAndSendRequest(any());
+        verify(uilRequestService, times(0)).createAndSendRequest(any(), any());
         verify(controlRepository, times(0)).save(any());
         assertNotNull(requestUuidDtoResult);
         assertEquals(ErrorCodesEnum.VEHICLE_ID_INCORRECT_FORMAT.name(), requestUuidDtoResult.getErrorCode());
@@ -502,7 +532,7 @@ class ControlServiceTest extends AbstractServiceTest {
 
         RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
 
-        verify(defaultUilSearchRequestService, times(0)).createAndSendRequest(any());
+        verify(uilRequestService, times(0)).createAndSendRequest(any(), any());
         verify(controlRepository, times(0)).save(any());
         assertNotNull(requestUuidDtoResult);
         assertEquals(ErrorCodesEnum.VEHICLE_COUNTRY_INCORRECT.name(), requestUuidDtoResult.getErrorCode());
@@ -516,7 +546,7 @@ class ControlServiceTest extends AbstractServiceTest {
 
         RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
 
-        verify(defaultUilSearchRequestService, times(0)).createAndSendRequest(any());
+        verify(uilRequestService, times(0)).createAndSendRequest(any(), any());
         verify(controlRepository, times(0)).save(any());
         assertNotNull(requestUuidDtoResult);
         assertEquals(ErrorCodesEnum.TRANSPORT_MODE_INCORRECT.name(), requestUuidDtoResult.getErrorCode());

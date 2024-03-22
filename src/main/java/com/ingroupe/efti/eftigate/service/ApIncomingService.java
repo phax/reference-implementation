@@ -16,6 +16,8 @@ import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
+import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
+import com.ingroupe.efti.eftigate.service.request.UilRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import com.sun.istack.ByteArrayDataSource;
 import lombok.AllArgsConstructor;
@@ -33,7 +35,8 @@ import java.nio.charset.StandardCharsets;
 public class ApIncomingService {
 
     private final NotificationService notificationService;
-    private final UilSearchRequestService defaultUilSearchRequestService;
+    private final UilRequestService uilRequestService;
+    private final MetadataRequestService metadataRequestService;
     private final MetadataService metadataService;
     private final GateProperties gateProperties;
 
@@ -48,8 +51,9 @@ public class ApIncomingService {
             throw new TechnicalException("unknown edelivery action " + notificationDto.getContent().getAction());
         }
         switch (action) {
-            case GET_UIL -> defaultUilSearchRequestService.updateWithResponse(notificationDto);
+            case GET_UIL -> uilRequestService.updateWithResponse(notificationDto);
             case UPLOAD_METADATA -> metadataService.createOrUpdate(parseBodyToMetadata(notificationDto.getContent()));
+            case GET_IDENTIFIERS -> metadataRequestService.updateWithResponse(notificationDto);
             default -> log.warn("unmanaged notification type {}", notificationDto.getContent().getAction());
         }
     }

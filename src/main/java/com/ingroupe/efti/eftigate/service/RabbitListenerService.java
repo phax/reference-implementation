@@ -8,15 +8,19 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
+import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
+import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
+import com.ingroupe.efti.eftigate.dto.requestbody.MetadataRequestBodyDto;
 import com.ingroupe.efti.eftigate.dto.requestbody.RequestBodyDto;
+import com.ingroupe.efti.eftigate.entity.SearchParameter;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
@@ -105,23 +109,41 @@ public class RabbitListenerService {
     }
 
     private String buildBody(final RequestDto requestDto) throws TechnicalException {
-        final RequestBodyDto requestBodyDto = RequestBodyDto.builder()
-                .requestUuid(requestDto.getControl().getRequestUuid())
-                .eFTIDataUuid(requestDto.getControl().getEftiDataUuid())
-                .subsetEU(new LinkedList<>())
-                .subsetMS(new LinkedList<>())
-                .build();
-        try {
-            return objectMapper.writeValueAsString(requestBodyDto);
-        } catch (JsonProcessingException e) {
-            throw new TechnicalException("error while building request body", e);
+        ControlDto controlDto = requestDto.getControl();
+        if (controlDto != null && RequestTypeEnum.LOCAL_METADATA_SEARCH.name().equalsIgnoreCase(controlDto.getRequestType())){
+            SearchParameter transportMetaData = controlDto.getTransportMetaData();
+            MetadataRequestBodyDto metadataRequestBodyDto = MetadataRequestBodyDto.builder()
+                    .requestUuid(controlDto.getRequestUuid())
+                    .vehicleID(transportMetaData.getVehicleId())
+                    .transportMode(transportMetaData.getTransportMode())
+                    .isDangerousGoods(transportMetaData.getIsDangerousGoods())
+                    .vehicleCountry(transportMetaData.getVehicleCountry())
+                    .build();
+            try {
+                return objectMapper.writeValueAsString(metadataRequestBodyDto);
+            } catch (JsonProcessingException e) {
+                throw new TechnicalException("error while building request body", e);
+            }
+        } else {
+            assert controlDto != null;
+            final RequestBodyDto requestBodyDto = RequestBodyDto.builder()
+                    .requestUuid(controlDto.getRequestUuid())
+                    .eFTIDataUuid(controlDto.getEftiDataUuid())
+                    .subsetEU(new LinkedList<>())
+                    .subsetMS(new LinkedList<>())
+                    .build();
+            try {
+                return objectMapper.writeValueAsString(requestBodyDto);
+            } catch (JsonProcessingException e) {
+                throw new TechnicalException("error while building request body", e);
+            }
         }
     }
 
     private ApRequestDto buildApRequestDto(final RequestDto requestDto) throws TechnicalException {
         return ApRequestDto.builder()
-                .sender(requestDto.getControl().getEftiGateUrl())
-                .receiver(requestDto.getControl().getEftiPlatformUrl())
+                .sender(gateProperties.getOwner())
+                .receiver(requestDto.getGateUrlDest())
                 .body(buildBody(requestDto))
                 .apConfig(ApConfigDto.builder()
                         .username(gateProperties.getAp().getUsername())
@@ -133,8 +155,13 @@ public class RabbitListenerService {
 
     private void trySendDomibus(final RequestDto requestDto, final ApRequestDto apRequestDto) {
         try {
-            final String result = this.requestSendingService.sendRequest(apRequestDto, EDeliveryAction.GET_UIL);
-            requestDto.setEdeliveryMessageId(result);
+            if (RequestTypeEnum.LOCAL_METADATA_SEARCH.name().equalsIgnoreCase(requestDto.getControl().getRequestType())){
+                final String result = this.requestSendingService.sendRequest(apRequestDto, EDeliveryAction.GET_IDENTIFIERS);
+                requestDto.setEdeliveryMessageId(result);
+            } else {
+                final String result = this.requestSendingService.sendRequest(apRequestDto, EDeliveryAction.GET_UIL);
+                requestDto.setEdeliveryMessageId(result);
+            }
             this.updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
         } catch (SendRequestException e) {
             log.error("error while sending request");
