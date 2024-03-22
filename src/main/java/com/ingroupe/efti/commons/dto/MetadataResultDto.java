@@ -25,6 +25,7 @@ public class MetadataResultDto implements Serializable {
     private String eFTIDataUuid;
     @JsonProperty("eFTIPlatformUrl")
     private String eFTIPlatformUrl;
+    @JsonProperty("isDangerousGoods")
     private boolean isDangerousGoods;
     private String journeyStart;
     private String countryStart;
