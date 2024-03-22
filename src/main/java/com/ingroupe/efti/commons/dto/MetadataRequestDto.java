@@ -21,7 +21,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class MetadataRequestDto implements ValidableControl {
+public class MetadataRequestDto implements ValidableDto {
 
     @ValueOfEnum(enumClass = TransportMode.class, message = "TRANSPORT_MODE_INCORRECT")
     private String transportMode;

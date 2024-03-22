@@ -8,7 +8,8 @@ import lombok.Getter;
 public enum EDeliveryAction {
     UPLOAD_METADATA("uploadMetadata"),
     FORWARD_UIL("forwardUil"),
-    GET_UIL("getUIL");
+    GET_UIL("getUIL"),
+    GET_IDENTIFIERS("getIdentifiers");
 
     private final String value;
 
