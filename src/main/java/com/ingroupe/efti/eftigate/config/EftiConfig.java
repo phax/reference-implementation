@@ -2,6 +2,7 @@ package com.ingroupe.efti.eftigate.config;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.AbstractConverter;
 import org.modelmapper.AbstractProvider;
 import org.modelmapper.Converter;
@@ -45,7 +46,7 @@ public class EftiConfig {
             @Override
             protected LocalDateTime convert(final String source) {
                 try {
-                    return OffsetDateTime.parse( source ).toLocalDateTime();
+                    return StringUtils.isNotBlank(source) ? OffsetDateTime.parse( source ).toLocalDateTime() : null;
                 } catch (DateTimeParseException e) {
                     log.error(INVALID_DATE_FORMAT, source);
                     return null;
@@ -61,11 +62,14 @@ public class EftiConfig {
                             .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                             .appendOffset(OFFSET_PATTERN, NO_OFFSET_TEXT)
                             .toFormatter();
-                    return source.atZone(ZoneId.of(UTC)).format(dateTimeFormatter);
+                    if (source != null) {
+                        return source.atZone(ZoneId.of(UTC)).format(dateTimeFormatter);
+                    }
                 } catch (DateTimeParseException e) {
                     log.error(INVALID_DATE_FORMAT, source);
                     return null;
                 }
+                return null;
             }
         };
 
@@ -73,7 +77,7 @@ public class EftiConfig {
             @Override
             protected OffsetDateTime convert(final String source) {
                 try {
-                    return OffsetDateTime.parse(source);
+                    return StringUtils.isNotBlank(source) ? OffsetDateTime.parse(source) : null;
                 } catch (DateTimeParseException e) {
                     log.error(INVALID_DATE_FORMAT, source);
                     return null;
@@ -89,11 +93,14 @@ public class EftiConfig {
                             .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME) // use the existing formatter for date time
                             .appendOffset(OFFSET_PATTERN, NO_OFFSET_TEXT)// set 'noOffsetText' to desired '+00:00'
                             .toFormatter();
-                    return source.toZonedDateTime().format(dateTimeFormatter);
+                    if (source != null) {
+                        return source.toZonedDateTime().format(dateTimeFormatter);
+                    }
                 } catch (DateTimeParseException e) {
                     log.error(INVALID_DATE_FORMAT, source);
                     return null;
                 }
+                return null;
             }
         };
         modelMapper.createTypeMap(String.class, LocalDateTime.class);
