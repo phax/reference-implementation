@@ -10,6 +10,8 @@ import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
+import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
+import com.ingroupe.efti.eftigate.service.request.UilRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import com.sun.istack.ByteArrayDataSource;
 import org.junit.jupiter.api.AfterEach;
@@ -36,7 +38,9 @@ class ApIncomingServiceTest extends AbstractServiceTest {
     @Mock
     private NotificationService notificationService;
     @Mock
-    private UilSearchRequestService defaultUilSearchRequestService;
+    private UilRequestService uilRequestService;
+    @Mock
+    private MetadataRequestService metadataRequestService;
     @Mock
     private MetadataService metadataService;
 
@@ -118,7 +122,7 @@ class ApIncomingServiceTest extends AbstractServiceTest {
                         .password(password)
                         .username(username).build()).build();
         openMocks = MockitoAnnotations.openMocks(this);
-        service = new ApIncomingService(notificationService, defaultUilSearchRequestService, metadataService, gateProperties);
+        service = new ApIncomingService(notificationService, uilRequestService, metadataRequestService, metadataService, gateProperties);
     }
 
     @AfterEach
@@ -149,7 +153,7 @@ class ApIncomingServiceTest extends AbstractServiceTest {
         service.manageIncomingNotification(receivedNotificationDto);
 
         verify(notificationService).consume(apConfigDto, receivedNotificationDto);
-        verify(defaultUilSearchRequestService).updateWithResponse(notificationDto);
+        verify(uilRequestService).updateWithResponse(notificationDto);
     }
 
     @Test
@@ -269,6 +273,6 @@ class ApIncomingServiceTest extends AbstractServiceTest {
         service.manageIncomingNotification(receivedNotificationDto);
 
         verify(notificationService).consume(apConfigDto, receivedNotificationDto);
-        verify(defaultUilSearchRequestService, never()).updateWithResponse(any());
+        verify(uilRequestService, never()).updateWithResponse(any());
     }
 }

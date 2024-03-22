@@ -5,6 +5,7 @@ import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.dto.TransportVehicleDto;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
+import com.ingroupe.efti.eftigate.service.request.MetadataLocalRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +21,7 @@ import static org.mockito.Mockito.*;
 class EftiAsyncCallsProcessorTest {
     AutoCloseable openMocks;
     @Mock
-    private MetadataSearchRequestService defaultMetadataSearchRequestService;
+    private MetadataLocalRequestService metadataLocalRequestService;
     @Mock
     private MetadataService metadataService;
 
@@ -38,7 +39,7 @@ class EftiAsyncCallsProcessorTest {
     @BeforeEach
     public void before() {
         openMocks = MockitoAnnotations.openMocks(this);
-        eftiAsyncCallsProcessor = new EftiAsyncCallsProcessor(defaultMetadataSearchRequestService, metadataService);
+        eftiAsyncCallsProcessor = new EftiAsyncCallsProcessor(metadataLocalRequestService, metadataService);
 
         final AuthorityDto authorityDto = new AuthorityDto();
 
@@ -66,7 +67,7 @@ class EftiAsyncCallsProcessorTest {
         eftiAsyncCallsProcessor.checkLocalRepoAsync(metadataRequestDto, controlDto);
 
         //Assert
-        verify(defaultMetadataSearchRequestService, times(1)).createRequest(controlDto, "SUCCESS", Collections.singletonList(metadataDto));
+        verify(metadataLocalRequestService, times(1)).createRequest(controlDto, "SUCCESS", Collections.singletonList(metadataDto));
     }
 
     @Test
@@ -77,7 +78,7 @@ class EftiAsyncCallsProcessorTest {
         eftiAsyncCallsProcessor.checkLocalRepoAsync(metadataRequestDto, controlDto);
 
         //Assert
-        verify(defaultMetadataSearchRequestService, times(1)).createRequest(controlDto, "ERROR", null);
+        verify(metadataLocalRequestService, times(1)).createRequest(controlDto, "ERROR", null);
     }
 
     @AfterEach

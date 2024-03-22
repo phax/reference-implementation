@@ -2,7 +2,7 @@ package com.ingroupe.efti.eftigate.dto;
 
 import com.ingroupe.efti.commons.dto.AbstractUilDto;
 import com.ingroupe.efti.commons.dto.AuthorityDto;
-import com.ingroupe.efti.commons.dto.ValidableControl;
+import com.ingroupe.efti.commons.dto.ValidableDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -17,7 +17,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class UilDto extends AbstractUilDto implements ValidableControl {
+public class UilDto extends AbstractUilDto implements ValidableDto {
 
     @Valid
     @NotNull(message= "AUTHORITY_MISSING")

@@ -1,10 +1,11 @@
-package com.ingroupe.efti.eftigate.service.impl;
+package com.ingroupe.efti.eftigate.service.request;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
+import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
@@ -19,68 +20,66 @@ import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
-import com.ingroupe.efti.eftigate.service.UilSearchRequestService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.cxf.helpers.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
-@Service
-@RequiredArgsConstructor(onConstructor = @__(@Lazy))
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.ERROR;
+
 @Slf4j
-public class DefaultUilSearchRequestService implements UilSearchRequestService {
+@Component
+@RequiredArgsConstructor(onConstructor = @__(@Lazy))
+@Getter
+public abstract class RequestService {
+    protected static final List<String> UIL_TYPES = List.of(RequestTypeEnum.LOCAL_UIL_SEARCH.name(), RequestTypeEnum.EXTERNAL_UIL_SEARCH.name(), RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH.name());
+    protected static final List<String> IDENTIFIERS_TYPES = List.of(RequestTypeEnum.LOCAL_METADATA_SEARCH.name(), RequestTypeEnum.EXTERNAL_METADATA_SEARCH.name(), RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH.name());
 
     private final RequestRepository requestRepository;
     private final MapperUtils mapperUtils;
+    private final RabbitSenderService rabbitSenderService;
     @Lazy
     private final ControlService controlService;
-    private final RabbitSenderService rabbitSenderService;
 
     @Value("${spring.rabbitmq.queues.eftiSendMessageExchange:efti.send-message.exchange}")
     private String eftiSendMessageExchange;
-
     @Value("${spring.rabbitmq.queues.eftiKeySendMessage:EFTI}")
     private String eftiKeySendMessage;
 
+    public abstract boolean allRequestsContainsData(List<RequestEntity> controlEntityRequests);
 
+    public abstract void setDataFromRequests(ControlEntity controlEntity);
 
-    @Override
-    public RequestDto createAndSendRequest(final ControlDto controlDto) {
+    public abstract void manageMessageReceive(final NotificationDto notificationDto);
+
+    public abstract boolean supports(final String requestTypeEnum);
+
+    public void createAndSendRequest(ControlDto controlDto, String destinationUrl){
         RequestDto requestDto = new RequestDto(controlDto);
+        if (StringUtils.isNotBlank(destinationUrl)){
+            requestDto.setGateUrlDest(destinationUrl);
+        }
         log.info("Request has been register with controlId : {}", requestDto.getControl().getId());
         final RequestDto result = this.save(requestDto);
         this.sendRequest(result);
-        return result;
     }
 
-    @Override
-    public boolean allRequestsContainsData(List<RequestEntity> controlEntityRequests) {
-        return CollectionUtils.emptyIfNull(controlEntityRequests).stream()
-                .allMatch(requestEntity -> Objects.nonNull(requestEntity.getReponseData()));
+    protected RequestDto save(final RequestDto requestDto) {
+        return mapperUtils.requestToRequestDto(requestRepository.save(mapperUtils.requestDtoToRequestEntity(requestDto)));
     }
 
-    @Override
-    public void setDataFromRequests(final ControlEntity controlEntity) {
-        controlEntity.setEftiData(controlEntity.getRequests().stream()
-                .map(RequestEntity::getReponseData).toList().stream()
-                .collect(ByteArrayOutputStream::new, (byteArrayOutputStream, bytes) -> byteArrayOutputStream.write(bytes, 0, bytes.length), (arrayOutputStream, byteArrayOutputStream) -> {})
-                .toByteArray());
-    }
-
-    @Override
-    public void sendRequest(final RequestDto requestDto) {
+    protected void sendRequest(final RequestDto requestDto) {
         try {
             rabbitSenderService.sendMessageToRabbit(eftiSendMessageExchange, eftiKeySendMessage, requestDto);
         } catch (JsonProcessingException e) {
@@ -88,7 +87,11 @@ public class DefaultUilSearchRequestService implements UilSearchRequestService {
         }
     }
 
-    @Override
+    public boolean allRequestsAreInErrorStatus(List<RequestEntity> controlEntityRequests){
+        return CollectionUtils.emptyIfNull(controlEntityRequests).stream()
+                .allMatch(requestEntity -> ERROR.name().equalsIgnoreCase(requestEntity.getStatus()));
+    }
+
     public void updateWithResponse(final NotificationDto notificationDto) {
         switch (notificationDto.getNotificationType()) {
             case RECEIVED -> manageMessageReceive(notificationDto);
@@ -97,7 +100,12 @@ public class DefaultUilSearchRequestService implements UilSearchRequestService {
         }
     }
 
-    private void manageMessageReceive(final NotificationDto notificationDto) {
+    protected void manageSendFailure(final NotificationDto notificationDto) {
+        final RequestDto requestDto = this.findByMessageIdOrThrow(notificationDto.getMessageId());
+        this.updateStatus(requestDto, RequestStatusEnum.SEND_ERROR);
+    }
+
+    protected MessageBodyDto getMessageBodyFromNotification(NotificationDto notificationDto) {
         final ObjectMapper mapper = new ObjectMapper();
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         MessageBodyDto messageBody;
@@ -108,26 +116,34 @@ public class DefaultUilSearchRequestService implements UilSearchRequestService {
         } catch (final IOException e) {
             throw new RetrieveMessageException("error while sending retrieve message request", e);
         }
-
-        final RequestEntity requestEntity = this.findByRequestUuidOrThrow(messageBody.getRequestUuid());
-        if (requestEntity != null){
-            if (messageBody.getStatus().equals(StatusEnum.COMPLETE.name())) {
-                requestEntity.setReponseData(messageBody.getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
-                //this.controlService.setEftiData(requestDto.getControl(), messageBody.getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
-            } else {
-                errorReceived(requestEntity, messageBody.getErrorDescription());
-            }
-            this.updateStatus(requestEntity, RequestStatusEnum.RECEIVED);
-        }
-
+        return messageBody;
     }
-    private void updateStatus(RequestEntity requestEntity, RequestStatusEnum status) {
+
+    protected RequestEntity findByRequestUuidOrThrow(String requestId) {
+        return Optional.ofNullable(this.requestRepository.findByControlRequestUuid(requestId))
+                .orElseThrow(() -> new RequestNotFoundException("couldn't find request for requestUuid: " + requestId));
+    }
+
+    protected RequestDto findByMessageIdOrThrow(final String messageId) {
+        final RequestEntity requestEntity =
+                Optional.ofNullable(this.requestRepository.findByEdeliveryMessageId(messageId))
+                        .orElseThrow(() -> new RequestNotFoundException("couldn't find request for messageId: " + messageId));
+        return mapperUtils.requestToRequestDto(requestEntity);
+    }
+
+    protected RequestDto updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {
+        requestDto.setStatus(status.name());
+        requestDto.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
+        return this.save(requestDto);
+    }
+
+    protected void updateStatus(RequestEntity requestEntity, RequestStatusEnum status) {
         requestEntity.setStatus(status.name());
         requestEntity.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
         requestRepository.save(requestEntity);
     }
 
-    private void errorReceived(final RequestEntity requestEntity, final String errorDescription) {
+    protected void errorReceived(final RequestEntity requestEntity, final String errorDescription) {
         log.error("Error received, change status of requestId : {}", requestEntity.getControl().getRequestUuid());
         final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         final ErrorEntity errorEntity = ErrorEntity.builder()
@@ -143,32 +159,5 @@ public class DefaultUilSearchRequestService implements UilSearchRequestService {
         requestEntity.setControl(controlEntity);
         requestRepository.save(requestEntity);
         controlService.setError(controlEntity, errorEntity);
-    }
-
-    private void manageSendFailure(final NotificationDto notificationDto) {
-        final RequestDto requestDto = this.findByMessageIdOrThrow(notificationDto.getMessageId());
-        this.updateStatus(requestDto, RequestStatusEnum.SEND_ERROR);
-    }
-
-    private RequestEntity findByRequestUuidOrThrow(String requestId) {
-        return Optional.ofNullable(this.requestRepository.findByControlRequestUuid(requestId))
-                .orElseThrow(() -> new RequestNotFoundException("couldn't find request for requestUuid: " + requestId));
-    }
-
-    private RequestDto findByMessageIdOrThrow(final String messageId) {
-        final RequestEntity requestEntity =
-                Optional.ofNullable(this.requestRepository.findByEdeliveryMessageId(messageId))
-                        .orElseThrow(() -> new RequestNotFoundException("couldn't find request for messageId: " + messageId));
-        return mapperUtils.requestToRequestDto(requestEntity);
-    }
-
-    public RequestDto updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {
-        requestDto.setStatus(status.name());
-        requestDto.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
-        return this.save(requestDto);
-    }
-
-    private RequestDto save(final RequestDto requestDto) {
-        return mapperUtils.requestToRequestDto(requestRepository.save(mapperUtils.requestDtoToRequestEntity(requestDto)));
     }
 }
