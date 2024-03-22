@@ -10,10 +10,12 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 
+@EqualsAndHashCode(callSuper = true)
 @MappedSuperclass
 @Data
 public abstract class JourneyEntity extends AbstractModel implements Serializable {
