@@ -45,7 +45,7 @@ public class EftiConfig {
             @Override
             protected LocalDateTime convert(final String source) {
                 try {
-                    return StringUtils.isNotBlank(source) ? OffsetDateTime.parse( source ).toLocalDateTime() : null;
+                    return getLocalDateTime(source);
                 } catch (DateTimeParseException e) {
                     log.error(INVALID_DATE_FORMAT, source);
                     return null;
@@ -57,11 +57,8 @@ public class EftiConfig {
             @Override
             protected String convert(final LocalDateTime source) {
                 try {
-                    DateTimeFormatter dateTimeFormatter = new DateTimeFormatterBuilder()
-                            .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                            .appendOffset(OFFSET_PATTERN, NO_OFFSET_TEXT)
-                            .toFormatter();
                     if (source != null) {
+                        DateTimeFormatter dateTimeFormatter = getDateTimeFormatter();
                         return source.atZone(ZoneId.of(UTC)).format(dateTimeFormatter);
                     }
                 } catch (DateTimeParseException e) {
@@ -88,11 +85,8 @@ public class EftiConfig {
             @Override
             protected String convert(final OffsetDateTime source) {
                 try {
-                    DateTimeFormatter dateTimeFormatter = new DateTimeFormatterBuilder()
-                            .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME) // use the existing formatter for date time
-                            .appendOffset(OFFSET_PATTERN, NO_OFFSET_TEXT)// set 'noOffsetText' to desired '+00:00'
-                            .toFormatter();
                     if (source != null) {
+                        DateTimeFormatter dateTimeFormatter = getDateTimeFormatter();
                         return source.toZonedDateTime().format(dateTimeFormatter);
                     }
                 } catch (DateTimeParseException e) {
@@ -110,6 +104,20 @@ public class EftiConfig {
         modelMapper.addConverter(toStringOffsetDateTime);
         modelMapper.getTypeMap(String.class, LocalDateTime.class).setProvider(localDateProvider);
         return modelMapper;
+    }
+
+    private static DateTimeFormatter getDateTimeFormatter() {
+        return new DateTimeFormatterBuilder()
+                .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                .appendOffset(OFFSET_PATTERN, NO_OFFSET_TEXT)
+                .toFormatter();
+    }
+
+    private static LocalDateTime getLocalDateTime(String source) {
+        if (StringUtils.isNotBlank(source)) {
+            return OffsetDateTime.parse(source).toLocalDateTime();
+        }
+        return null;
     }
 
     @Bean
