@@ -11,7 +11,7 @@
             <column name="streetname" type="VARCHAR(255)"/>
             <column name="buildingnumber" type="VARCHAR(30)"/>
             <column name="city" type="VARCHAR(255)"/>
-            <column name="additionalline" type="VARCHAR(255)"/>
+            <column name="additionalline" type="VARCHAR(300)"/>
             <column name="postalcode" type="VARCHAR(30)"/>
         </createTable>
     </changeSet>
