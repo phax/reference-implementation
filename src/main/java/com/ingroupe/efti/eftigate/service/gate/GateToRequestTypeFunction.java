@@ -3,7 +3,6 @@ package com.ingroupe.efti.eftigate.service.gate;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -13,9 +12,8 @@ import java.util.function.Function;
 @Slf4j
 @Component
 @AllArgsConstructor
-@NoArgsConstructor
 public class GateToRequestTypeFunction implements Function<List<String>, RequestTypeEnum> {
-    private GateProperties gateProperties;
+    private final GateProperties gateProperties;
     @Override
     public RequestTypeEnum apply(List<String> gatesUrls) {
         if (gatesUrls != null && gatesUrls.size() == 1){
