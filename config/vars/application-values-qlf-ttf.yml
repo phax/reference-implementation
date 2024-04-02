@@ -15,7 +15,7 @@ gate:
   maxSleep: 2000
   owner: http://efti.platform.ttf.com
   cda_path: file:/opt/javapp/config/cda
-  gate: http://efti.gate.france.eu
+  gate: https://gate-fr.efti.qlf.k8s.groupein.local
   ap:
     url: https://qleftimicr24in.service.groupein.local:8443/domibus/services/wsplugin
     username: ttf_service_account
