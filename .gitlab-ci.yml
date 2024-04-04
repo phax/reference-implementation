@@ -35,12 +35,12 @@ workflow:
         SA: dev-efti-sa
     - if: $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web" && $DEPLOY_ENVIRONMENT == "int"
       variables:
-        NAMESPACE: app-int-efti-midl
-        SA: int-efti-midl-sa
+        NAMESPACE: app-int-efti
+        SA: int-efti-sa
     - if: $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web" && $DEPLOY_ENVIRONMENT == "qlf"
       variables:
-        NAMESPACE: app-qlf-efti-midl
-        SA: qlf-efti-midl-sa
+        NAMESPACE: app-qlf-efti
+        SA: qlf-efti-sa
     - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_REF_NAME !~ "develop"
       when: never
     - when: always
