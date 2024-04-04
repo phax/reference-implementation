@@ -67,9 +67,7 @@ public abstract class RequestService {
 
     public void createAndSendRequest(ControlDto controlDto, String destinationUrl){
         RequestDto requestDto = new RequestDto(controlDto);
-        if (StringUtils.isNotBlank(destinationUrl)){
-            requestDto.setGateUrlDest(destinationUrl);
-        }
+        requestDto.setGateUrlDest(StringUtils.isNotBlank(destinationUrl) ? destinationUrl : controlDto.getEftiPlatformUrl());
         log.info("Request has been register with controlId : {}", requestDto.getControl().getId());
         final RequestDto result = this.save(requestDto);
         this.sendRequest(result);

@@ -34,7 +34,6 @@ public class RequestDto {
         this.status = RequestStatusEnum.RECEIVED.toString();
         this.retry = 0;
         this.createdDate = localDateTime;
-        this.gateUrlDest = controlDto.getEftiGateUrl();
         this.control = controlDto;
     }
 }
