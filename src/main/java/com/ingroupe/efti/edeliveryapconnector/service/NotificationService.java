@@ -53,7 +53,8 @@ public class NotificationService {
                     .content(this.requestRetrievingService.retrieveMessage(apConfigDto, receivedNotificationDto.getMessageId().orElse(null))).build());
         } catch (SendRequestException | RetrieveMessageFault e) {
             log.error("error while retrieving message " + receivedNotificationDto.getMessageId());
-            throw new RetrieveMessageException("error while retrieving message " + receivedNotificationDto.getMessageId().orElse(null), e);
+            throw new RetrieveMessageException("error while retrieving message " + receivedNotificationDto.getMessageId().orElse(null)
+                    + " " + e.getMessage());
         }
     }
 }
