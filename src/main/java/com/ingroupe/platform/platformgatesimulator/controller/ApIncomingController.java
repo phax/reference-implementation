@@ -19,12 +19,18 @@ import java.io.IOException;
 @Slf4j
 public class ApIncomingController {
 
+    private final String soapResult = """
+            <Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+               <Body> domibus ws plugin require a response when it call our endpoint </Body>
+            </Envelope>
+           """;
+
     private final ApIncomingService apIncomingService;
 
     @PostMapping("/notification")
-    public ResponseEntity<Void> getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) throws IOException, InterruptedException, UuidFileNotFoundException {
+    public ResponseEntity<String> getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) throws IOException, InterruptedException, UuidFileNotFoundException {
         log.info("Notification reçus");
         apIncomingService.manageIncomingNotification(receivedNotificationDto);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(soapResult);
     }
 }
