@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -22,7 +21,6 @@ import java.util.Map;
 
 import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.MESSAGE_ID;
 import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.SENT_SUCCESS;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 @WebMvcTest(ApIncomingController.class)
 @ContextConfiguration(classes= {ApIncomingController.class})
@@ -52,7 +50,7 @@ class ApIncomingControllerTest {
         ReceivedNotificationDto receivedNotificationDto = new ReceivedNotificationDto();
         receivedNotificationDto.setBody(body);
 
-        ResponseEntity<Void> result = apIncomingController.incoming(receivedNotificationDto);
+        ResponseEntity<String> result = apIncomingController.incoming(receivedNotificationDto);
 
         Assertions.assertEquals(HttpStatus.OK, result.getStatusCode());
     }
