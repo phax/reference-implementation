@@ -21,15 +21,15 @@ import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
-import com.ingroupe.efti.eftigate.service.RequestServiceTest;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.AdditionalAnswers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import javax.mail.util.ByteArrayDataSource;
 import java.io.IOException;
@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -56,7 +56,12 @@ class MetadataRequestServiceTest extends RequestServiceTest {
     private RabbitSenderService rabbitSenderService;
     @Mock
     private MetadataService metadataService;
+    @MockBean
     private MetadataRequestService metadataRequestService;
+    @Mock
+    private MetadataLocalRequestService metadataLocalRequestService;
+
+
     private final UilDto uilDto = new UilDto();
     private final ControlDto controlDto = new ControlDto();
     private final ControlEntity controlEntity = new ControlEntity();
@@ -69,7 +74,7 @@ class MetadataRequestServiceTest extends RequestServiceTest {
         openMocks = MockitoAnnotations.openMocks(this);
 
         GateProperties gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).build();
-        metadataRequestService = new MetadataRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService, metadataService);
+        metadataRequestService = new MetadataRequestService(requestRepository, getMapperUtils(), rabbitSenderService, controlService, gateProperties, metadataService, metadataLocalRequestService);
 
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         String requestUuid = UUID.randomUUID().toString();
@@ -116,13 +121,29 @@ class MetadataRequestServiceTest extends RequestServiceTest {
         this.requestEntity.setControl(controlEntity);
     }
 
+    @Override
     @AfterEach
     void tearDown() throws Exception {
         openMocks.close();
     }
 
     @Test
-    void trySendDomibusSucessTest() throws SendRequestException, JsonProcessingException {
+    void shouldCreateRequest() throws JsonProcessingException {
+        //Arrange
+        final ArgumentCaptor<RequestDto> argumentCaptor = ArgumentCaptor.forClass(RequestDto.class);
+        when(getRequestRepository().save(any())).then(AdditionalAnswers.returnsFirstArg());
+        when(getMapperUtils().requestToRequestDto(any())).thenReturn(getRequestDto());
+
+        //Act
+        metadataRequestService.createAndSendRequest(controlDto, "https://efti.platform.borduria.eu");
+
+        //Assert
+        verify(getMapperUtils()).requestDtoToRequestEntity(argumentCaptor.capture());
+        assertEquals("https://efti.platform.borduria.eu", argumentCaptor.getValue().getGateUrlDest());
+    }
+
+    @Test
+    void trySendDomibusSuccessTest() throws SendRequestException, JsonProcessingException {
         when(requestSendingService.sendRequest(any(), any())).thenReturn("result");
         when(requestRepository.save(any())).thenReturn(requestEntity);
 
@@ -130,21 +151,8 @@ class MetadataRequestServiceTest extends RequestServiceTest {
         verify(rabbitSenderService).sendMessageToRabbit(any(), any(), any());
     }
 
-
     @Test
-    void sendTest() throws SendRequestException, InterruptedException {
-        when(requestRepository.save(any())).thenReturn(requestEntity);
-        when(requestSendingService.sendRequest(any(),any())).thenThrow(SendRequestException.class);
-
-        //add a desturl
-        metadataRequestService.createAndSendRequest(controlDto, null);
-
-        Thread.sleep(1000);
-        verify(requestRepository, Mockito.times(1)).save(any());
-    }
-
-    @Test
-    void shouldUpdateResponse() throws IOException {
+    void shouldManageMessageReceive() throws IOException {
         final String messageId = "messageId";
         final String eftiData = """
                   { 
@@ -160,14 +168,14 @@ class MetadataRequestServiceTest extends RequestServiceTest {
                         .body(new ByteArrayDataSource(eftiData, "osef"))
                         .build())
                 .build();
-        final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
-        when(requestRepository.findByControlRequestUuid(any())).thenReturn(requestEntity);
-        when(requestRepository.save(any())).thenReturn(requestEntity);
-        metadataRequestService.updateWithResponse(notificationDto);
+        when(controlService.save(any())).thenReturn(getControlDto());
+        //Act
+        metadataRequestService.manageMessageReceive(notificationDto);
 
-        verify(requestRepository).save(argumentCaptor.capture());
-        assertNotNull(argumentCaptor.getValue());
-        assertEquals(RequestStatusEnum.RECEIVED.name(), argumentCaptor.getValue().getStatus());
+        //assert
+        verify(controlService).save(any());
+        verify(metadataService).search(any());
+        verify(metadataLocalRequestService).createRequest(any(ControlDto.class), anyString(), anyList());
     }
 
     @Test

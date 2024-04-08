@@ -5,11 +5,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
-import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
-import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
+import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
@@ -37,25 +36,26 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.ERROR;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SEND_ERROR;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
 @Getter
 public abstract class RequestService {
-    protected static final List<String> UIL_TYPES = List.of(RequestTypeEnum.LOCAL_UIL_SEARCH.name(), RequestTypeEnum.EXTERNAL_UIL_SEARCH.name(), RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH.name());
-    protected static final List<String> IDENTIFIERS_TYPES = List.of(RequestTypeEnum.LOCAL_METADATA_SEARCH.name(), RequestTypeEnum.EXTERNAL_METADATA_SEARCH.name(), RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH.name());
-
     private final RequestRepository requestRepository;
     private final MapperUtils mapperUtils;
     private final RabbitSenderService rabbitSenderService;
     @Lazy
     private final ControlService controlService;
+    private final GateProperties gateProperties;
+
 
     @Value("${spring.rabbitmq.queues.eftiSendMessageExchange:efti.send-message.exchange}")
     private String eftiSendMessageExchange;
     @Value("${spring.rabbitmq.queues.eftiKeySendMessage:EFTI}")
     private String eftiKeySendMessage;
+
 
     public abstract boolean allRequestsContainsData(List<RequestEntity> controlEntityRequests);
 
@@ -99,22 +99,18 @@ public abstract class RequestService {
     }
 
     protected void manageSendFailure(final NotificationDto notificationDto) {
-        final RequestDto requestDto = this.findByMessageIdOrThrow(notificationDto.getMessageId());
-        this.updateStatus(requestDto, RequestStatusEnum.SEND_ERROR);
+        this.updateStatus(findRequestByMessageIdOrThrow(notificationDto.getMessageId()), SEND_ERROR);
     }
 
-    protected MessageBodyDto getMessageBodyFromNotification(NotificationDto notificationDto) {
+    protected <T> T getMessageBodyFromNotification(NotificationDto notificationDto, Class<T> targetClass) {
         final ObjectMapper mapper = new ObjectMapper();
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        MessageBodyDto messageBody;
-        try {
+         try {
             final String body = IOUtils.toString(notificationDto.getContent().getBody().getInputStream());
-            messageBody = mapper.readValue(body, MessageBodyDto.class);
-
+            return mapper.readValue(body, targetClass);
         } catch (final IOException e) {
             throw new RetrieveMessageException("error while sending retrieve message request", e);
         }
-        return messageBody;
     }
 
     protected RequestEntity findByRequestUuidOrThrow(String requestId) {
@@ -122,17 +118,9 @@ public abstract class RequestService {
                 .orElseThrow(() -> new RequestNotFoundException("couldn't find request for requestUuid: " + requestId));
     }
 
-    protected RequestDto findByMessageIdOrThrow(final String messageId) {
-        final RequestEntity requestEntity =
-                Optional.ofNullable(this.requestRepository.findByEdeliveryMessageId(messageId))
+    protected RequestEntity findRequestByMessageIdOrThrow(final String messageId) {
+        return Optional.ofNullable(this.requestRepository.findByEdeliveryMessageId(messageId))
                         .orElseThrow(() -> new RequestNotFoundException("couldn't find request for messageId: " + messageId));
-        return mapperUtils.requestToRequestDto(requestEntity);
-    }
-
-    protected RequestDto updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {
-        requestDto.setStatus(status.name());
-        requestDto.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
-        return this.save(requestDto);
     }
 
     protected void updateStatus(RequestEntity requestEntity, RequestStatusEnum status) {

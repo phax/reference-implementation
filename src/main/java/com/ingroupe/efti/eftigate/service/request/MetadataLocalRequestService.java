@@ -1,15 +1,16 @@
 package com.ingroupe.efti.eftigate.service.request;
 
 import com.ingroupe.efti.commons.dto.MetadataDto;
+import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.MetadataResult;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
-import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +34,15 @@ public class MetadataLocalRequestService {
         requestDto.setMetadataResults(buildMetadataResult(metadataDtoList));
         requestRepository.save(mapperUtils.requestDtoToRequestEntity(requestDto));
         log.info("Request has been register with controlId : {}", requestDto.getControl().getId());
+    }
+
+    public void createRequest(List<MetadataDto> metadataDtoList, ControlDto savedControl){
+        if (CollectionUtils.isNotEmpty(metadataDtoList)){
+            this.createRequest(savedControl, RequestStatusEnum.SUCCESS.name(), metadataDtoList);
+        }
+        else {
+            this.createRequest(savedControl, RequestStatusEnum.ERROR.name(), null);
+        }
     }
 
     public MetadataResults buildMetadataResult(List<MetadataDto> metadataDtos) {

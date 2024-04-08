@@ -24,7 +24,7 @@ public class GateToRequestTypeFunction implements Function<List<String>, Request
 
     private RequestTypeEnum getRequestTypeEnumForSingleUrl(List<String> gatesUrls) {
         String destUrl = gatesUrls.iterator().next();
-        if (destUrl.equalsIgnoreCase(gateProperties.getOwner())){
+        if (gateProperties != null && destUrl.equalsIgnoreCase(gateProperties.getOwner())){
             return RequestTypeEnum.LOCAL_METADATA_SEARCH;
         } else {
             return RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH;

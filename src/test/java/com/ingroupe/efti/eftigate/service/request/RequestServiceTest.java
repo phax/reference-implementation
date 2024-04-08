@@ -1,4 +1,4 @@
-package com.ingroupe.efti.eftigate.service;
+package com.ingroupe.efti.eftigate.service.request;
 
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
@@ -8,7 +8,10 @@ import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
+import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
+import com.ingroupe.efti.eftigate.service.AbstractServiceTest;
+import lombok.Getter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
@@ -18,11 +21,14 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
-public class RequestServiceTest extends AbstractServiceTest {
+@Getter
+class RequestServiceTest extends AbstractServiceTest {
 
     AutoCloseable openMocks;
     @Mock
     private RequestRepository requestRepository;
+    @Mock
+    private MapperUtils mapperUtils;
     private final UilDto uilDto = new UilDto();
     private final ControlDto controlDto = new ControlDto();
     private final ControlEntity controlEntity = new ControlEntity();
@@ -33,6 +39,7 @@ public class RequestServiceTest extends AbstractServiceTest {
     @BeforeEach
     public void before() {
         openMocks = MockitoAnnotations.openMocks(this);
+
 
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         String requestUuid = UUID.randomUUID().toString();
@@ -88,20 +95,5 @@ public class RequestServiceTest extends AbstractServiceTest {
     @AfterEach
     void tearDown() throws Exception {
         openMocks.close();
-    }
-
-    public RequestRepository getRequestRepository() {
-        return requestRepository;
-    }
-    public ControlDto getControlDto() {
-        return controlDto;
-    }
-
-    public RequestEntity getRequestEntity() {
-        return requestEntity;
-    }
-
-    public RequestEntity getSecondRequestEntity() {
-        return secondRequestEntity;
     }
 }

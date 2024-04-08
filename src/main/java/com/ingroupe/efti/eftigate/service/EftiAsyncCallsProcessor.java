@@ -2,13 +2,11 @@ package com.ingroupe.efti.eftigate.service;
 
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
-import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.service.request.MetadataLocalRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,13 +21,8 @@ public class EftiAsyncCallsProcessor {
     private final MetadataService metadataService;
     @Async
     @Transactional("metadataTransactionManager")
-    public void checkLocalRepoAsync(final MetadataRequestDto metadataRequestDto, ControlDto saveControl) {
+    public void checkLocalRepoAsync(final MetadataRequestDto metadataRequestDto, ControlDto savedControl) {
         List<MetadataDto> metadataDtoList = metadataService.search(metadataRequestDto);
-        if (CollectionUtils.isNotEmpty(metadataDtoList)){
-            metadataLocalRequestService.createRequest(saveControl, RequestStatusEnum.SUCCESS.name(), metadataDtoList);
-        }
-        else {
-            metadataLocalRequestService.createRequest(saveControl, RequestStatusEnum.ERROR.name(), null);
-        }
+        metadataLocalRequestService.createRequest(metadataDtoList, savedControl);
     }
 }

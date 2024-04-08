@@ -4,6 +4,8 @@ import com.ingroupe.efti.commons.dto.AuthorityDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
+import com.ingroupe.efti.edeliveryapconnector.dto.IdentifiersMessageBodyDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.SearchParameter;
 import lombok.AllArgsConstructor;
@@ -61,7 +63,7 @@ public class ControlDto {
         return controlDto;
     }
 
-    public static ControlDto fromMetadataControl(final MetadataRequestDto metadataRequestDto) {
+    public static ControlDto fromLocalMetadataControl(final MetadataRequestDto metadataRequestDto) {
         final String uuidGenerator = UUID.randomUUID().toString();
         final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
 
@@ -80,6 +82,30 @@ public class ControlDto {
                 .vehicleCountry(metadataRequestDto.getVehicleCountry())
                 .isDangerousGoods(metadataRequestDto.getIsDangerousGoods())
                 .build());
+        return controlDto;
+    }
+
+    public static ControlDto fromExternalMetadataControl(IdentifiersMessageBodyDto messageBodyDto, String requestTypeEnum, NotificationDto notificationDto, String eftiGateUrl) {
+        final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
+
+        final ControlDto controlDto = new ControlDto();
+        //to check
+        controlDto.setEftiGateUrl(eftiGateUrl);
+        controlDto.setFromGateUrl(notificationDto.getContent().getFromPartyId());
+        controlDto.setRequestType(requestTypeEnum);
+        controlDto.setStatus(StatusEnum.PENDING.toString());
+        controlDto.setSubsetEuRequested("SubsetEuRequested");
+        controlDto.setSubsetMsRequested("SubsetMsRequested");
+        controlDto.setCreatedDate(localDateTime);
+        controlDto.setLastModifiedDate(localDateTime);
+        controlDto.setRequestUuid(messageBodyDto.getRequestUuid());
+        controlDto.setTransportMetaData(SearchParameter.builder()
+                .vehicleId(messageBodyDto.getVehicleID())
+                .transportMode(messageBodyDto.getTransportMode())
+                .vehicleCountry(messageBodyDto.getVehicleCountry())
+                .isDangerousGoods(messageBodyDto.getIsDangerousGoods())
+                .build());
+        controlDto.setAuthority(null);
         return controlDto;
     }
 
