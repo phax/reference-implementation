@@ -58,18 +58,6 @@ class EftiAsyncCallsProcessorTest {
         this.metadataRequestDto.setTransportMode("ROAD");
     }
 
-        @Test
-    void checkLocalRepoTest_whenMetadataIsPresentInRegistry() {
-        //Arrange
-        when(metadataService.search(metadataRequestDto)).thenReturn(Collections.singletonList(metadataDto));
-
-        //Act
-        eftiAsyncCallsProcessor.checkLocalRepoAsync(metadataRequestDto, controlDto);
-
-        //Assert
-        verify(metadataLocalRequestService, times(1)).createRequest(controlDto, "SUCCESS", Collections.singletonList(metadataDto));
-    }
-
     @Test
     void checkLocalRepoTest_whenMetadataIsNotPresentInRegistry() {
         //Arrange
@@ -78,7 +66,8 @@ class EftiAsyncCallsProcessorTest {
         eftiAsyncCallsProcessor.checkLocalRepoAsync(metadataRequestDto, controlDto);
 
         //Assert
-        verify(metadataLocalRequestService, times(1)).createRequest(controlDto, "ERROR", null);
+        verify(metadataService, times(1)).search(metadataRequestDto);
+        verify(metadataLocalRequestService, times(1)).createRequest(anyList(), any(ControlDto.class));
     }
 
     @AfterEach

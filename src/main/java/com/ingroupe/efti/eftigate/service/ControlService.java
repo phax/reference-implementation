@@ -81,7 +81,7 @@ public class ControlService {
     @Transactional("controlTransactionManager")
     public RequestUuidDto createMetadataControl(final MetadataRequestDto metadataRequestDto) {
         log.info("create metadata control for vehicleId : {}", metadataRequestDto.getVehicleID());
-        return createControl(metadataRequestDto, ControlDto.fromMetadataControl(metadataRequestDto));
+        return createControl(metadataRequestDto, ControlDto.fromLocalMetadataControl(metadataRequestDto));
     }
 
     private <T extends ValidableDto> RequestUuidDto createControl(final T searchDto, ControlDto controlDto) {
@@ -248,7 +248,7 @@ public class ControlService {
         this.save(controlDto);
     }
 
-    private ControlDto save(final ControlDto controlDto) {
+    public ControlDto save(final ControlDto controlDto) {
         return mapperUtils.controlEntityToControlDto(
                 controlRepository.save(mapperUtils. controlDtoToControEntity(controlDto)));
     }

@@ -16,10 +16,8 @@ import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
-import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
-import com.ingroupe.efti.eftigate.service.RequestServiceTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +33,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.ERROR;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -42,8 +41,6 @@ import static org.mockito.Mockito.*;
 class UilRequestServiceTest extends RequestServiceTest {
 
     AutoCloseable openMocks;
-    @Mock
-    private RequestRepository requestRepository;
     @Mock
     private RequestSendingService requestSendingService;
     @Mock
@@ -57,12 +54,13 @@ class UilRequestServiceTest extends RequestServiceTest {
     private final RequestEntity requestEntity = new RequestEntity();
     private final RequestDto requestDto = new RequestDto();
 
+    @Override
     @BeforeEach
     public void before() {
         openMocks = MockitoAnnotations.openMocks(this);
 
         GateProperties gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).build();
-        uilRequestService = new UilRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService);
+        uilRequestService = new UilRequestService(getRequestRepository(), getMapperUtils(), rabbitSenderService, controlService, gateProperties);
 
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         String requestUuid = UUID.randomUUID().toString();
@@ -109,15 +107,16 @@ class UilRequestServiceTest extends RequestServiceTest {
         this.requestEntity.setControl(controlEntity);
     }
 
+    @Override
     @AfterEach
     void tearDown() throws Exception {
         openMocks.close();
     }
 
     @Test
-    void trySendDomibusSucessTest() throws SendRequestException, JsonProcessingException {
+    void trySendDomibusSuccessTest() throws SendRequestException, JsonProcessingException {
         when(requestSendingService.sendRequest(any(), any())).thenReturn("result");
-        when(requestRepository.save(any())).thenReturn(requestEntity);
+        when(getRequestRepository().save(any())).thenReturn(requestEntity);
 
         uilRequestService.sendRequest(requestDto);
         verify(rabbitSenderService).sendMessageToRabbit(any(), any(), any());
@@ -125,13 +124,13 @@ class UilRequestServiceTest extends RequestServiceTest {
 
     @Test
     void sendTest() throws SendRequestException, InterruptedException {
-        when(requestRepository.save(any())).thenReturn(requestEntity);
+        when(getRequestRepository().save(any())).thenReturn(requestEntity);
         when(requestSendingService.sendRequest(any(),any())).thenThrow(SendRequestException.class);
 
         uilRequestService.createAndSendRequest(controlDto, null);
 
         Thread.sleep(1000);
-        verify(requestRepository, Mockito.times(1)).save(any());
+        verify(getRequestRepository(), Mockito.times(1)).save(any());
     }
 
     @Test
@@ -151,12 +150,12 @@ class UilRequestServiceTest extends RequestServiceTest {
                         .build())
                 .build();
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
-        when(requestRepository.findByControlRequestUuid(any())).thenReturn(requestEntity);
-        when(requestRepository.save(any())).thenReturn(requestEntity);
+        when(getRequestRepository().findByControlRequestUuid(any())).thenReturn(requestEntity);
+        when(getRequestRepository().save(any())).thenReturn(requestEntity);
         uilRequestService.updateWithResponse(notificationDto);
 
         //verify(controlService).setEftiData(controlDto, "<data>vive les datas<data>".getBytes(StandardCharsets.UTF_8));
-        verify(requestRepository).save(argumentCaptor.capture());
+        verify(getRequestRepository()).save(argumentCaptor.capture());
         assertNotNull(argumentCaptor.getValue());
         assertEquals(RequestStatusEnum.RECEIVED.name(), argumentCaptor.getValue().getStatus());
     }
@@ -178,31 +177,22 @@ class UilRequestServiceTest extends RequestServiceTest {
                         .build())
                 .build();
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
-        when(requestRepository.findByControlRequestUuid(any())).thenReturn(requestEntity);
-        when(requestRepository.save(any())).thenReturn(requestEntity);
+        when(getRequestRepository().findByControlRequestUuid(any())).thenReturn(requestEntity);
+        when(getRequestRepository().save(any())).thenReturn(requestEntity);
         uilRequestService.updateWithResponse(notificationDto);
 
-        verify(requestRepository, times(2)).save(argumentCaptor.capture());
+        verify(getRequestRepository(), times(2)).save(argumentCaptor.capture());
         assertNotNull(argumentCaptor.getValue());
         assertEquals(RequestStatusEnum.RECEIVED.name(), argumentCaptor.getValue().getStatus());
     }
 
     @Test
-    void shouldUpdateResponseSendFailure() {
-        final String messageId = "messageId";
-        final NotificationDto notificationDto = NotificationDto.builder()
-                .notificationType(NotificationType.SEND_FAILURE)
-                .content(NotificationContentDto.builder()
-                        .messageId(messageId)
-                        .build())
-                .build();
-        final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
-        when(requestRepository.findByEdeliveryMessageId(any())).thenReturn(requestEntity);
-        when(requestRepository.save(any())).thenReturn(requestEntity);
-        uilRequestService.updateWithResponse(notificationDto);
-        verify(requestRepository).save(argumentCaptor.capture());
-        assertNotNull(argumentCaptor.getValue());
-        assertEquals(RequestStatusEnum.SEND_ERROR.name(), argumentCaptor.getValue().getStatus());
+    void shouldUpdateStatus() {
+        ArgumentCaptor<RequestEntity> requestEntityArgumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
+        uilRequestService.updateStatus(getRequestEntity(), ERROR);
+        verify(getRequestRepository()).save(requestEntityArgumentCaptor.capture());
+        verify(getRequestRepository(),  Mockito.times(1)).save(any(RequestEntity.class));
+        assertEquals(ERROR.name(), requestEntityArgumentCaptor.getValue().getStatus());
     }
 
     @Test
@@ -214,7 +204,7 @@ class UilRequestServiceTest extends RequestServiceTest {
                         .messageId(messageId)
                         .build())
                 .build();
-        when(requestRepository.findByEdeliveryMessageId(any())).thenReturn(null);
+        when(getRequestRepository().findByEdeliveryMessageId(any())).thenReturn(null);
         assertThrows(RequestNotFoundException.class, () -> uilRequestService.updateWithResponse(notificationDto));
     }
 
@@ -235,11 +225,11 @@ class UilRequestServiceTest extends RequestServiceTest {
                         .build())
                 .build();
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
-        when(requestRepository.findByControlRequestUuid(any())).thenReturn(null);
+        when(getRequestRepository().findByControlRequestUuid(any())).thenReturn(null);
 
         assertThrows(RequestNotFoundException.class, () -> uilRequestService.updateWithResponse(notificationDto));
 
-        verify(requestRepository, never()).save(argumentCaptor.capture());
+        verify(getRequestRepository(), never()).save(argumentCaptor.capture());
     }
 
     @Test

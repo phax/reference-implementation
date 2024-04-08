@@ -4,6 +4,7 @@ import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
+import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
@@ -19,11 +20,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 
+import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.UIL_TYPES;
+
 @Slf4j
 @Component
 public class UilRequestService extends RequestService {
-    public UilRequestService(RequestRepository requestRepository, MapperUtils mapperUtils, RabbitSenderService rabbitSenderService, ControlService controlService) {
-        super(requestRepository, mapperUtils, rabbitSenderService, controlService);
+    public UilRequestService(RequestRepository requestRepository, MapperUtils mapperUtils, RabbitSenderService rabbitSenderService, ControlService controlService, GateProperties gateProperties) {
+        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties);
     }
 
     @Override
@@ -42,7 +45,7 @@ public class UilRequestService extends RequestService {
 
     @Override
     public void manageMessageReceive(NotificationDto notificationDto) {
-        MessageBodyDto messageBody = getMessageBodyFromNotification(notificationDto);
+        MessageBodyDto messageBody = getMessageBodyFromNotification(notificationDto, MessageBodyDto.class);
         final RequestEntity requestEntity = this.findByRequestUuidOrThrow(messageBody.getRequestUuid());
         if (requestEntity != null){
             if (messageBody.getStatus().equals(StatusEnum.COMPLETE.name())) {

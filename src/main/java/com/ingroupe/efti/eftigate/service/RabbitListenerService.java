@@ -8,19 +8,18 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
-import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
+import com.ingroupe.efti.eftigate.constant.EftiGateConstants;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.requestbody.MetadataRequestBodyDto;
 import com.ingroupe.efti.eftigate.dto.requestbody.RequestBodyDto;
-import com.ingroupe.efti.eftigate.entity.SearchParameter;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
@@ -33,6 +32,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.LinkedList;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
@@ -47,6 +47,7 @@ public class RabbitListenerService {
     private final MapperUtils mapperUtils;
     private final RequestRepository requestRepository;
     private final ApIncomingService apIncomingService;
+    private final Function<String, EDeliveryAction> requestTypeToEDeliveryFunction;
 
     @RabbitListener(queues = "${spring.rabbitmq.queues.eftiReceiveMessageQueue:efti.receive-messages.q}")
     public void listenReceiveMessage(final String message) {
@@ -110,33 +111,31 @@ public class RabbitListenerService {
 
     private String buildBody(final RequestDto requestDto) throws TechnicalException {
         ControlDto controlDto = requestDto.getControl();
-        if (controlDto != null && RequestTypeEnum.LOCAL_METADATA_SEARCH.name().equalsIgnoreCase(controlDto.getRequestType())){
-            SearchParameter transportMetaData = controlDto.getTransportMetaData();
-            MetadataRequestBodyDto metadataRequestBodyDto = MetadataRequestBodyDto.builder()
-                    .requestUuid(controlDto.getRequestUuid())
-                    .vehicleID(transportMetaData.getVehicleId())
-                    .transportMode(transportMetaData.getTransportMode())
-                    .isDangerousGoods(transportMetaData.getIsDangerousGoods())
-                    .vehicleCountry(transportMetaData.getVehicleCountry())
-                    .build();
-            try {
-                return objectMapper.writeValueAsString(metadataRequestBodyDto);
-            } catch (JsonProcessingException e) {
-                throw new TechnicalException("error while building request body", e);
+        if (controlDto != null){
+            if (EftiGateConstants.IDENTIFIERS_TYPES.contains(controlDto.getRequestType())){
+                MetadataRequestBodyDto metadataRequestBodyDto = MetadataRequestBodyDto.fromControl(controlDto);
+                return getValueAsString(metadataRequestBodyDto);
+            } else {
+                final RequestBodyDto requestBodyDto = RequestBodyDto.builder()
+                        .requestUuid(controlDto.getRequestUuid())
+                        .eFTIDataUuid(controlDto.getEftiDataUuid())
+                        .subsetEU(new LinkedList<>())
+                        .subsetMS(new LinkedList<>())
+                        .build();
+                return getValueAsString(requestBodyDto);
             }
-        } else {
-            assert controlDto != null;
-            final RequestBodyDto requestBodyDto = RequestBodyDto.builder()
-                    .requestUuid(controlDto.getRequestUuid())
-                    .eFTIDataUuid(controlDto.getEftiDataUuid())
-                    .subsetEU(new LinkedList<>())
-                    .subsetMS(new LinkedList<>())
-                    .build();
-            try {
-                return objectMapper.writeValueAsString(requestBodyDto);
-            } catch (JsonProcessingException e) {
-                throw new TechnicalException("error while building request body", e);
-            }
+        }
+        else {
+            log.error("control was null for request");
+            throw new TechnicalException("control was null for request ");
+        }
+    }
+
+    private <T> String getValueAsString(T requestBodyDto) {
+        try {
+            return objectMapper.writeValueAsString(requestBodyDto);
+        } catch (JsonProcessingException e) {
+            throw new TechnicalException("error while building request body", e);
         }
     }
 
@@ -155,13 +154,9 @@ public class RabbitListenerService {
 
     private void trySendDomibus(final RequestDto requestDto, final ApRequestDto apRequestDto) {
         try {
-            if (RequestTypeEnum.LOCAL_METADATA_SEARCH.name().equalsIgnoreCase(requestDto.getControl().getRequestType())){
-                final String result = this.requestSendingService.sendRequest(apRequestDto, EDeliveryAction.GET_IDENTIFIERS);
-                requestDto.setEdeliveryMessageId(result);
-            } else {
-                final String result = this.requestSendingService.sendRequest(apRequestDto, EDeliveryAction.GET_UIL);
-                requestDto.setEdeliveryMessageId(result);
-            }
+            EDeliveryAction eDeliveryAction = requestTypeToEDeliveryFunction.apply(requestDto.getControl().getRequestType());
+            final String result = this.requestSendingService.sendRequest(apRequestDto, eDeliveryAction);
+            requestDto.setEdeliveryMessageId(result);
             this.updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
         } catch (SendRequestException e) {
             log.error("error while sending request");
@@ -178,13 +173,13 @@ public class RabbitListenerService {
         this.updateStatus(requestDto, RequestStatusEnum.ERROR);
     }
 
-    private RequestDto updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {
+    private void updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {
         requestDto.setStatus(status.name());
         requestDto.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
-        return this.save(requestDto);
+        this.save(requestDto);
     }
 
-    private RequestDto save(final RequestDto requestDto) {
-        return mapperUtils.requestToRequestDto(requestRepository.save(mapperUtils.requestDtoToRequestEntity(requestDto)));
+    private void save(final RequestDto requestDto) {
+        mapperUtils.requestToRequestDto(requestRepository.save(mapperUtils.requestDtoToRequestEntity(requestDto)));
     }
 }

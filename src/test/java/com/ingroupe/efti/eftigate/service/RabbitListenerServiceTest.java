@@ -3,6 +3,7 @@ package com.ingroupe.efti.eftigate.service;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.ingroupe.common.test.log.MemoryAppender;
+import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
@@ -18,6 +19,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
+
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -47,6 +50,9 @@ class RabbitListenerServiceTest {
     private MemoryAppender memoryAppender;
 
     private Logger memoryAppenderTestLogger;
+
+    @Mock
+    private Function<String, EDeliveryAction> requestTypeToEDeliveryFunction;
     private static final String LOGGER_NAME = RabbitListenerService.class.getName();
 
 
@@ -61,7 +67,7 @@ class RabbitListenerServiceTest {
                         .username(username).build()).build();
         openMocks = MockitoAnnotations.openMocks(this);
 
-        rabbitListenerService = new RabbitListenerService(controlService, gateProperties, requestSendingService, mapperUtils, requestRepository, apIncomingService);
+        rabbitListenerService = new RabbitListenerService(controlService, gateProperties, requestSendingService, mapperUtils, requestRepository, apIncomingService, requestTypeToEDeliveryFunction);
         memoryAppenderTestLogger = (Logger) LoggerFactory.getLogger(LOGGER_NAME);
         memoryAppender =
                 MemoryAppender.createInitializedMemoryAppender(
