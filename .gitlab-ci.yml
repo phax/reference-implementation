@@ -9,7 +9,6 @@ variables:
   MAVEN_EXTENSION: jar
   VERSION_ARTEFACT_SNAPSHOT: 0.3.0-SNAPSHOT
   VERSION_ARTEFACT_RELEASE: 0.2.0
-  LABEL: "NONE"
   DEPLOY_ENVIRONMENT:
     value: "dev"
     options:
@@ -26,18 +25,34 @@ variables:
       - "true"
       - "false"
     description: "Allow to rebuild or no the component Image. Set to 'true' by default."
+  LABEL: 
+    value: "NONE"
+    options:
+      - "NONE"
+      - "bo"
+      - "li"
+      - "sy"      
+    description: "The label of component. Set to 'NONE' for default gate."
 
 workflow:
   rules:
-    - if: $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web" && $DEPLOY_ENVIRONMENT == "dev"
+    - if: $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web" && $DEPLOY_ENVIRONMENT == "dev" && $LABEL == "NONE"
       variables:
         NAMESPACE: app-dev-efti
         SA: dev-efti-sa
-    - if: $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web" && $DEPLOY_ENVIRONMENT == "int"
+    - if: $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web" && $DEPLOY_ENVIRONMENT == "dev" && ($LABEL != "NONE" || $LABEL != null)
+      variables:
+        NAMESPACE: app-dev-efti-mock
+        SA: dev-efti-mock-sa
+    - if: $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web" && $DEPLOY_ENVIRONMENT == "int" && $LABEL == "NONE"
       variables:
         NAMESPACE: app-int-efti
         SA: int-efti-sa
-    - if: $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web" && $DEPLOY_ENVIRONMENT == "qlf"
+    - if: $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web" && $DEPLOY_ENVIRONMENT == "int" && ($LABEL != "NONE" || $LABEL != null)
+      variables:
+        NAMESPACE: app-qlf-efti-mock
+        SA: qlf-efti-mock-sa
+    - if: $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web" && $DEPLOY_ENVIRONMENT == "qlf" && $LABEL == "NONE"
       variables:
         NAMESPACE: app-qlf-efti
         SA: qlf-efti-sa
@@ -59,7 +74,7 @@ build_and_deploy_microservices_hors_prod:
     include:
       - project: "kube/build"
         file: "build_ms.yml"
-        ref: "kustomize"
+        ref: "mock"
     forward:
       pipeline_variables: true
     strategy: depend
