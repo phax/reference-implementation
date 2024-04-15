@@ -83,7 +83,7 @@ public class MetadataJpaConfiguration {
         liquibase.setDefaultSchema(properties.getDefaultSchema());
         liquibase.setDropFirst(properties.isDropFirst());
         liquibase.setShouldRun(properties.isEnabled());
-        liquibase.setLabels(properties.getLabels());
+        liquibase.setLabelFilter(properties.getLabelFilter());
         liquibase.setChangeLogParameters(properties.getParameters());
         liquibase.setRollbackFile(properties.getRollbackFile());
         return liquibase;
