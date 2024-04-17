@@ -3,7 +3,7 @@ spring:
     password: borduria
     username: borduria
     virtual_host: borduria
-    host: svc-efti-rabbitmq
+    host: svc-efti-rabbitmq.app-dev-efti
   application:
     name: efti-gate-bo
   datasource:
