@@ -29,7 +29,7 @@ public class MetadataController {
 
     @PostMapping("/upload/file")
     public ResponseEntity<String> uploadFile(@RequestPart MultipartFile file) {
-        if (file == null) {
+        if (file == null || file.isEmpty()) {
             log.error("No file send");
             return new ResponseEntity("Error, no file send", HttpStatus.BAD_REQUEST);
         }

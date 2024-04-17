@@ -122,7 +122,8 @@ public class ApIncomingService {
 
     private void sendSucess(ApConfigDto apConfigDto, String eftidataUuid, String requestUuid, String data, final EDeliveryAction eDeliveryAction) throws JsonProcessingException {
         ApRequestDto apRequestDto = ApRequestDto.builder()
-                .requestId(1L).body(buildBody(data, requestUuid, eftidataUuid))
+                .requestId(1L)
+                .body(buildBody(data, requestUuid, eftidataUuid))
                 .apConfig(apConfigDto)
                 .receiver(gateProperties.getGate())
                 .sender(gateProperties.getOwner())
