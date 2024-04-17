@@ -22,7 +22,7 @@ spring:
         metadata_schema: "metadatabo"
 
 gate:
-  owner: https://gate-bo.efti.dev.k8s.groupein.local
+  owner: https://mock.efti.dev.k8s.groupein.local/bo
   ap:
     url: http://172.16.201.146:8080/domibus/services/wsplugin
     username: borduria_service_account
