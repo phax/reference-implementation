@@ -5,6 +5,7 @@ import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.IdentifiersMessageBodyDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.SearchParameter;
@@ -43,8 +44,26 @@ public class ControlDto {
     private ErrorDto error;
     private MetadataResults metadataResults;
 
+    public static ControlDto fromGateToGateMessageBodyDto(MessageBodyDto messageBodyDto, String requestTypeEnum, NotificationDto notificationDto, String eftiGateUrl) {
+        final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
 
-    public static ControlDto fromUilControl(final UilDto uilDto) {
+        final ControlDto controlDto = new ControlDto();
+        controlDto.setEftiDataUuid(messageBodyDto.getEFTIDataUuid());
+        controlDto.setEftiGateUrl(eftiGateUrl);
+        controlDto.setFromGateUrl(notificationDto.getContent().getFromPartyId());
+        controlDto.setEftiPlatformUrl(messageBodyDto.getEFTIPlatformUrl());
+        controlDto.setRequestUuid(messageBodyDto.getRequestUuid());
+        controlDto.setRequestType(requestTypeEnum);
+        controlDto.setStatus(StatusEnum.PENDING.toString());
+        controlDto.setSubsetEuRequested("SubsetEuRequested");
+        controlDto.setSubsetMsRequested("SubsetMsRequested");
+        controlDto.setCreatedDate(localDateTime);
+        controlDto.setLastModifiedDate(localDateTime);
+        controlDto.setAuthority(null);
+        return controlDto;
+    }
+
+    public static ControlDto fromUilControl(final UilDto uilDto, RequestTypeEnum requestTypeEnum) {
         final String uuidGenerator = UUID.randomUUID().toString();
         final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
 
@@ -53,7 +72,7 @@ public class ControlDto {
         controlDto.setEftiGateUrl(uilDto.getEFTIGateUrl());
         controlDto.setEftiPlatformUrl(uilDto.getEFTIPlatformUrl());
         controlDto.setRequestUuid(uuidGenerator);
-        controlDto.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
+        controlDto.setRequestType(requestTypeEnum.name());
         controlDto.setStatus(StatusEnum.PENDING.toString());
         controlDto.setSubsetEuRequested("SubsetEuRequested");
         controlDto.setSubsetMsRequested("SubsetMsRequested");

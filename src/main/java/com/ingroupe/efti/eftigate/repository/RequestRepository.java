@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface RequestRepository extends JpaRepository<RequestEntity, Long> {
 
-    RequestEntity findByControlRequestUuid(final String EftiDataUuid);
+    RequestEntity findByControlRequestUuidAndStatus(final String EftiDataUuid, final String status);
 
     RequestEntity findByEdeliveryMessageId(final String messageId);
 

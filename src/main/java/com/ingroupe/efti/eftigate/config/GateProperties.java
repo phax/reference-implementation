@@ -1,5 +1,6 @@
 package com.ingroupe.efti.eftigate.config;
 
+import com.ingroupe.efti.eftigate.dto.RequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,5 +20,9 @@ public class GateProperties {
         private String url;
         private String username;
         private String password;
+    }
+
+    public boolean isCurrentGate(String gateUrl) {
+        return this.owner.equals(gateUrl);
     }
 }
