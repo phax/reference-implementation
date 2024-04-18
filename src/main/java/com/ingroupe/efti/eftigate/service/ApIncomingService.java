@@ -52,6 +52,7 @@ public class ApIncomingService {
         }
         switch (action) {
             case GET_UIL -> uilRequestService.updateWithResponse(notificationDto);
+            case FORWARD_UIL -> uilRequestService.receiveGateRequest(notificationDto);
             case UPLOAD_METADATA -> metadataService.createOrUpdate(parseBodyToMetadata(notificationDto.getContent()));
             case GET_IDENTIFIERS -> metadataRequestService.updateWithResponse(notificationDto);
             default -> log.warn("unmanaged notification type {}", notificationDto.getContent().getAction());

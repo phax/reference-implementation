@@ -131,6 +131,32 @@ class ApIncomingServiceTest extends AbstractServiceTest {
     }
 
     @Test
+    void shouldManageIncomingNotificationForwardUil() {
+        final String messageId = "messageId";
+        final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
+                .body(Map.of(RECEIVE_SUCCESS, Map.of(MESSAGE_ID, messageId))).build();
+        final ApConfigDto apConfigDto = ApConfigDto.builder()
+                .username(username)
+                .password(password)
+                .url(url)
+                .build();
+        final NotificationDto notificationDto = NotificationDto.builder()
+                .content(NotificationContentDto.builder()
+                        .messageId(messageId)
+                        .body(null)
+                        .action(EDeliveryAction.FORWARD_UIL.getValue())
+                        .build())
+                .notificationType(NotificationType.RECEIVED)
+                .build();
+
+        when(notificationService.consume(apConfigDto, receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
+        service.manageIncomingNotification(receivedNotificationDto);
+
+        verify(notificationService).consume(apConfigDto, receivedNotificationDto);
+        verify(uilRequestService).receiveGateRequest(notificationDto);
+    }
+
+    @Test
     void shouldManageIncomingNotification() {
         final String messageId = "messageId";
         final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()

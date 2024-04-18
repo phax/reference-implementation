@@ -21,6 +21,7 @@ import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
 import com.ingroupe.efti.eftigate.service.gate.EftiGateUrlResolver;
 import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
+import com.ingroupe.efti.eftigate.service.request.RequestService;
 import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
 import com.ingroupe.efti.eftigate.service.request.UilRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
@@ -30,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.nio.charset.StandardCharsets;
@@ -88,14 +90,21 @@ class ControlServiceTest extends AbstractServiceTest {
     private final String requestUuid = UUID.randomUUID().toString();
     private final String metadataUuid = UUID.randomUUID().toString();
 
+    private final static String url = "url";
+    private final static String password = "password";
+    private final static String username = "username";
+
     @BeforeEach
     public void before() {
-        openMocks = MockitoAnnotations.openMocks(this);
         final GateProperties gateProperties = GateProperties.builder()
-                .owner("france").build();
+                .owner("http://france.lol")
+                .ap(GateProperties.ApConfig.builder()
+                        .url(url)
+                        .password(password)
+                        .username(username).build()).build();
+        openMocks = MockitoAnnotations.openMocks(this);
         controlService = new ControlService(controlRepository, eftiGateUrlResolver, mapperUtils, requestServiceFactory, gateToRequestTypeFunction, eftiAsyncCallsProcessor, gateProperties);
 
-        //gateToRequestTypeFunction = mock(Function.class);
         final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         final String status = StatusEnum.PENDING.toString();
         final AuthorityDto authorityDto = AuthorityDto.builder()
@@ -199,6 +208,22 @@ class ControlServiceTest extends AbstractServiceTest {
 
         verify(controlRepository, times(1)).findById(1L);
         assertNotNull(controlEntity);
+    }
+
+    @Test
+    void createControlEntitySameGate() throws InstantiationException, IllegalAccessException {
+        uilDto.setEFTIGateUrl("http://france.lol");
+
+        when(controlRepository.save(any())).thenReturn(controlEntity);
+        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
+
+        RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
+
+        verify(uilRequestService, times(1)).createAndSendRequest(any(), any());
+        verify(controlRepository, times(1)).save(any());
+        assertNotNull(requestUuidDtoResult);
+        assertNull(requestUuidDtoResult.getErrorCode());
+        assertNull(requestUuidDtoResult.getErrorDescription());
     }
 
     @Test

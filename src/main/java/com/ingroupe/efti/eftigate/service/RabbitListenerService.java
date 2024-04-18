@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
+import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
@@ -29,6 +30,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.LinkedList;
@@ -47,7 +49,7 @@ public class RabbitListenerService {
     private final MapperUtils mapperUtils;
     private final RequestRepository requestRepository;
     private final ApIncomingService apIncomingService;
-    private final Function<String, EDeliveryAction> requestTypeToEDeliveryFunction;
+    private final Function<RequestDto, EDeliveryAction> requestTypeToEDeliveryFunction;
 
     @RabbitListener(queues = "${spring.rabbitmq.queues.eftiReceiveMessageQueue:efti.receive-messages.q}")
     public void listenReceiveMessage(final String message) {
@@ -111,12 +113,14 @@ public class RabbitListenerService {
 
     private String buildBody(final RequestDto requestDto) throws TechnicalException {
         ControlDto controlDto = requestDto.getControl();
-        if (controlDto != null){
-            if (EftiGateConstants.IDENTIFIERS_TYPES.contains(controlDto.getRequestType())){
+        if (controlDto != null) {
+            if (EftiGateConstants.IDENTIFIERS_TYPES.contains(controlDto.getRequestType())) {
                 MetadataRequestBodyDto metadataRequestBodyDto = MetadataRequestBodyDto.fromControl(controlDto);
                 return getValueAsString(metadataRequestBodyDto);
             } else {
                 final RequestBodyDto requestBodyDto = RequestBodyDto.builder()
+                        .eFTIData(requestDto.getReponseData() != null ? new String(requestDto.getReponseData(), StandardCharsets.UTF_8) : null)
+                        .eFTIPlatformUrl(requestDto.getControl().getEftiPlatformUrl())
                         .requestUuid(controlDto.getRequestUuid())
                         .eFTIDataUuid(controlDto.getEftiDataUuid())
                         .subsetEU(new LinkedList<>())
@@ -124,8 +128,7 @@ public class RabbitListenerService {
                         .build();
                 return getValueAsString(requestBodyDto);
             }
-        }
-        else {
+        } else {
             log.error("control was null for request");
             throw new TechnicalException("control was null for request ");
         }
@@ -140,9 +143,10 @@ public class RabbitListenerService {
     }
 
     private ApRequestDto buildApRequestDto(final RequestDto requestDto) throws TechnicalException {
+        String receiver = gateProperties.isCurrentGate(requestDto.getGateUrlDest()) ? requestDto.getControl().getEftiPlatformUrl() : requestDto.getGateUrlDest();
         return ApRequestDto.builder()
                 .sender(gateProperties.getOwner())
-                .receiver(requestDto.getGateUrlDest())
+                .receiver(receiver)
                 .body(buildBody(requestDto))
                 .apConfig(ApConfigDto.builder()
                         .username(gateProperties.getAp().getUsername())
@@ -154,10 +158,12 @@ public class RabbitListenerService {
 
     private void trySendDomibus(final RequestDto requestDto, final ApRequestDto apRequestDto) {
         try {
-            EDeliveryAction eDeliveryAction = requestTypeToEDeliveryFunction.apply(requestDto.getControl().getRequestType());
+            EDeliveryAction eDeliveryAction = requestTypeToEDeliveryFunction.apply(requestDto);
             final String result = this.requestSendingService.sendRequest(apRequestDto, eDeliveryAction);
             requestDto.setEdeliveryMessageId(result);
-            this.updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
+            if (!RequestStatusEnum.SUCCESS.name().equals(requestDto.getStatus())) {
+                this.updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
+            }
         } catch (SendRequestException e) {
             log.error("error while sending request");
             throw new TechnicalException("Error when try to send message to domibus");

@@ -113,11 +113,6 @@ public abstract class RequestService {
         }
     }
 
-    protected RequestEntity findByRequestUuidOrThrow(String requestId) {
-        return Optional.ofNullable(this.requestRepository.findByControlRequestUuid(requestId))
-                .orElseThrow(() -> new RequestNotFoundException("couldn't find request for requestUuid: " + requestId));
-    }
-
     protected RequestEntity findRequestByMessageIdOrThrow(final String messageId) {
         return Optional.ofNullable(this.requestRepository.findByEdeliveryMessageId(messageId))
                         .orElseThrow(() -> new RequestNotFoundException("couldn't find request for messageId: " + messageId));

@@ -3,6 +3,7 @@ package com.ingroupe.efti.eftigate.mapper;
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataResultDto;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
+import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
@@ -33,6 +34,10 @@ public class MapperUtils {
             controlEntity.setError(errorEntity);
         }
         return controlEntity;
+    }
+
+    public ErrorEntity errorDtoToErrorEntity(final ErrorDto errorDto) {
+        return modelMapper.map(errorDto, ErrorEntity.class);
     }
 
     public ControlDto controlEntityToControlDto(final ControlEntity controlEntity) {

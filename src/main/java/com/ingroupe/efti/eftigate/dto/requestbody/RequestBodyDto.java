@@ -13,6 +13,10 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RequestBodyDto {
+    @JsonProperty
+    private String eFTIData;
+    @JsonProperty("eFTIPlatformUrl")
+    private String eFTIPlatformUrl;
     private String requestUuid;
     @JsonProperty("eFTIDataUuid")
     private String eFTIDataUuid;

@@ -75,8 +75,10 @@ public class ControlService {
     @Transactional("controlTransactionManager")
     public RequestUuidDto createUilControl(final UilDto uilDto) {
         log.info("create Uil control for uuid : {}", uilDto.getEFTIDataUuid());
-        return createControl(uilDto, ControlDto.fromUilControl(uilDto));
+        return createControl(uilDto, ControlDto
+                .fromUilControl(uilDto, gateProperties.isCurrentGate(uilDto.getEFTIGateUrl()) ? RequestTypeEnum.LOCAL_UIL_SEARCH : RequestTypeEnum.EXTERNAL_UIL_SEARCH));
     }
+
 
     @Transactional("controlTransactionManager")
     public RequestUuidDto createMetadataControl(final MetadataRequestDto metadataRequestDto) {
@@ -98,7 +100,7 @@ public class ControlService {
 
     private void createUilControl(ControlDto controlDto) {
         final ControlDto saveControl = this.save(controlDto);
-        getRequestService(controlDto.getRequestType()).createAndSendRequest(saveControl, null);
+        getRequestService(controlDto.getRequestType()).createAndSendRequest(saveControl, !gateProperties.isCurrentGate(controlDto.getEftiGateUrl()) ? controlDto.getEftiGateUrl() : null);
         log.info("Uil control with request uuid '{}' has been register", saveControl.getRequestUuid());
     }
 
@@ -132,7 +134,7 @@ public class ControlService {
         return buildMetadataResponse(controlDto);
     }
 
-    public int updatePendingControls(){
+    public int updatePendingControls() {
         List<ControlEntity> pendingControls = controlRepository.findByCriteria(StatusEnum.PENDING.name(), timeoutValue);
         CollectionUtils.emptyIfNull(pendingControls).forEach(this::updatePendingControl);
         return CollectionUtils.isNotEmpty(pendingControls) ? pendingControls.size() : 0;
@@ -229,6 +231,8 @@ public class ControlService {
                 .errorCode(errorCode)
                 .errorDescription(errorDescription).build();
     }
+
+
 
     public void setError(final ControlDto controlDto, final ErrorDto errorDto) {
         controlDto.setStatus(StatusEnum.ERROR.name());

@@ -1,9 +1,12 @@
 package com.ingroupe.efti.eftigate.service.request;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
+import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
@@ -16,6 +19,7 @@ import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
+import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
 import org.junit.jupiter.api.AfterEach;
@@ -27,7 +31,9 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import javax.mail.util.ByteArrayDataSource;
+import javax.naming.ldap.Control;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -41,6 +47,8 @@ import static org.mockito.Mockito.*;
 class UilRequestServiceTest extends RequestServiceTest {
 
     AutoCloseable openMocks;
+    @Mock
+    private RequestRepository requestRepository;
     @Mock
     private RequestSendingService requestSendingService;
     @Mock
@@ -59,7 +67,7 @@ class UilRequestServiceTest extends RequestServiceTest {
     public void before() {
         openMocks = MockitoAnnotations.openMocks(this);
 
-        GateProperties gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).build();
+        GateProperties gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).owner("owner").build();
         uilRequestService = new UilRequestService(getRequestRepository(), getMapperUtils(), rabbitSenderService, controlService, gateProperties);
 
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
@@ -78,6 +86,7 @@ class UilRequestServiceTest extends RequestServiceTest {
         this.controlDto.setSubsetMsRequested("oki");
         this.controlDto.setCreatedDate(localDateTime);
         this.controlDto.setLastModifiedDate(localDateTime);
+        this.controlDto.setEftiGateUrl("oki.lol");
 
         this.controlEntity.setEftiDataUuid(controlDto.getEftiDataUuid());
         this.controlEntity.setRequestUuid(controlDto.getRequestUuid());
@@ -95,6 +104,7 @@ class UilRequestServiceTest extends RequestServiceTest {
 
         this.requestDto.setStatus(RequestStatusEnum.RECEIVED.toString());
         this.requestDto.setRetry(0);
+        this.requestDto.setReponseData("<ui>ui</ui>".getBytes(StandardCharsets.UTF_8));
         this.requestDto.setCreatedDate(localDateTime);
         this.requestDto.setGateUrlDest(controlEntity.getEftiGateUrl());
         this.requestDto.setControl(ControlDto.builder().id(1).build());
@@ -111,6 +121,90 @@ class UilRequestServiceTest extends RequestServiceTest {
     @AfterEach
     void tearDown() throws Exception {
         openMocks.close();
+    }
+
+    @Test
+    void receiveGateRequestFromOtherGateSucessTest() throws IOException {
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        final String messageId = "e94806cd-e52b-11ee-b7d3-0242ac120012@domibus.eu";
+        final String content = "{\"requestUuid\":\"24414689-1abf-4a9f-b4df-de3a491a44c9\",\"subsetEU\":[],\"subsetMS\":[],\"authority\":null,\"eFTIPlatformUrl\":\"http://efti.platform.acme.com\",\"eFTIDataUuid\":\"12345678-ab12-4ab6-8999-123456789abc\", \"eFTIData\":\"oki\"}";
+        final NotificationDto notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.RECEIVED)
+                .content(NotificationContentDto.builder()
+                        .action("forwardUil")
+                        .body(new ByteArrayDataSource(content, "application/json"))
+                        .contentType("application/json")
+                        .fromPartyId("http://efti.gate.listenbourg.eu")
+                        .messageId(messageId)
+                        .build())
+                .build();
+        final ArgumentCaptor<ControlDto> argumentCaptorControlDto = ArgumentCaptor.forClass(ControlDto.class);
+
+        Mockito.when(requestRepository.findByControlRequestUuidAndStatus(any(), any())).thenReturn(requestEntity);
+        Mockito.when(requestRepository.save(any())).thenReturn(requestEntity);
+        Mockito.when(uilRequestService.getControlService().save(any())).thenReturn(controlDto);
+
+        uilRequestService.receiveGateRequest(notificationDto);
+
+        verify(controlService).save(argumentCaptorControlDto.capture());
+        assertEquals(StatusEnum.PENDING.name(), argumentCaptorControlDto.getValue().getStatus());
+    }
+
+    @Test
+    void receiveGateRequestFromOtherGateErrorTest() throws IOException {
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        final String messageId = "e94806cd-e52b-11ee-b7d3-0242ac120012@domibus.eu";
+        final String content = "{\"requestUuid\":\"24414689-1abf-4a9f-b4df-de3a491a44c9\",\"subsetEU\":[],\"subsetMS\":[],\"authority\":null,\"eFTIPlatformUrl\":\"http://efti.platform.acme.com\",\"eFTIDataUuid\":\"12345678-ab12-4ab6-8999-123456789abc\"}";
+        final NotificationDto notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.RECEIVED)
+                .content(NotificationContentDto.builder()
+                        .action("forwardUil")
+                        .body(new ByteArrayDataSource(content, "application/json"))
+                        .contentType("application/json")
+                        .fromPartyId("http://efti.gate.listenbourg.eu")
+                        .messageId(messageId)
+                        .build())
+                .build();
+        final ArgumentCaptor<RequestEntity> argumentCaptorRequestEntity = ArgumentCaptor.forClass(RequestEntity.class);
+
+        Mockito.when(requestRepository.findByControlRequestUuidAndStatus(any(), any())).thenReturn(requestEntity);
+        Mockito.when(uilRequestService.getControlService().save(any())).thenReturn(controlDto);
+        Mockito.when(getRequestRepository().findByControlRequestUuidAndStatus(any(), any())).thenReturn(requestEntity);
+
+        uilRequestService.receiveGateRequest(notificationDto);
+
+        verify(getRequestRepository()).save(argumentCaptorRequestEntity.capture());
+        assertEquals(RequestStatusEnum.ERROR.name(), argumentCaptorRequestEntity.getValue().getStatus());
+    }
+
+    @Test
+    void receiveGateRequestSucessTest() throws IOException {
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        final String messageId = "e94806cd-e52b-11ee-b7d3-0242ac120012@domibus.eu";
+        final String content = "{\"requestUuid\":\"24414689-1abf-4a9f-b4df-de3a491a44c9\",\"subsetEU\":[],\"subsetMS\":[],\"authority\":null,\"eFTIPlatformUrl\":\"http://efti.platform.acme.com\",\"eFTIDataUuid\":\"12345678-ab12-4ab6-8999-123456789abc\"}";
+        final NotificationDto notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.RECEIVED)
+                .content(NotificationContentDto.builder()
+                        .action("forwardUil")
+                        .body(new ByteArrayDataSource(content, "osef"))
+                        .contentType("application/json")
+                        .fromPartyId("http://efti.gate.listenbourg.eu")
+                        .messageId(messageId)
+                        .build())
+                .build();
+        ControlDto controlDto = ControlDto.fromGateToGateMessageBodyDto(mapper.readValue(content, MessageBodyDto.class), RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH.name(), notificationDto, "http://france.fr");
+        final ArgumentCaptor<ControlDto> argumentCaptorControlDto = ArgumentCaptor.forClass(ControlDto.class);
+        final ArgumentCaptor<RequestEntity> argumentCaptorRequestEntity = ArgumentCaptor.forClass(RequestEntity.class);
+
+        Mockito.when(controlService.save(any())).thenReturn(controlDto);
+
+        uilRequestService.receiveGateRequest(notificationDto);
+
+        verify(controlService).save(argumentCaptorControlDto.capture());
+        assertEquals(RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH.name(), argumentCaptorControlDto.getValue().getRequestType());
     }
 
     @Test
@@ -134,8 +228,37 @@ class UilRequestServiceTest extends RequestServiceTest {
     }
 
     @Test
+    void shouldUpdateResponseSucessFromPlatformAndShoulSendToGate() throws IOException {
+        final String messageId = "e94806cd-e52b-11ee-b7d3-0242ac120012@domibus.eu";
+        final String eftiData = """
+                  {
+                    "requestUuid": "test",
+                    "status": "COMPLETE",
+                    "eFTIData": "<data>vive les datas<data>"
+                  }""";
+        this.requestDto.getControl().setRequestType(RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH.toString());
+        final NotificationDto notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.RECEIVED)
+                .content(NotificationContentDto.builder()
+                        .messageId(messageId)
+                        .body(new ByteArrayDataSource(eftiData, "osef"))
+                        .build())
+                .build();
+        final ArgumentCaptor<ControlDto> argumentCaptorControlDto = ArgumentCaptor.forClass(ControlDto.class);
+        requestEntity.getControl().setFromGateUrl("other");
+        when(getRequestRepository().findByControlRequestUuidAndStatus(any(), any())).thenReturn(requestEntity);
+        when(getMapperUtils().requestToRequestDto(any())).thenReturn(requestDto);
+        when(requestRepository.save(any())).thenReturn(requestEntity);
+
+        uilRequestService.updateWithResponse(notificationDto);
+
+        verify(controlService).save(argumentCaptorControlDto.capture());
+        assertEquals(RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH.name(), argumentCaptorControlDto.getValue().getRequestType());
+    }
+
+    @Test
     void shouldUpdateResponse() throws IOException {
-        final String messageId = "messageId";
+        final String messageId = "e94806cd-e52b-11ee-b7d3-0242ac120012@domibus.eu";
         final String eftiData = """
                   {
                     "requestUuid": "test",
@@ -150,14 +273,13 @@ class UilRequestServiceTest extends RequestServiceTest {
                         .build())
                 .build();
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
-        when(getRequestRepository().findByControlRequestUuid(any())).thenReturn(requestEntity);
+        when(getRequestRepository().findByControlRequestUuidAndStatus(any(), any())).thenReturn(requestEntity);
         when(getRequestRepository().save(any())).thenReturn(requestEntity);
         uilRequestService.updateWithResponse(notificationDto);
 
-        //verify(controlService).setEftiData(controlDto, "<data>vive les datas<data>".getBytes(StandardCharsets.UTF_8));
         verify(getRequestRepository()).save(argumentCaptor.capture());
         assertNotNull(argumentCaptor.getValue());
-        assertEquals(RequestStatusEnum.RECEIVED.name(), argumentCaptor.getValue().getStatus());
+        assertEquals(RequestStatusEnum.SUCCESS.name(), argumentCaptor.getValue().getStatus());
     }
 
     @Test
@@ -177,13 +299,13 @@ class UilRequestServiceTest extends RequestServiceTest {
                         .build())
                 .build();
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
-        when(getRequestRepository().findByControlRequestUuid(any())).thenReturn(requestEntity);
+        when(getRequestRepository().findByControlRequestUuidAndStatus(any(), any())).thenReturn(requestEntity);
         when(getRequestRepository().save(any())).thenReturn(requestEntity);
         uilRequestService.updateWithResponse(notificationDto);
 
         verify(getRequestRepository(), times(2)).save(argumentCaptor.capture());
         assertNotNull(argumentCaptor.getValue());
-        assertEquals(RequestStatusEnum.RECEIVED.name(), argumentCaptor.getValue().getStatus());
+        assertEquals(RequestStatusEnum.ERROR.name(), argumentCaptor.getValue().getStatus());
     }
 
     @Test
@@ -193,6 +315,26 @@ class UilRequestServiceTest extends RequestServiceTest {
         verify(getRequestRepository()).save(requestEntityArgumentCaptor.capture());
         verify(getRequestRepository(),  Mockito.times(1)).save(any(RequestEntity.class));
         assertEquals(ERROR.name(), requestEntityArgumentCaptor.getValue().getStatus());
+    }
+
+    @Test
+    void shouldUpdateResponseSendFailure() {
+        final String messageId = "messageId";
+        final NotificationDto notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.SEND_FAILURE)
+                .content(NotificationContentDto.builder()
+                        .messageId(messageId)
+                        .build())
+                .build();
+        final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
+        when(getRequestRepository().findByEdeliveryMessageId(any())).thenReturn(requestEntity);
+        when(requestRepository.save(any())).thenReturn(requestEntity);
+
+        uilRequestService.updateWithResponse(notificationDto);
+
+        verify(getRequestRepository()).save(argumentCaptor.capture());
+        assertNotNull(argumentCaptor.getValue());
+        assertEquals(RequestStatusEnum.SEND_ERROR.name(), argumentCaptor.getValue().getStatus());
     }
 
     @Test
@@ -225,7 +367,7 @@ class UilRequestServiceTest extends RequestServiceTest {
                         .build())
                 .build();
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
-        when(getRequestRepository().findByControlRequestUuid(any())).thenReturn(null);
+        when(getRequestRepository().findByControlRequestUuidAndStatus(any(), any())).thenReturn(null);
 
         assertThrows(RequestNotFoundException.class, () -> uilRequestService.updateWithResponse(notificationDto));
 
