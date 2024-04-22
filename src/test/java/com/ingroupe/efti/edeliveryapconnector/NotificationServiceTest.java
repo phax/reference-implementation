@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -113,5 +114,7 @@ class NotificationServiceTest {
         final ApConfigDto apConfigDto = ApConfigDto.builder().build();
 
         service.setMarkedAsDownload(apConfigDto, "messageIdQuiEstTropBeauDeFouCommeLePsgMamaIlEstLongLeMessageId");
+
+        verify(requestRetrievingService, times(1)).setMarkedAsDownload(any(),any());
     }
 }
