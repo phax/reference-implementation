@@ -8,6 +8,7 @@ import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
+import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
@@ -49,6 +50,8 @@ class MetadataRequestServiceTest extends RequestServiceTest {
     @Mock
     private RequestRepository requestRepository;
     @Mock
+    private NotificationService notificationService;
+    @Mock
     private RequestSendingService requestSendingService;
     @Mock
     private ControlService controlService;
@@ -74,7 +77,7 @@ class MetadataRequestServiceTest extends RequestServiceTest {
         openMocks = MockitoAnnotations.openMocks(this);
 
         GateProperties gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).build();
-        metadataRequestService = new MetadataRequestService(requestRepository, getMapperUtils(), rabbitSenderService, controlService, gateProperties, metadataService, metadataLocalRequestService);
+        metadataRequestService = new MetadataRequestService(requestRepository, getMapperUtils(), rabbitSenderService, controlService, gateProperties, metadataService, metadataLocalRequestService, notificationService);
 
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         String requestUuid = UUID.randomUUID().toString();

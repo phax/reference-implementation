@@ -11,6 +11,7 @@ import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
+import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
@@ -33,6 +34,7 @@ import org.mockito.MockitoAnnotations;
 import javax.mail.util.ByteArrayDataSource;
 import javax.naming.ldap.Control;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -49,6 +51,8 @@ class UilRequestServiceTest extends RequestServiceTest {
     AutoCloseable openMocks;
     @Mock
     private RequestRepository requestRepository;
+    @Mock
+    private NotificationService notificationService;
     @Mock
     private RequestSendingService requestSendingService;
     @Mock
@@ -68,7 +72,7 @@ class UilRequestServiceTest extends RequestServiceTest {
         openMocks = MockitoAnnotations.openMocks(this);
 
         GateProperties gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).owner("owner").build();
-        uilRequestService = new UilRequestService(getRequestRepository(), getMapperUtils(), rabbitSenderService, controlService, gateProperties);
+        uilRequestService = new UilRequestService(getRequestRepository(), getMapperUtils(), rabbitSenderService, controlService, gateProperties, notificationService);
 
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         String requestUuid = UUID.randomUUID().toString();
@@ -309,9 +313,9 @@ class UilRequestServiceTest extends RequestServiceTest {
     }
 
     @Test
-    void shouldUpdateStatus() {
+    void shouldUpdateStatus() throws MalformedURLException {
         ArgumentCaptor<RequestEntity> requestEntityArgumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
-        uilRequestService.updateStatus(getRequestEntity(), ERROR);
+        uilRequestService.updateStatus(getRequestEntity(), ERROR, new NotificationDto());
         verify(getRequestRepository()).save(requestEntityArgumentCaptor.capture());
         verify(getRequestRepository(),  Mockito.times(1)).save(any(RequestEntity.class));
         assertEquals(ERROR.name(), requestEntityArgumentCaptor.getValue().getStatus());

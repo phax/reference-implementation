@@ -9,6 +9,7 @@ import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
+import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
@@ -37,8 +39,8 @@ import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.UIL_TYPES;
 @Slf4j
 @Component
 public class UilRequestService extends RequestService {
-    public UilRequestService(RequestRepository requestRepository, MapperUtils mapperUtils, RabbitSenderService rabbitSenderService, ControlService controlService, GateProperties gateProperties) {
-        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties);
+    public UilRequestService(RequestRepository requestRepository, MapperUtils mapperUtils, RabbitSenderService rabbitSenderService, ControlService controlService, GateProperties gateProperties, NotificationService notificationService) {
+        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, notificationService);
     }
 
     @Override
@@ -63,9 +65,9 @@ public class UilRequestService extends RequestService {
         final RequestEntity requestEntity = this.findByRequestUuidOrThrow(messageBody.getRequestUuid());
         if (messageBody.getStatus().equals(StatusEnum.COMPLETE.name())) {
             requestEntity.setReponseData(messageBody.getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
-            this.updateStatus(requestEntity, RequestStatusEnum.SUCCESS);
+            this.updateStatus(requestEntity, RequestStatusEnum.SUCCESS, notificationDto);
         } else {
-            this.updateStatus(requestEntity, RequestStatusEnum.ERROR);
+            this.updateStatus(requestEntity, RequestStatusEnum.ERROR, notificationDto);
             errorReceived(requestEntity, messageBody.getErrorDescription());
         }
         responseToOtherGateIfNecessary(requestEntity);

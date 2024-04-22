@@ -6,8 +6,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
+import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
+import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
@@ -30,6 +32,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -49,6 +52,7 @@ public abstract class RequestService {
     @Lazy
     private final ControlService controlService;
     private final GateProperties gateProperties;
+    private final NotificationService notificationService;
 
 
     @Value("${spring.rabbitmq.queues.eftiSendMessageExchange:efti.send-message.exchange}")
@@ -99,7 +103,7 @@ public abstract class RequestService {
     }
 
     protected void manageSendFailure(final NotificationDto notificationDto) {
-        this.updateStatus(findRequestByMessageIdOrThrow(notificationDto.getMessageId()), SEND_ERROR);
+        this.updateStatus(findRequestByMessageIdOrThrow(notificationDto.getMessageId()), SEND_ERROR, notificationDto);
     }
 
     protected <T> T getMessageBodyFromNotification(NotificationDto notificationDto, Class<T> targetClass) {
@@ -118,10 +122,15 @@ public abstract class RequestService {
                         .orElseThrow(() -> new RequestNotFoundException("couldn't find request for messageId: " + messageId));
     }
 
-    protected void updateStatus(RequestEntity requestEntity, RequestStatusEnum status) {
+    protected void updateStatus(RequestEntity requestEntity, RequestStatusEnum status, NotificationDto notificationDto) {
         requestEntity.setStatus(status.name());
         requestEntity.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
         requestRepository.save(requestEntity);
+        try {
+            notificationService.setMarkedAsDownload(createApConfig(), notificationDto.getMessageId());
+        } catch (MalformedURLException e) {
+            log.error("Error while try to set mark as download", e);
+        }
     }
 
     protected void errorReceived(final RequestEntity requestEntity, final String errorDescription) {
@@ -140,5 +149,13 @@ public abstract class RequestService {
         requestEntity.setControl(controlEntity);
         requestRepository.save(requestEntity);
         controlService.setError(controlEntity, errorEntity);
+    }
+
+    private ApConfigDto createApConfig() {
+        return ApConfigDto.builder()
+                .username(gateProperties.getAp().getUsername())
+                .password(gateProperties.getAp().getPassword())
+                .url(gateProperties.getAp().getUrl())
+                .build();
     }
 }
