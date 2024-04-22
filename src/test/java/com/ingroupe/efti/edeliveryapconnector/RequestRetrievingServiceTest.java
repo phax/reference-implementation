@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.net.MalformedURLException;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
@@ -46,16 +48,32 @@ class RequestRetrievingServiceTest {
         wireMockServer.stubFor(post(urlEqualTo("/domibus/services/wsplugin?wsdl"))
                 .willReturn(aResponse().withBodyFile("retrieve-response.xml")));
 
-        final ApConfigDto requestDto = ApConfigDto.builder()
+        final ApConfigDto apConfigDto = ApConfigDto.builder()
                         .url(String.format("http://localhost:%s/domibus/services/wsplugin?wsdl", wireMockServer.port()))
                         .username("username")
                         .password("password")
                         .build();
 
-        final NotificationContentDto result = service.retrieveMessage(requestDto, messageId);
+        final NotificationContentDto result = service.retrieveMessage(apConfigDto, messageId);
         assertNotNull(result);
         assertEquals("getUIL", result.getAction());
         assertEquals("9992596f-9a6a-11ee-90b4-0242ac13000e@domibus.eu", result.getMessageId());
         assertNotNull(result.getBody());
+    }
+
+    @Test
+    void setMarkedAsDownloadTest() throws MalformedURLException {
+        final ApConfigDto apConfigDto = ApConfigDto.builder()
+                .url(String.format("http://localhost:%s/domibus/services/wsplugin?wsdl", wireMockServer.port()))
+                .username("username")
+                .password("password")
+                .build();
+
+        wireMockServer.stubFor(get(urlEqualTo("/domibus/services/wsplugin?wsdl"))
+                .willReturn(aResponse().withBodyFile("WebServicePlugin.wsdl")));
+        wireMockServer.stubFor(post(urlEqualTo("/domibus/services/wsplugin?wsdl"))
+                .willReturn(aResponse().withBodyFile("retrieve-response.xml")));
+
+        service.setMarkedAsDownload(apConfigDto, "messageId");
     }
 }
