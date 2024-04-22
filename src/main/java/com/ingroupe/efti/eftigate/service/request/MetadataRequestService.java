@@ -4,6 +4,7 @@ import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.IdentifiersMessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
+import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
@@ -34,8 +35,8 @@ public class MetadataRequestService extends RequestService {
     @Lazy
     private final MetadataService metadataService;
     private final MetadataLocalRequestService metadataLocalRequestService;
-    public MetadataRequestService(RequestRepository requestRepository, MapperUtils mapperUtils, RabbitSenderService rabbitSenderService, ControlService controlService, GateProperties gateProperties, MetadataService metadataService, MetadataLocalRequestService metadataLocalRequestService) {
-        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties);
+    public MetadataRequestService(RequestRepository requestRepository, MapperUtils mapperUtils, RabbitSenderService rabbitSenderService, ControlService controlService, GateProperties gateProperties, MetadataService metadataService, MetadataLocalRequestService metadataLocalRequestService, NotificationService notificationService) {
+        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, notificationService);
         this.metadataService = metadataService;
         this.metadataLocalRequestService = metadataLocalRequestService;
     }
