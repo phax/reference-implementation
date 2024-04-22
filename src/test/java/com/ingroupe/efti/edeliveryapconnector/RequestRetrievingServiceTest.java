@@ -1,21 +1,26 @@
 package com.ingroupe.efti.edeliveryapconnector;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.CountMatchingStrategy;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestRetrievingService;
+import eu.domibus.plugin.ws.generated.MarkMessageAsDownloadedFault;
 import eu.domibus.plugin.ws.generated.RetrieveMessageFault;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.net.MalformedURLException;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -46,16 +51,34 @@ class RequestRetrievingServiceTest {
         wireMockServer.stubFor(post(urlEqualTo("/domibus/services/wsplugin?wsdl"))
                 .willReturn(aResponse().withBodyFile("retrieve-response.xml")));
 
-        final ApConfigDto requestDto = ApConfigDto.builder()
+        final ApConfigDto apConfigDto = ApConfigDto.builder()
                         .url(String.format("http://localhost:%s/domibus/services/wsplugin?wsdl", wireMockServer.port()))
                         .username("username")
                         .password("password")
                         .build();
 
-        final NotificationContentDto result = service.retrieveMessage(requestDto, messageId);
+        final NotificationContentDto result = service.retrieveMessage(apConfigDto, messageId);
         assertNotNull(result);
         assertEquals("getUIL", result.getAction());
         assertEquals("9992596f-9a6a-11ee-90b4-0242ac13000e@domibus.eu", result.getMessageId());
         assertNotNull(result.getBody());
+    }
+
+    @Test
+    void setMarkedAsDownloadTest() throws MalformedURLException, MarkMessageAsDownloadedFault {
+        wireMockServer.stubFor(get(urlEqualTo("/domibus/services/wsplugin?wsdl"))
+                .willReturn(aResponse().withBodyFile("WebServicePlugin.wsdl")));
+        wireMockServer.stubFor(post(urlEqualTo("/domibus/services/wsplugin?wsdl"))
+                .willReturn(aResponse().withBodyFile("retrieve-response.xml")));
+
+        final ApConfigDto apConfigDto = ApConfigDto.builder()
+                .url(String.format("http://localhost:%s/domibus/services/wsplugin?wsdl", wireMockServer.port()))
+                .username("username")
+                .password("password")
+                .build();
+
+        service.setMarkedAsDownload(apConfigDto, "messageId");
+
+        wireMockServer.verify(new CountMatchingStrategy(CountMatchingStrategy.EQUAL_TO,1), postRequestedFor(urlEqualTo("/domibus/services/wsplugin?wsdl")));
     }
 }

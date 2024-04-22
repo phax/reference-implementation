@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.net.MalformedURLException;
 import java.util.Optional;
 
 @Slf4j
@@ -35,6 +36,10 @@ public class NotificationService {
         }
         log.info("received a notification of type {}", receivedNotificationDto.getBody().keySet());
         return Optional.empty();
+    }
+
+    public void setMarkedAsDownload(final ApConfigDto apConfigDto, final String messageId) throws MalformedURLException {
+        requestRetrievingService.setMarkedAsDownload(apConfigDto, messageId);
     }
 
     private Optional<NotificationDto> onSendFailure(ReceivedNotificationDto receivedNotificationDto) {

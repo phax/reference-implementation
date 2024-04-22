@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.net.MalformedURLException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -105,5 +107,14 @@ class NotificationServiceTest {
                 .body(Map.of("random type", Map.of(MESSAGE_ID, messageId))).build();
         service.consume(apConfigDto, receivedNotificationDto);
         verify(requestRetrievingService, never()).retrieveMessage(apConfigDto, messageId);
+    }
+
+    @Test
+    void setMarkedAsDownloadTest() throws MalformedURLException {
+        final ApConfigDto apConfigDto = ApConfigDto.builder().build();
+
+        service.setMarkedAsDownload(apConfigDto, "messageIdQuiEstTropBeauDeFouCommeLePsgMamaIlEstLongLeMessageId");
+
+        verify(requestRetrievingService, times(1)).setMarkedAsDownload(any(),any());
     }
 }
