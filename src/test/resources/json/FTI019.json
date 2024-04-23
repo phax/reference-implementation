@@ -1,0 +1,8 @@
+{
+  "requestUuid": "67fe38bd-6bf7-4b06-b20e-206264bd639c",
+  "transportMode": "ROAD",
+  "vehicleID": "AA123VV",
+  "vehicleCountry": "FR",
+  "isDangerousGoods": true,
+  "eFTIGateIndicator": ["BE","FR"]
+ }

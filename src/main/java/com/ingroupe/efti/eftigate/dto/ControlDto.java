@@ -1,5 +1,6 @@
 package com.ingroupe.efti.eftigate.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingroupe.efti.commons.dto.AuthorityDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
@@ -13,18 +14,20 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
+import static com.ingroupe.efti.commons.enums.StatusEnum.PENDING;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ControlDto {
-
     private int id;
     private String eftiDataUuid;
     private String requestUuid;
@@ -39,6 +42,8 @@ public class ControlDto {
     private byte[] eftiData;
     private SearchParameter transportMetaData;
     private String fromGateUrl;
+    @ToString.Exclude
+    @JsonIgnore
     private List<RequestDto> requests;
     private AuthorityDto authority;
     private ErrorDto error;
@@ -82,19 +87,11 @@ public class ControlDto {
         return controlDto;
     }
 
-    public static ControlDto fromLocalMetadataControl(final MetadataRequestDto metadataRequestDto) {
-        final String uuidGenerator = UUID.randomUUID().toString();
+    public static ControlDto fromLocalMetadataControl(final MetadataRequestDto metadataRequestDto, String requestTypeEnum) {
         final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
+        AuthorityDto authorityDto = metadataRequestDto.getAuthority();
 
-        final ControlDto controlDto = new ControlDto();
-        controlDto.setRequestUuid(uuidGenerator);
-        controlDto.setRequestType(RequestTypeEnum.LOCAL_METADATA_SEARCH.toString());
-        controlDto.setStatus(StatusEnum.PENDING.toString());
-        controlDto.setSubsetEuRequested("SubsetEuRequested");
-        controlDto.setSubsetMsRequested("SubsetMsRequested");
-        controlDto.setCreatedDate(localDateTime);
-        controlDto.setLastModifiedDate(localDateTime);
-        controlDto.setAuthority(metadataRequestDto.getAuthority());
+        ControlDto controlDto = getControlFrom(requestTypeEnum, localDateTime, authorityDto, UUID.randomUUID().toString());
         controlDto.setTransportMetaData(SearchParameter.builder()
                 .vehicleId(metadataRequestDto.getVehicleID())
                 .transportMode(metadataRequestDto.getTransportMode())
@@ -104,27 +101,32 @@ public class ControlDto {
         return controlDto;
     }
 
-    public static ControlDto fromExternalMetadataControl(IdentifiersMessageBodyDto messageBodyDto, String requestTypeEnum, NotificationDto notificationDto, String eftiGateUrl) {
+    public static ControlDto fromExternalMetadataControl(IdentifiersMessageBodyDto messageBodyDto, String requestTypeEnum, String fromGateUrl, String eftiGateUrl) {
         final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
 
-        final ControlDto controlDto = new ControlDto();
+        ControlDto controlDto = getControlFrom(requestTypeEnum, localDateTime, null, messageBodyDto.getRequestUuid());
         //to check
         controlDto.setEftiGateUrl(eftiGateUrl);
-        controlDto.setFromGateUrl(notificationDto.getContent().getFromPartyId());
-        controlDto.setRequestType(requestTypeEnum);
-        controlDto.setStatus(StatusEnum.PENDING.toString());
-        controlDto.setSubsetEuRequested("SubsetEuRequested");
-        controlDto.setSubsetMsRequested("SubsetMsRequested");
-        controlDto.setCreatedDate(localDateTime);
-        controlDto.setLastModifiedDate(localDateTime);
-        controlDto.setRequestUuid(messageBodyDto.getRequestUuid());
+        controlDto.setFromGateUrl(fromGateUrl);
         controlDto.setTransportMetaData(SearchParameter.builder()
                 .vehicleId(messageBodyDto.getVehicleID())
                 .transportMode(messageBodyDto.getTransportMode())
                 .vehicleCountry(messageBodyDto.getVehicleCountry())
                 .isDangerousGoods(messageBodyDto.getIsDangerousGoods())
                 .build());
-        controlDto.setAuthority(null);
+        return controlDto;
+    }
+
+    private static ControlDto getControlFrom(String requestTypeEnum, LocalDateTime localDateTime, AuthorityDto authorityDto, String requestUuid) {
+        ControlDto controlDto = new ControlDto();
+        controlDto.setRequestUuid(requestUuid);
+        controlDto.setRequestType(requestTypeEnum);
+        controlDto.setStatus(PENDING.toString());
+        controlDto.setSubsetEuRequested("SubsetEuRequested");
+        controlDto.setSubsetMsRequested("SubsetMsRequested");
+        controlDto.setCreatedDate(localDateTime);
+        controlDto.setLastModifiedDate(localDateTime);
+        controlDto.setAuthority(authorityDto);
         return controlDto;
     }
 

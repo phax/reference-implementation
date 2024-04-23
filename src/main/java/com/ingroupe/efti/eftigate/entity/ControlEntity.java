@@ -78,7 +78,7 @@ public class ControlEntity extends AbstractModel implements Serializable {
     @Column(name = "fromgateurl")
     private String fromGateUrl;
 
-    @OneToMany(mappedBy = "control", fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "control", fetch = FetchType.EAGER)
     @ToString.Exclude @EqualsAndHashCode.Exclude
     private List<RequestEntity> requests;
 

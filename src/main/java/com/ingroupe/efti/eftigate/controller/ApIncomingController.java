@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class ApIncomingController {
 
-    private final String soapResult = """
+    private static final String SOAP_RESULT = """
             <Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
                <Body> domibus ws plugin require a response when it call our endpoint </Body>
             </Envelope>
@@ -42,6 +42,6 @@ public class ApIncomingController {
         } catch (JsonProcessingException e) {
             log.error("Error when try to parse message and send it to the rabbitmq", e);
         }
-        return ResponseEntity.ok().body(soapResult);
+        return ResponseEntity.ok().body(SOAP_RESULT);
     }
 }

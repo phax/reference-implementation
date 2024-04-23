@@ -1,6 +1,5 @@
 package com.ingroupe.efti.eftigate.config;
 
-import com.ingroupe.efti.eftigate.dto.RequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

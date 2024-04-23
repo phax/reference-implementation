@@ -40,7 +40,6 @@ class MetadataControllerTest {
 
     @MockBean
     ControlService controlService;
-
     @BeforeEach
     void before() {
         metadataResponseDto.setStatus("COMPLETED");
@@ -69,7 +68,7 @@ class MetadataControllerTest {
     @Test
     @WithMockUser
     void requestUilGetTest() throws Exception {
-        Mockito.when(controlService.getControlEntityForMetadata(REQUEST_UUID)).thenReturn(metadataResponseDto);
+        Mockito.when(controlService.getMetadataResponse(REQUEST_UUID)).thenReturn(metadataResponseDto);
 
         MvcResult result = mockMvc.perform(get("/v1/getMetadata").param("requestUuid", REQUEST_UUID))
                 .andDo(print())

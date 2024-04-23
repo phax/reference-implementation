@@ -5,11 +5,11 @@ import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.eftigate.entity.GateEntity;
 import com.ingroupe.efti.eftigate.repository.GateRepository;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
@@ -18,8 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class EftiGateUrlResolverTest {
-    AutoCloseable openMocks;
     private EftiGateUrlResolver eftiGateUrlResolver;
     @Mock
     private GateRepository gateRepository;
@@ -32,7 +32,6 @@ class EftiGateUrlResolverTest {
 
     @BeforeEach
     public void before() {
-        openMocks = MockitoAnnotations.openMocks(this);
         eftiGateUrlResolver = new EftiGateUrlResolver(gateRepository);
 
         final AuthorityDto authorityDto = new AuthorityDto();
@@ -72,10 +71,5 @@ class EftiGateUrlResolverTest {
         //Assert
         assertFalse(destinationGatesUrls.isEmpty());
         assertEquals(List.of("https://efti.gate.fr.eu", "https://efti.gate.be.eu", "https://efti.gate.de.eu"), destinationGatesUrls);
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        openMocks.close();
     }
 }

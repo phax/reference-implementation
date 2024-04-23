@@ -31,6 +31,6 @@ public class MetadataController implements MetadataControllerApi {
     @Override
     public ResponseEntity<MetadataResponseDto> getMetadataResult(final @Parameter String requestUuid) {
         log.info("GET on /getMetadata with param requestUuid {}", requestUuid);
-        return new ResponseEntity<>(controlService.getControlEntityForMetadata(requestUuid), HttpStatus.OK);
+        return new ResponseEntity<>(controlService.getMetadataResponse(requestUuid), HttpStatus.OK);
     }
 }

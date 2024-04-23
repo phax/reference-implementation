@@ -1,12 +1,10 @@
 package com.ingroupe.efti.eftigate.service.request;
 
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
-import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.constant.EftiGateConstants;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import io.micrometer.common.util.StringUtils;
 import lombok.AllArgsConstructor;
@@ -18,7 +16,7 @@ import java.util.function.Function;
 @Slf4j
 @Component
 @AllArgsConstructor
-public class RequestTypeToEDeliveryFunction implements Function<RequestDto, EDeliveryAction> {
+public class RequestToEDeliveryActionFunction implements Function<RequestDto, EDeliveryAction> {
 
     private final GateProperties gateProperties;
 
