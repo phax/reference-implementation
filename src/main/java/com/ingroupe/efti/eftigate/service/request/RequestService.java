@@ -8,7 +8,6 @@ import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
-import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
@@ -17,10 +16,13 @@ import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
+import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
+import com.nimbusds.jose.shaded.gson.JsonObject;
+import com.nimbusds.jose.shaded.gson.JsonParser;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -106,16 +108,31 @@ public abstract class RequestService {
         this.updateStatus(findRequestByMessageIdOrThrow(notificationDto.getMessageId()), SEND_ERROR, notificationDto);
     }
 
-    protected <T> T getMessageBodyFromNotification(NotificationDto notificationDto, Class<T> targetClass) {
+    protected <T> T getMessageFromNotificationBody(String body, Class<T> targetClass) {
         final ObjectMapper mapper = new ObjectMapper();
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-         try {
-            final String body = IOUtils.toString(notificationDto.getContent().getBody().getInputStream());
+        try {
             return mapper.readValue(body, targetClass);
-        } catch (final IOException e) {
-            throw new RetrieveMessageException("error while sending retrieve message request", e);
+        } catch (JsonProcessingException e) {
+            log.error("Error while retrieving Received message from Notification : " + e.getMessage());
+            throw new TechnicalException("Error while retrieving Received message from Notification");
         }
     }
+
+    protected String getBodyFromNotification(NotificationDto notificationDto) {
+        try {
+            return IOUtils.toString(notificationDto.getContent().getBody().getInputStream());
+        } catch (IOException e) {
+            log.error("Error occurred while retrieving body from notification: ",e);
+            return StringUtils.EMPTY;
+        }
+    }
+
+    protected String getRequestUuid(String bodyJsonString) {
+        JsonObject parsed = JsonParser.parseString(bodyJsonString).getAsJsonObject();
+        return parsed.get("requestUuid").getAsString();
+    }
+
 
     protected RequestEntity findRequestByMessageIdOrThrow(final String messageId) {
         return Optional.ofNullable(this.requestRepository.findByEdeliveryMessageId(messageId))

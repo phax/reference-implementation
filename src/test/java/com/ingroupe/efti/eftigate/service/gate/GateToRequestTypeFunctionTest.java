@@ -4,15 +4,15 @@ import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@ExtendWith(MockitoExtension.class)
 class GateToRequestTypeFunctionTest {
-    AutoCloseable openMocks;
-
     private GateToRequestTypeFunction gateToRequestTypeFunction;
 
     @BeforeEach
@@ -22,7 +22,6 @@ class GateToRequestTypeFunctionTest {
                 .ap(GateProperties.ApConfig.builder()
                         .url("https://efti.gate.fr.eu")
                         .build()).build();
-        openMocks = MockitoAnnotations.openMocks(this);
         gateToRequestTypeFunction = new GateToRequestTypeFunction(gateProperties);
     }
 

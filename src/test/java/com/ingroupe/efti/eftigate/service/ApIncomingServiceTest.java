@@ -14,11 +14,11 @@ import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
 import com.ingroupe.efti.eftigate.service.request.UilRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import com.sun.istack.ByteArrayDataSource;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 
 import java.util.Map;
@@ -30,10 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class ApIncomingServiceTest extends AbstractServiceTest {
-
-    AutoCloseable openMocks;
-
     private ApIncomingService service;
     @Mock
     private NotificationService notificationService;
@@ -121,13 +119,7 @@ class ApIncomingServiceTest extends AbstractServiceTest {
                         .url(url)
                         .password(password)
                         .username(username).build()).build();
-        openMocks = MockitoAnnotations.openMocks(this);
         service = new ApIncomingService(notificationService, uilRequestService, metadataRequestService, metadataService, gateProperties);
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        openMocks.close();
     }
 
     @Test

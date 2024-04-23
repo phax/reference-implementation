@@ -1,185 +1,231 @@
 package com.ingroupe.efti.eftigate.service.request;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.ingroupe.efti.commons.dto.MetadataDto;
+import com.ingroupe.efti.commons.dto.TransportVehicleDto;
+import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
-import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
-import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
-import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
-import com.ingroupe.efti.eftigate.config.GateProperties;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
-import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.MetadataResult;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
-import com.ingroupe.efti.eftigate.repository.RequestRepository;
-import com.ingroupe.efti.eftigate.service.ControlService;
-import com.ingroupe.efti.eftigate.service.RabbitSenderService;
+import com.ingroupe.efti.eftigate.service.BaseServiceTest;
+import com.ingroupe.efti.metadataregistry.entity.TransportVehicle;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.AdditionalAnswers;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.mail.util.ByteArrayDataSource;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SUCCESS;
+import static com.ingroupe.efti.eftigate.EftiTestUtils.testFile;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-class MetadataRequestServiceTest extends RequestServiceTest {
-
-    AutoCloseable openMocks;
-    @Mock
-    private RequestRepository requestRepository;
-    @Mock
-    private NotificationService notificationService;
-    @Mock
-    private RequestSendingService requestSendingService;
-    @Mock
-    private ControlService controlService;
-    @Mock
-    private RabbitSenderService rabbitSenderService;
+@ExtendWith(MockitoExtension.class)
+class MetadataRequestServiceTest extends BaseServiceTest {
     @Mock
     private MetadataService metadataService;
-    @MockBean
     private MetadataRequestService metadataRequestService;
-    @Mock
-    private MetadataLocalRequestService metadataLocalRequestService;
+    @Captor
+    ArgumentCaptor<RequestDto> requestDtoArgumentCaptor;
 
+    @Captor
+    ArgumentCaptor<ControlEntity> controlEntityArgumentCaptor;
 
-    private final UilDto uilDto = new UilDto();
-    private final ControlDto controlDto = new ControlDto();
-    private final ControlEntity controlEntity = new ControlEntity();
-    private final RequestEntity requestEntity = new RequestEntity();
-    private final RequestDto requestDto = new RequestDto();
+    public static final String DATA_UUID = "12345678-ab12-4ab6-8999-123456789abc";
+    public static final String PLATFORM_URL = "http://efti.platform.truc.eu";
+    private MetadataDto metadataDto;
+    private MetadataResult metadataResult;
 
     @Override
     @BeforeEach
     public void before() {
-        openMocks = MockitoAnnotations.openMocks(this);
+        super.before();
+        metadataDto = MetadataDto.builder()
+                .eFTIDataUuid(DATA_UUID)
+                .eFTIPlatformUrl(PLATFORM_URL)
+                .transportVehicles(List.of(TransportVehicleDto.builder()
+                        .vehicleId("abc123").countryStart("FR").countryEnd("toto").build(), TransportVehicleDto.builder()
+                        .vehicleId("abc124").countryStart("BE").countryEnd("IT").build())).build();
 
-        GateProperties gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).build();
-        metadataRequestService = new MetadataRequestService(requestRepository, getMapperUtils(), rabbitSenderService, controlService, gateProperties, metadataService, metadataLocalRequestService, notificationService);
-
-        LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
-        String requestUuid = UUID.randomUUID().toString();
-
-        this.uilDto.setEFTIGateUrl("gate");
-        this.uilDto.setEFTIDataUuid("uuid");
-        this.uilDto.setEFTIPlatformUrl("plateform");
-        this.controlDto.setEftiDataUuid(uilDto.getEFTIDataUuid());
-        this.controlDto.setEftiGateUrl(uilDto.getEFTIGateUrl());
-        this.controlDto.setEftiPlatformUrl(uilDto.getEFTIPlatformUrl());
-        this.controlDto.setRequestUuid(requestUuid);
-        this.controlDto.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
-        this.controlDto.setStatus(StatusEnum.PENDING.toString());
-        this.controlDto.setSubsetEuRequested("oki");
-        this.controlDto.setSubsetMsRequested("oki");
-        this.controlDto.setCreatedDate(localDateTime);
-        this.controlDto.setLastModifiedDate(localDateTime);
-
-        this.controlEntity.setEftiDataUuid(controlDto.getEftiDataUuid());
-        this.controlEntity.setRequestUuid(controlDto.getRequestUuid());
-        this.controlEntity.setRequestType(controlDto.getRequestType());
-        this.controlEntity.setStatus(controlDto.getStatus());
-        this.controlEntity.setEftiPlatformUrl(controlDto.getEftiPlatformUrl());
-        this.controlEntity.setEftiGateUrl(controlDto.getEftiGateUrl());
-        this.controlEntity.setSubsetEuRequested(controlDto.getSubsetEuRequested());
-        this.controlEntity.setSubsetMsRequested(controlDto.getSubsetMsRequested());
-        this.controlEntity.setCreatedDate(controlDto.getCreatedDate());
-        this.controlEntity.setLastModifiedDate(controlDto.getLastModifiedDate());
-        this.controlEntity.setEftiData(controlDto.getEftiData());
-        this.controlEntity.setTransportMetadata(controlDto.getTransportMetaData());
-        this.controlEntity.setFromGateUrl(controlDto.getFromGateUrl());
-
-        this.requestDto.setStatus(RequestStatusEnum.RECEIVED.toString());
-        this.requestDto.setRetry(0);
-        this.requestDto.setCreatedDate(localDateTime);
-        this.requestDto.setGateUrlDest(controlEntity.getEftiGateUrl());
-        this.requestDto.setControl(ControlDto.builder().id(1).build());
-        this.requestDto.setGateUrlDest("gate");
-
-        this.requestEntity.setStatus(this.requestDto.getStatus());
-        this.requestEntity.setRetry(this.requestDto.getRetry());
-        this.requestEntity.setCreatedDate(this.requestEntity.getCreatedDate());
-        this.requestEntity.setGateUrlDest(this.requestDto.getGateUrlDest());
-        this.requestEntity.setControl(controlEntity);
-    }
-
-    @Override
-    @AfterEach
-    void tearDown() throws Exception {
-        openMocks.close();
+        metadataResult = MetadataResult.builder()
+                .eFTIDataUuid(DATA_UUID)
+                .eFTIPlatformUrl(PLATFORM_URL)
+                .transportVehicles(List.of(TransportVehicle.builder()
+                        .vehicleId("abc123").vehicleCountry(CountryIndicator.FR).build(), TransportVehicle.builder()
+                        .vehicleId("abc124").vehicleCountry(CountryIndicator.BE).build())).build();
+        metadataRequestService = new MetadataRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, notificationService, metadataService);
     }
 
     @Test
-    void shouldCreateRequest() throws JsonProcessingException {
+    void shouldCreateAndSendRequest() {
         //Arrange
-        final ArgumentCaptor<RequestDto> argumentCaptor = ArgumentCaptor.forClass(RequestDto.class);
-        when(getRequestRepository().save(any())).then(AdditionalAnswers.returnsFirstArg());
-        when(getMapperUtils().requestToRequestDto(any())).thenReturn(getRequestDto());
+        when(requestRepository.save(any())).then(AdditionalAnswers.returnsFirstArg());
+        when(mapperUtils.requestToRequestDto(any())).thenReturn(requestDto);
 
         //Act
         metadataRequestService.createAndSendRequest(controlDto, "https://efti.platform.borduria.eu");
 
         //Assert
-        verify(getMapperUtils()).requestDtoToRequestEntity(argumentCaptor.capture());
-        assertEquals("https://efti.platform.borduria.eu", argumentCaptor.getValue().getGateUrlDest());
+        verify(mapperUtils).requestDtoToRequestEntity(requestDtoArgumentCaptor.capture());
+        assertEquals("https://efti.platform.borduria.eu", requestDtoArgumentCaptor.getValue().getGateUrlDest());
     }
 
     @Test
-    void trySendDomibusSuccessTest() throws SendRequestException, JsonProcessingException {
-        when(requestSendingService.sendRequest(any(), any())).thenReturn("result");
+    void shouldCreateRequest() {
+        //Arrange
         when(requestRepository.save(any())).thenReturn(requestEntity);
+        when(mapperUtils.requestDtoToRequestEntity(any())).thenReturn(requestEntity);
+        when(mapperUtils.requestToRequestDto(any())).thenReturn(requestDto);
+        when(mapperUtils.metadataDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
 
+        //Act
+        metadataRequestService.createRequest(controlDto, SUCCESS.name(), Collections.singletonList(metadataDto));
+
+        //Assert
+        verify(mapperUtils).requestDtoToRequestEntity(requestDtoArgumentCaptor.capture());
+        assertEquals(List.of(metadataResult), requestDtoArgumentCaptor.getValue().getMetadataResults().getMetadataResult());
+        assertEquals("SUCCESS", requestDtoArgumentCaptor.getValue().getStatus());
+    }
+
+    @Test
+    void shouldCreateRequestWithErrorStatus_WhenNoMetadata() {
+        //Arrange
+        when(requestRepository.save(any())).thenReturn(requestEntity);
+        when(mapperUtils.requestDtoToRequestEntity(any())).thenReturn(requestEntity);
+        when(mapperUtils.requestToRequestDto(any())).thenReturn(requestDto);
+
+        //Act
+        metadataRequestService.createRequest(controlDto, Collections.emptyList());
+
+        //Assert
+        verify(mapperUtils).requestDtoToRequestEntity(requestDtoArgumentCaptor.capture());
+        assertEquals("ERROR", requestDtoArgumentCaptor.getValue().getStatus());
+    }
+
+    @Test
+    void shouldCreateRequestWithSuccessStatus_WhenMetadataNotEmpty() {
+        //Arrange
+        when(requestRepository.save(any())).thenReturn(requestEntity);
+        when(mapperUtils.requestDtoToRequestEntity(any())).thenReturn(requestEntity);
+        when(mapperUtils.requestToRequestDto(any())).thenReturn(requestDto);
+
+        //Act
+        metadataRequestService.createRequest(controlDto, Collections.singletonList(metadataDto));
+
+        //Assert
+        verify(mapperUtils).requestDtoToRequestEntity(requestDtoArgumentCaptor.capture());
+        assertEquals("SUCCESS", requestDtoArgumentCaptor.getValue().getStatus());
+    }
+    @Test
+    void trySendDomibusSuccessTest() throws SendRequestException, JsonProcessingException {
         metadataRequestService.sendRequest(requestDto);
         verify(rabbitSenderService).sendMessageToRabbit(any(), any(), any());
     }
 
     @Test
-    void shouldManageMessageReceive() throws IOException {
-        final String messageId = "messageId";
-        final String eftiData = """
-                  { 
-                    "eFTIGate": "FR",
-                    "requestUuid": "test",
-                    "status": "COMPLETE",
-                    "metadata": "<data>vive les datas<data>"
-                  }""";
+    void shouldManageMessageReceiveAndCreateNewControl_whenControlDoesNotExist() throws IOException {
         final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
-                        .messageId(messageId)
-                        .body(new ByteArrayDataSource(eftiData, "osef"))
+                        .messageId("messageId")
+                        .body(new ByteArrayDataSource(testFile("/json/FTI019.json"), "application/json"))
                         .build())
                 .build();
-        when(controlService.save(any())).thenReturn(getControlDto());
+        when(controlService.getControlByRequestUuid(anyString())).thenReturn(controlDto);
+        when(controlService.createControlFrom(any(), any())).thenReturn(controlDto);
+        when(mapperUtils.requestToRequestDto(any())).thenReturn(requestDto);
+
         //Act
         metadataRequestService.manageMessageReceive(notificationDto);
 
         //assert
-        verify(controlService).save(any());
+        verify(controlService).getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "PENDING", "IN_PROGRESS");
+        verify(controlService).createControlFrom(any(), any());
+        verify(requestRepository, times(1)).save(any());
         verify(metadataService).search(any());
-        verify(metadataLocalRequestService).createRequest(any(ControlDto.class), anyString(), anyList());
+        verify(rabbitSenderService).sendMessageToRabbit(any(), any(), any());
     }
+
+
+
+
+
+    @Test
+    void shouldManageMessageReceiveAndUpdateExistingControl() throws IOException {
+        final NotificationDto notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.RECEIVED)
+                .content(NotificationContentDto.builder()
+                        .messageId("messageId")
+                        .body(new ByteArrayDataSource(testFile("/json/FTI020.json"), "application/json"))
+                        .fromPartyId("gate")
+                        .build())
+                .build();
+        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH.name());
+        requestEntity.setStatus("IN_PROGRESS");
+        controlEntity.setRequests(List.of(requestEntity));
+        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "PENDING", "IN_PROGRESS")).thenReturn(controlEntity);
+        when(mapperUtils.metadataResultDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
+
+        //Act
+        metadataRequestService.manageMessageReceive(notificationDto);
+
+        //assert
+        verify(controlService, never()).createControlFrom(any(), any());
+        verify(metadataService, never()).search(any());
+        verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
+
+        verify(controlService).save(controlEntityArgumentCaptor.capture());
+        assertEquals("COMPLETE", controlEntityArgumentCaptor.getValue().getStatus());
+        assertFalse(controlEntityArgumentCaptor.getValue().getMetadataResults().getMetadataResult().isEmpty());
+        assertFalse(controlEntityArgumentCaptor.getValue().getRequests().iterator().next().getMetadataResults().getMetadataResult().isEmpty());
+    }
+
+    @Test
+    void shouldManageMessageReceiveAndUpdateExistingControlMetadatas() throws IOException {
+        final NotificationDto notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.RECEIVED)
+                .content(NotificationContentDto.builder()
+                        .messageId("messageId")
+                        .body(new ByteArrayDataSource(testFile("/json/FTI020.json"), "application/json"))
+                        .build())
+                .build();
+        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH.name());
+        requestEntity.setStatus("IN_PROGRESS");
+        requestEntity.setMetadataResults(metadataResults);
+        controlEntity.setRequests(List.of(requestEntity));
+        controlEntity.setMetadataResults(metadataResults);
+
+        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "PENDING", "IN_PROGRESS")).thenReturn(controlEntity);
+        when(mapperUtils.metadataResultDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
+
+        //Act
+        metadataRequestService.manageMessageReceive(notificationDto);
+
+        //assert
+        verify(controlService).save(controlEntityArgumentCaptor.capture());
+        assertEquals(2, controlEntityArgumentCaptor.getValue().getMetadataResults().getMetadataResult().size());
+        assertEquals(1, controlEntityArgumentCaptor.getValue().getRequests().iterator().next().getMetadataResults().getMetadataResult().size());
+    }
+
 
     @Test
     void shouldUpdateResponseSendFailure() {
@@ -214,18 +260,15 @@ class MetadataRequestServiceTest extends RequestServiceTest {
 
     @Test
     void allRequestsContainsDataTest_whenFalse() {
-        //Arrange
-        when(getRequestRepository().save(any())).thenReturn(getRequestEntity());
-        //Act and Assert
-        assertFalse(metadataRequestService.allRequestsContainsData(List.of(getRequestEntity())));
+        assertFalse(metadataRequestService.allRequestsContainsData(List.of(requestEntity)));
     }
 
     @Test
     void allRequestsContainsDataTest_whenTrue() {
         //Arrange
-        getRequestEntity().setMetadataResults(new MetadataResults());
+        requestEntity.setMetadataResults(new MetadataResults());
         //Act and Assert
-        assertTrue(metadataRequestService.allRequestsContainsData(List.of(getRequestEntity())));
+        assertTrue(metadataRequestService.allRequestsContainsData(List.of(requestEntity)));
     }
 
     @Test
@@ -249,10 +292,10 @@ class MetadataRequestServiceTest extends RequestServiceTest {
         MetadataResults metadataResults2 = new MetadataResults();
         metadataResults2.setMetadataResult(List.of(metadataResult2));
 
-        getRequestEntity().setMetadataResults(metadataResults1);
-        getSecondRequestEntity().setMetadataResults(metadataResults2);
+        requestEntity.setMetadataResults(metadataResults1);
+        secondRequestEntity.setMetadataResults(metadataResults2);
 
-        final ControlEntity controlEntity = ControlEntity.builder().requests(List.of(getRequestEntity(), getSecondRequestEntity())).build();
+        final ControlEntity controlEntity = ControlEntity.builder().requests(List.of(requestEntity, secondRequestEntity)).build();
         //Act
         metadataRequestService.setDataFromRequests(controlEntity);
 

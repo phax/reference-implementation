@@ -16,9 +16,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 
 import java.util.function.Function;
@@ -27,10 +28,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
 @Slf4j
+@ExtendWith(MockitoExtension.class)
 class RabbitListenerServiceTest {
-
-    AutoCloseable openMocks;
-
     @Mock
     private ControlService controlService;
     @Mock
@@ -53,7 +52,7 @@ class RabbitListenerServiceTest {
     private Logger memoryAppenderTestLogger;
 
     @Mock
-    private Function<RequestDto, EDeliveryAction> requestTypeToEDeliveryFunction;
+    private Function<RequestDto, EDeliveryAction> requestToEDeliveryActionFunction;
     private static final String LOGGER_NAME = RabbitListenerService.class.getName();
 
 
@@ -66,9 +65,8 @@ class RabbitListenerServiceTest {
                         .url(url)
                         .password(password)
                         .username(username).build()).build();
-        openMocks = MockitoAnnotations.openMocks(this);
 
-        rabbitListenerService = new RabbitListenerService(controlService, gateProperties, requestSendingService, mapperUtils, requestRepository, apIncomingService, requestTypeToEDeliveryFunction);
+        rabbitListenerService = new RabbitListenerService(controlService, gateProperties, requestSendingService, mapperUtils, requestRepository, apIncomingService, requestToEDeliveryActionFunction);
         memoryAppenderTestLogger = (Logger) LoggerFactory.getLogger(LOGGER_NAME);
         memoryAppender =
                 MemoryAppender.createInitializedMemoryAppender(

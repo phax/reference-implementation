@@ -1,48 +1,62 @@
-package com.ingroupe.efti.eftigate.service.request;
+package com.ingroupe.efti.eftigate.service;
 
+import com.ingroupe.efti.commons.dto.MetadataResultDto;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
+import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
+import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
+import com.ingroupe.efti.eftigate.entity.MetadataResult;
+import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
-import com.ingroupe.efti.eftigate.service.AbstractServiceTest;
-import lombok.Getter;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.UUID;
+import java.util.Collections;
+import java.util.List;
 
-@Getter
-class RequestServiceTest extends AbstractServiceTest {
-
-    AutoCloseable openMocks;
+@ExtendWith(MockitoExtension.class)
+public abstract class BaseServiceTest {
     @Mock
-    private RequestRepository requestRepository;
+    protected RequestRepository requestRepository;
     @Mock
-    private MapperUtils mapperUtils;
-    private final UilDto uilDto = new UilDto();
-    private final ControlDto controlDto = new ControlDto();
-    private final ControlEntity controlEntity = new ControlEntity();
-    private final RequestEntity requestEntity = new RequestEntity();
-    private final RequestEntity secondRequestEntity = new RequestEntity();
-    private final RequestDto requestDto = new RequestDto();
+    protected MapperUtils mapperUtils;
+    @Mock
+    protected RabbitSenderService rabbitSenderService;
+    @Mock
+    protected ControlService controlService;
+    @Mock
+    protected NotificationService notificationService;
 
-    @BeforeEach
+
+    protected GateProperties gateProperties;
+
+    protected final UilDto uilDto = new UilDto();
+    protected final ControlDto controlDto = new ControlDto();
+    protected final ControlEntity controlEntity = new ControlEntity();
+    protected final RequestEntity requestEntity = new RequestEntity();
+    protected final RequestEntity secondRequestEntity = new RequestEntity();
+    protected final RequestDto requestDto = new RequestDto();
+    protected final MetadataResult metadataResult = new MetadataResult();
+    protected final MetadataResults metadataResults = new MetadataResults();
+    protected final MetadataResultDto metadataResultDto = new MetadataResultDto();
+
+
     public void before() {
-        openMocks = MockitoAnnotations.openMocks(this);
+        gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).owner("owner").build();
 
 
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
-        String requestUuid = UUID.randomUUID().toString();
+        String requestUuid = "67fe38bd-6bf7-4b06-b20e-206264bd639c";
 
         this.uilDto.setEFTIGateUrl("gate");
         this.uilDto.setEFTIDataUuid("uuid");
@@ -77,7 +91,7 @@ class RequestServiceTest extends AbstractServiceTest {
         this.requestDto.setCreatedDate(localDateTime);
         this.requestDto.setGateUrlDest(controlEntity.getEftiGateUrl());
         this.requestDto.setControl(ControlDto.builder().id(1).build());
-        this.requestDto.setGateUrlDest("gate");
+        this.requestDto.setControl(controlDto);
 
         this.requestEntity.setStatus(this.requestDto.getStatus());
         this.requestEntity.setRetry(this.requestDto.getRetry());
@@ -90,10 +104,19 @@ class RequestServiceTest extends AbstractServiceTest {
         this.secondRequestEntity.setCreatedDate(this.requestEntity.getCreatedDate());
         this.secondRequestEntity.setGateUrlDest(this.requestDto.getGateUrlDest());
         this.secondRequestEntity.setControl(controlEntity);
-    }
 
-    @AfterEach
-    void tearDown() throws Exception {
-        openMocks.close();
-    }
+        controlEntity.setRequests(List.of(requestEntity, secondRequestEntity));
+
+        metadataResult.setCountryStart("FR");
+        metadataResult.setCountryEnd("FR");
+        metadataResult.setDisabled(false);
+        metadataResult.setDangerousGoods(true);
+
+        metadataResults.setMetadataResult(Collections.singletonList(metadataResult));
+
+        metadataResultDto.setCountryStart("FR");
+        metadataResultDto.setCountryEnd("FR");
+        metadataResultDto.setDisabled(false);
+        metadataResultDto.setDangerousGoods(true);    }
+
 }

@@ -5,17 +5,16 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
-import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
-import com.ingroupe.efti.eftigate.constant.EftiGateConstants;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
@@ -36,6 +35,9 @@ import java.time.ZoneOffset;
 import java.util.LinkedList;
 import java.util.function.Function;
 
+import static com.ingroupe.efti.commons.enums.RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH;
+import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.IDENTIFIERS_TYPES;
+
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
 @Slf4j
@@ -49,7 +51,7 @@ public class RabbitListenerService {
     private final MapperUtils mapperUtils;
     private final RequestRepository requestRepository;
     private final ApIncomingService apIncomingService;
-    private final Function<RequestDto, EDeliveryAction> requestTypeToEDeliveryFunction;
+    private final Function<RequestDto, EDeliveryAction> requestToEDeliveryActionFunction;
 
     @RabbitListener(queues = "${spring.rabbitmq.queues.eftiReceiveMessageQueue:efti.receive-messages.q}")
     public void listenReceiveMessage(final String message) {
@@ -113,10 +115,9 @@ public class RabbitListenerService {
 
     private String buildBody(final RequestDto requestDto) throws TechnicalException {
         ControlDto controlDto = requestDto.getControl();
-        if (controlDto != null) {
-            if (EftiGateConstants.IDENTIFIERS_TYPES.contains(controlDto.getRequestType())) {
-                MetadataRequestBodyDto metadataRequestBodyDto = MetadataRequestBodyDto.fromControl(controlDto);
-                return getValueAsString(metadataRequestBodyDto);
+        if (controlDto != null){
+            if (IDENTIFIERS_TYPES.contains(controlDto.getRequestType())){
+                return getBodyForIdentifiersRequest(requestDto);
             } else {
                 final RequestBodyDto requestBodyDto = RequestBodyDto.builder()
                         .eFTIData(requestDto.getReponseData() != null ? new String(requestDto.getReponseData(), StandardCharsets.UTF_8) : null)
@@ -131,6 +132,16 @@ public class RabbitListenerService {
         } else {
             log.error("control was null for request");
             throw new TechnicalException("control was null for request ");
+        }
+    }
+
+    private String getBodyForIdentifiersRequest(RequestDto requestDto) {
+        if (EXTERNAL_ASK_METADATA_SEARCH.name().equalsIgnoreCase(requestDto.getControl().getRequestType())){ //remote sending response
+            MetadataResponseDto metadataResponseDto = controlService.buildMetadataResponse(requestDto.getControl());
+            return getValueAsString(metadataResponseDto);
+        } else { //local sending request
+            MetadataRequestBodyDto metadataRequestBodyDto = MetadataRequestBodyDto.fromControl(requestDto.getControl());
+            return getValueAsString(metadataRequestBodyDto);
         }
     }
 
@@ -158,11 +169,14 @@ public class RabbitListenerService {
 
     private void trySendDomibus(final RequestDto requestDto, final ApRequestDto apRequestDto) {
         try {
-            EDeliveryAction eDeliveryAction = requestTypeToEDeliveryFunction.apply(requestDto);
+            EDeliveryAction eDeliveryAction = requestToEDeliveryActionFunction.apply(requestDto);
             final String result = this.requestSendingService.sendRequest(apRequestDto, eDeliveryAction);
             requestDto.setEdeliveryMessageId(result);
             if (!RequestStatusEnum.SUCCESS.name().equals(requestDto.getStatus())) {
                 this.updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
+            } else {
+                requestDto.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
+                this.save(requestDto);
             }
         } catch (SendRequestException e) {
             log.error("error while sending request");
@@ -186,6 +200,6 @@ public class RabbitListenerService {
     }
 
     private void save(final RequestDto requestDto) {
-        mapperUtils.requestToRequestDto(requestRepository.save(mapperUtils.requestDtoToRequestEntity(requestDto)));
+         mapperUtils.requestToRequestDto(requestRepository.save(mapperUtils.requestDtoToRequestEntity(requestDto)));
     }
 }

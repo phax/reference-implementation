@@ -5,26 +5,28 @@ import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.dto.TransportVehicleDto;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.service.request.MetadataLocalRequestService;
+import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class EftiAsyncCallsProcessorTest {
-    AutoCloseable openMocks;
     @Mock
-    private MetadataLocalRequestService metadataLocalRequestService;
+    private MetadataRequestService metadataRequestService;
     @Mock
     private MetadataService metadataService;
 
+    @InjectMocks
     private EftiAsyncCallsProcessor eftiAsyncCallsProcessor;
 
     private final MetadataRequestDto metadataRequestDto = new MetadataRequestDto();
@@ -38,9 +40,6 @@ class EftiAsyncCallsProcessorTest {
 
     @BeforeEach
     public void before() {
-        openMocks = MockitoAnnotations.openMocks(this);
-        eftiAsyncCallsProcessor = new EftiAsyncCallsProcessor(metadataLocalRequestService, metadataService);
-
         final AuthorityDto authorityDto = new AuthorityDto();
 
 
@@ -67,11 +66,6 @@ class EftiAsyncCallsProcessorTest {
 
         //Assert
         verify(metadataService, times(1)).search(metadataRequestDto);
-        verify(metadataLocalRequestService, times(1)).createRequest(anyList(), any(ControlDto.class));
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        openMocks.close();
+        verify(metadataRequestService, times(1)).createRequest(any(ControlDto.class), anyList());
     }
 }

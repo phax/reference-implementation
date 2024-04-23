@@ -119,7 +119,7 @@ public class UilRequestService extends RequestService {
         final ObjectMapper mapper = new ObjectMapper();
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         try {
-            final String body = IOUtils.toString(notificationDto.getContent().getBody().getInputStream());
+            final String body = IOUtils.toString(notificationDto.getContent().getBody().getInputStream(), StandardCharsets.UTF_8);
             return mapper.readValue(body, MessageBodyDto.class);
         } catch (final IOException e) {
             throw new RetrieveMessageException("error while sending retrieve message request", e);
