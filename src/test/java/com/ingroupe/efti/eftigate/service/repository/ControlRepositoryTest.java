@@ -43,7 +43,7 @@ class ControlRepositoryTest {
         ControlEntity secondSavedControl = controlRepository.save(secondControl);
 
         //Act
-        List<ControlEntity> controls = controlRepository.findByCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "PENDING", "IN_PROGRESS");
+        List<ControlEntity> controls = controlRepository.findByCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS");
 
         //Assert
         assertThat(controls).containsExactlyInAnyOrder(firstSavedControl);

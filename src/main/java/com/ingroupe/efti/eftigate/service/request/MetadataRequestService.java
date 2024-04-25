@@ -67,9 +67,9 @@ public class MetadataRequestService extends RequestService {
         String bodyFromNotification = getBodyFromNotification(notificationDto);
         if (StringUtils.isNotBlank(bodyFromNotification)){
             String requestUuid = getRequestUuid(bodyFromNotification);
-            ControlEntity pendingControl = getControlService().getControlForCriteria(requestUuid, StatusEnum.PENDING.name(), RequestStatusEnum.IN_PROGRESS.name());
-            if (pendingControl != null) {
-                updateExistingControl(bodyFromNotification, pendingControl, notificationDto);
+            ControlEntity existingControl = getControlService().getControlForCriteria(requestUuid, RequestStatusEnum.IN_PROGRESS.name());
+            if (existingControl != null) {
+                updateExistingControl(bodyFromNotification, existingControl, notificationDto);
             } else {
                 handleNewControlRequest(notificationDto, bodyFromNotification);
             }
@@ -84,24 +84,43 @@ public class MetadataRequestService extends RequestService {
         sendRequest(request);
     }
 
-    private void updateExistingControl(String bodyFromNotification, ControlEntity pendingControl, NotificationDto notificationDto) {
+    private void updateExistingControl(String bodyFromNotification, ControlEntity existingControl, NotificationDto notificationDto) {
         MetadataResponseDto response = getMessageFromNotificationBody(bodyFromNotification, MetadataResponseDto.class);
         List<MetadataResultDto> metadataResultDtos = response.getMetadata();
         MetadataResults metadataResults = buildMetadataResultFrom(metadataResultDtos);
-        updateControlMetadata(pendingControl, metadataResults, metadataResultDtos);
-        updateControlRequests(pendingControl.getRequests(), metadataResults, notificationDto);
-        pendingControl.setStatus(StatusEnum.COMPLETE.name());
-        getControlService().save(pendingControl);
+        updateControlMetadata(existingControl, metadataResults, metadataResultDtos);
+        updateControlRequests(existingControl.getRequests(), metadataResults, notificationDto);
+        existingControl.setStatus(getControlStatus(existingControl));
+        getControlService().save(existingControl);
     }
 
-    private void updateControlMetadata(ControlEntity pendingControl, MetadataResults metadataResults, List<MetadataResultDto> metadataResultDtos) {
-        MetadataResults controlMetadataResults = pendingControl.getMetadataResults();
+    private String getControlStatus(ControlEntity existingControl) {
+        String currentControlStatus = existingControl.getStatus();
+        List<RequestEntity> remoteGatesRequests = existingControl.getRequests().stream()
+                .filter(requestEntity -> StringUtils.isNotBlank(requestEntity.getGateUrlDest())).toList();
+        if (remoteGatesRequests.stream().allMatch(requestEntity -> RequestStatusEnum.SUCCESS.name().equalsIgnoreCase(requestEntity.getStatus()))){
+             return StatusEnum.COMPLETE.name();
+         } else if (shouldSetTimeout(remoteGatesRequests)) {
+            return StatusEnum.TIMEOUT.name();
+        } else if (remoteGatesRequests.stream().anyMatch(requestEntity -> RequestStatusEnum.ERROR.name().equalsIgnoreCase(requestEntity.getStatus()))){
+             return StatusEnum.ERROR.name();
+         }
+         return currentControlStatus;
+    }
+
+    private static boolean shouldSetTimeout(List<RequestEntity> remoteGatesRequests) {
+        return remoteGatesRequests.stream().anyMatch(requestEntity -> RequestStatusEnum.TIMEOUT.name().equalsIgnoreCase(requestEntity.getStatus()))
+                && remoteGatesRequests.stream().noneMatch(requestEntity -> RequestStatusEnum.ERROR.name().equalsIgnoreCase(requestEntity.getStatus()));
+    }
+
+    private void updateControlMetadata(ControlEntity existingControl, MetadataResults metadataResults, List<MetadataResultDto> metadataResultDtos) {
+        MetadataResults controlMetadataResults = existingControl.getMetadataResults();
         if (controlMetadataResults == null || controlMetadataResults.getMetadataResult().isEmpty()){
-            pendingControl.setMetadataResults(metadataResults);
+            existingControl.setMetadataResults(metadataResults);
         } else {
             ArrayList<MetadataResult> currentMetadata = new ArrayList<>(controlMetadataResults.getMetadataResult());
             List<MetadataResult> responseMetadata = getMapperUtils().metadataResultDtosToMetadataEntities(metadataResultDtos);
-            pendingControl.setMetadataResults(MetadataResults.builder().metadataResult(ListUtils.union(currentMetadata, responseMetadata)).build());
+            existingControl.setMetadataResults(MetadataResults.builder().metadataResult(ListUtils.union(currentMetadata, responseMetadata)).build());
         }
     }
 

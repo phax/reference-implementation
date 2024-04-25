@@ -16,11 +16,10 @@ public interface ControlRepository extends JpaRepository<ControlEntity, Long>, J
     @Query(value = "SELECT * FROM {h-schema}control WHERE status =:status AND createddate > now() - make_interval(0,0,0,0,0,0,:timeoutValue)", nativeQuery = true)
     List<ControlEntity> findByCriteria(String status, Integer timeoutValue);
 
-    default List<ControlEntity> findByCriteria(final String requestUuid, final String controlStatus, final String requestStatus) {
+    default List<ControlEntity> findByCriteria(final String requestUuid, final String requestStatus) {
         return this.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("requestUuid"), requestUuid));
-            predicates.add(cb.equal(root.get("status"), controlStatus));
             predicates.add(cb.equal(root.join("requests").get("status"), requestStatus));
             return cb.and(predicates.toArray(new Predicate[] {}));
         });

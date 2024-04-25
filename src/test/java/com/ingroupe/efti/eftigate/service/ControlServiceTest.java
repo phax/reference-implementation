@@ -637,11 +637,11 @@ class ControlServiceTest extends AbstractServiceTest {
         RequestEntity expectedRequest = new RequestEntity();
         requestEntity.setStatus("IN_PROGRESS");
         ControlEntity expectedControl = ControlEntity.builder().requestUuid(requestUuid).status("PENDING").requests(List.of(expectedRequest)).build();
-        when(controlRepository.findByCriteria(anyString(), anyString(), anyString())).thenReturn(List.of(expectedControl));
+        when(controlRepository.findByCriteria(anyString(), anyString())).thenReturn(List.of(expectedControl));
         //Act
-        ControlEntity control = controlService.getControlForCriteria(requestUuid, "PENDING", "IN_PROGRESS");
+        ControlEntity control = controlService.getControlForCriteria(requestUuid, "IN_PROGRESS");
         //Assert
-        verify(controlRepository, times(1)).findByCriteria(requestUuid, "PENDING", "IN_PROGRESS");
+        verify(controlRepository, times(1)).findByCriteria(requestUuid, "IN_PROGRESS");
         assertThat(control).isEqualTo(expectedControl);
     }
 
@@ -655,25 +655,25 @@ class ControlServiceTest extends AbstractServiceTest {
         ControlEntity firstControl = ControlEntity.builder().requestUuid(requestUuid).status("PENDING").requests(List.of(firstRequest)).build();
         ControlEntity secondControl = ControlEntity.builder().requestUuid(requestUuid).status("PENDING").requests(List.of(secondRequest)).build();
 
-        when(controlRepository.findByCriteria(anyString(), anyString(), anyString())).thenReturn(List.of(firstControl, secondControl));
+        when(controlRepository.findByCriteria(anyString(), anyString())).thenReturn(List.of(firstControl, secondControl));
         //Act && Assert
         AmbiguousIdentifierException exception = assertThrows(AmbiguousIdentifierException.class,
-                () -> controlService.getControlForCriteria(requestUuid, "PENDING", "IN_PROGRESS"));
-        String expectedMessage = String.format("Control with request uuid '%s', status 'PENDING', and request with status 'IN_PROGRESS' is not unique, 2 controls found!", requestUuid);
+                () -> controlService.getControlForCriteria(requestUuid, "IN_PROGRESS"));
+        String expectedMessage = String.format("Control with request uuid '%s', and request with status 'IN_PROGRESS' is not unique, 2 controls found!", requestUuid);
         String actualMessage = exception.getMessage();
 
-        verify(controlRepository, times(1)).findByCriteria(requestUuid, "PENDING", "IN_PROGRESS");
+        verify(controlRepository, times(1)).findByCriteria(requestUuid, "IN_PROGRESS");
         assertEquals(expectedMessage, actualMessage);
     }
 
     @Test
     void shouldReturnNull_whenNoControlFound(){
         //Arrange
-        when(controlRepository.findByCriteria(anyString(), anyString(), anyString())).thenReturn(null);
+        when(controlRepository.findByCriteria(anyString(), anyString())).thenReturn(null);
         //Act
-        ControlEntity control = controlService.getControlForCriteria(requestUuid, "PENDING", "IN_PROGRESS");
+        ControlEntity control = controlService.getControlForCriteria(requestUuid, "IN_PROGRESS");
         //Assert
-        verify(controlRepository, times(1)).findByCriteria(requestUuid, "PENDING", "IN_PROGRESS");
+        verify(controlRepository, times(1)).findByCriteria(requestUuid, "IN_PROGRESS");
         assertNull(control);
     }
 }

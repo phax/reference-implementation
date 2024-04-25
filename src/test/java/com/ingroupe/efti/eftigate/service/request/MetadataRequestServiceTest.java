@@ -158,7 +158,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         metadataRequestService.manageMessageReceive(notificationDto);
 
         //assert
-        verify(controlService).getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "PENDING", "IN_PROGRESS");
+        verify(controlService).getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS");
         verify(controlService).createControlFrom(any(), any());
         verify(requestRepository, times(1)).save(any());
         verify(metadataService).search(any());
@@ -170,7 +170,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
 
 
     @Test
-    void shouldManageMessageReceiveAndUpdateExistingControl() throws IOException {
+    void shouldManageMessageReceiveAndUpdateExistingControlStatusAsComplete() throws IOException {
         final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
@@ -182,7 +182,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH.name());
         requestEntity.setStatus("IN_PROGRESS");
         controlEntity.setRequests(List.of(requestEntity));
-        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "PENDING", "IN_PROGRESS")).thenReturn(controlEntity);
+        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS")).thenReturn(controlEntity);
         when(mapperUtils.metadataResultDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
 
         //Act
@@ -195,8 +195,101 @@ class MetadataRequestServiceTest extends BaseServiceTest {
 
         verify(controlService).save(controlEntityArgumentCaptor.capture());
         assertEquals("COMPLETE", controlEntityArgumentCaptor.getValue().getStatus());
+        assertEquals("SUCCESS", controlEntityArgumentCaptor.getValue().getRequests().iterator().next().getStatus());
         assertFalse(controlEntityArgumentCaptor.getValue().getMetadataResults().getMetadataResult().isEmpty());
         assertFalse(controlEntityArgumentCaptor.getValue().getRequests().iterator().next().getMetadataResults().getMetadataResult().isEmpty());
+    }
+
+    @Test
+    void shouldManageMessageReceiveAndUpdateExistingControlStatusAsError_whenSomeRequestsAreInErrorStatus() throws IOException {
+        final NotificationDto notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.RECEIVED)
+                .content(NotificationContentDto.builder()
+                        .messageId("messageId")
+                        .body(new ByteArrayDataSource(testFile("/json/FTI020.json"), "application/json"))
+                        .fromPartyId("gate")
+                        .build())
+                .build();
+        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH.name());
+        secondRequestEntity.setStatus("ERROR");
+        requestEntity.setStatus("IN_PROGRESS");
+        controlEntity.setRequests(List.of(requestEntity, secondRequestEntity));
+        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS")).thenReturn(controlEntity);
+        when(mapperUtils.metadataResultDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
+
+        //Act
+        metadataRequestService.manageMessageReceive(notificationDto);
+
+        //assert
+        verify(controlService, never()).createControlFrom(any(), any());
+        verify(metadataService, never()).search(any());
+        verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
+
+        verify(controlService).save(controlEntityArgumentCaptor.capture());
+        assertEquals("ERROR", controlEntityArgumentCaptor.getValue().getStatus());
+        assertFalse(controlEntityArgumentCaptor.getValue().getMetadataResults().getMetadataResult().isEmpty());
+        assertFalse(controlEntityArgumentCaptor.getValue().getRequests().iterator().next().getMetadataResults().getMetadataResult().isEmpty());
+    }
+
+    @Test
+    void shouldManageMessageReceiveAndUpdateExistingControlStatusAsTimeout_whenSomeRequestsAreInTimeoutStatus() throws IOException {
+        final NotificationDto notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.RECEIVED)
+                .content(NotificationContentDto.builder()
+                        .messageId("messageId")
+                        .body(new ByteArrayDataSource(testFile("/json/FTI020.json"), "application/json"))
+                        .fromPartyId("gate")
+                        .build())
+                .build();
+        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH.name());
+        secondRequestEntity.setStatus("TIMEOUT");
+        requestEntity.setStatus("IN_PROGRESS");
+        controlEntity.setRequests(List.of(requestEntity, secondRequestEntity));
+        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS")).thenReturn(controlEntity);
+        when(mapperUtils.metadataResultDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
+
+        //Act
+        metadataRequestService.manageMessageReceive(notificationDto);
+
+        //assert
+        verify(controlService, never()).createControlFrom(any(), any());
+        verify(metadataService, never()).search(any());
+        verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
+
+        verify(controlService).save(controlEntityArgumentCaptor.capture());
+        assertEquals("TIMEOUT", controlEntityArgumentCaptor.getValue().getStatus());
+        assertFalse(controlEntityArgumentCaptor.getValue().getMetadataResults().getMetadataResult().isEmpty());
+        assertFalse(controlEntityArgumentCaptor.getValue().getRequests().iterator().next().getMetadataResults().getMetadataResult().isEmpty());
+    }
+
+    @Test
+    void shouldManageMessageReceiveAndUpdateExistingControlStatusAseRROR_whenOneRequestsIsInErrorStatus() throws IOException {
+        final NotificationDto notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.RECEIVED)
+                .content(NotificationContentDto.builder()
+                        .messageId("messageId")
+                        .body(new ByteArrayDataSource(testFile("/json/FTI020.json"), "application/json"))
+                        .fromPartyId("gate")
+                        .build())
+                .build();
+        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH.name());
+        secondRequestEntity.setStatus("TIMEOUT");
+        requestEntity.setStatus("ERROR");
+        controlEntity.setRequests(List.of(requestEntity, secondRequestEntity));
+        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS")).thenReturn(controlEntity);
+        when(mapperUtils.metadataResultDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
+
+        //Act
+        metadataRequestService.manageMessageReceive(notificationDto);
+
+        //assert
+        verify(controlService, never()).createControlFrom(any(), any());
+        verify(metadataService, never()).search(any());
+        verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
+
+        verify(controlService).save(controlEntityArgumentCaptor.capture());
+        assertEquals("ERROR", controlEntityArgumentCaptor.getValue().getStatus());
+        assertFalse(controlEntityArgumentCaptor.getValue().getMetadataResults().getMetadataResult().isEmpty());
     }
 
     @Test
@@ -214,7 +307,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         controlEntity.setRequests(List.of(requestEntity));
         controlEntity.setMetadataResults(metadataResults);
 
-        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "PENDING", "IN_PROGRESS")).thenReturn(controlEntity);
+        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS")).thenReturn(controlEntity);
         when(mapperUtils.metadataResultDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
 
         //Act
