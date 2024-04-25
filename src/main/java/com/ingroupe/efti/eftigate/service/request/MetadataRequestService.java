@@ -100,15 +100,17 @@ public class MetadataRequestService extends RequestService {
                 .filter(requestEntity -> StringUtils.isNotBlank(requestEntity.getGateUrlDest())).toList();
         if (remoteGatesRequests.stream().allMatch(requestEntity -> RequestStatusEnum.SUCCESS.name().equalsIgnoreCase(requestEntity.getStatus()))){
              return StatusEnum.COMPLETE.name();
-         } else if (remoteGatesRequests.stream().anyMatch(MetadataRequestService::hasErrorOrTimeoutRequest)){
+         } else if (shouldSetTimeout(remoteGatesRequests)) {
+            return StatusEnum.TIMEOUT.name();
+        } else if (remoteGatesRequests.stream().anyMatch(requestEntity -> RequestStatusEnum.ERROR.name().equalsIgnoreCase(requestEntity.getStatus()))){
              return StatusEnum.ERROR.name();
          }
          return currentControlStatus;
     }
 
-    private static boolean hasErrorOrTimeoutRequest(RequestEntity requestEntity) {
-        return RequestStatusEnum.ERROR.name().equalsIgnoreCase(requestEntity.getStatus())
-                || RequestStatusEnum.TIMEOUT.name().equalsIgnoreCase(requestEntity.getStatus());
+    private static boolean shouldSetTimeout(List<RequestEntity> remoteGatesRequests) {
+        return remoteGatesRequests.stream().anyMatch(requestEntity -> RequestStatusEnum.TIMEOUT.name().equalsIgnoreCase(requestEntity.getStatus()))
+                && remoteGatesRequests.stream().noneMatch(requestEntity -> RequestStatusEnum.ERROR.name().equalsIgnoreCase(requestEntity.getStatus()));
     }
 
     private void updateControlMetadata(ControlEntity existingControl, MetadataResults metadataResults, List<MetadataResultDto> metadataResultDtos) {
