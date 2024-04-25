@@ -158,7 +158,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         metadataRequestService.manageMessageReceive(notificationDto);
 
         //assert
-        verify(controlService).getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "PENDING", "IN_PROGRESS");
+        verify(controlService).getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS");
         verify(controlService).createControlFrom(any(), any());
         verify(requestRepository, times(1)).save(any());
         verify(metadataService).search(any());
@@ -182,7 +182,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH.name());
         requestEntity.setStatus("IN_PROGRESS");
         controlEntity.setRequests(List.of(requestEntity));
-        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "PENDING", "IN_PROGRESS")).thenReturn(controlEntity);
+        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS")).thenReturn(controlEntity);
         when(mapperUtils.metadataResultDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
 
         //Act
@@ -214,7 +214,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         controlEntity.setRequests(List.of(requestEntity));
         controlEntity.setMetadataResults(metadataResults);
 
-        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "PENDING", "IN_PROGRESS")).thenReturn(controlEntity);
+        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS")).thenReturn(controlEntity);
         when(mapperUtils.metadataResultDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
 
         //Act

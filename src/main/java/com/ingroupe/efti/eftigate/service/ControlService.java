@@ -306,12 +306,12 @@ public class ControlService {
         return  requestServiceFactory.getRequestServiceByRequestType(requestType);
     }
 
-    public ControlEntity getControlForCriteria(String requestUuid, String controlStatus, String requestStatus) {
+    public ControlEntity getControlForCriteria(String requestUuid, String requestStatus) {
         Preconditions.checkArgument(requestUuid != null, "Request Uuid must not be null");
-        List<ControlEntity> controls = controlRepository.findByCriteria(requestUuid, controlStatus, requestStatus);
+        List<ControlEntity> controls = controlRepository.findByCriteria(requestUuid, requestStatus);
         if (CollectionUtils.isNotEmpty(controls)) {
             if (controls.size() > 1) {
-                throw new AmbiguousIdentifierException(format("Control with request uuid '%s', status '%s', and request with status '%s' is not unique, %d controls found!", requestUuid, controlStatus, requestStatus, controls.size()));
+                throw new AmbiguousIdentifierException(format("Control with request uuid '%s', and request with status '%s' is not unique, %d controls found!", requestUuid, requestStatus, controls.size()));
             } else {
                 return controls.get(0);
             }
