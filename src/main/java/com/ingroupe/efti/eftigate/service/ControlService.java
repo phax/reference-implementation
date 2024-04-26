@@ -10,6 +10,7 @@ import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.IdentifiersMessageBodyDto;
 import com.ingroupe.efti.eftigate.config.GateProperties;
+import com.ingroupe.efti.eftigate.constant.EftiGateConstants;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
@@ -155,11 +156,15 @@ public class ControlService {
     }
 
     public ControlDto updateExistingControl(ControlEntity controlEntity) {
-        if (PENDING.toString().equals(controlEntity.getStatus())){
+        if (PENDING.toString().equals(controlEntity.getStatus()) && isLocalRequest(controlEntity.getRequestType())){
             return updatePendingControl(controlEntity);
         } else{
             return mapperUtils.controlEntityToControlDto(controlEntity);
         }
+    }
+
+    private boolean isLocalRequest(String requestType) {
+        return EftiGateConstants.LOCAL_REQUESTS_TYPES.contains(requestType);
     }
 
     public ControlDto updatePendingControl(ControlEntity controlEntity) {

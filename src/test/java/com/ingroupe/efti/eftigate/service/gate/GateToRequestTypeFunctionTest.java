@@ -49,7 +49,7 @@ class GateToRequestTypeFunctionTest {
         RequestTypeEnum requestType = gateToRequestTypeFunction.apply(List.of("https://efti.gate.be.eu"));
 
         //Assert
-        assertEquals(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH, requestType);
+        assertEquals(RequestTypeEnum.EXTERNAL_METADATA_SEARCH, requestType);
     }
 
 

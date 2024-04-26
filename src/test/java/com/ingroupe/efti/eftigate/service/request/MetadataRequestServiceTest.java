@@ -359,7 +359,12 @@ class MetadataRequestServiceTest extends BaseServiceTest {
     @Test
     void allRequestsContainsDataTest_whenTrue() {
         //Arrange
-        requestEntity.setMetadataResults(new MetadataResults());
+        MetadataResult metadataResult = new MetadataResult();
+        metadataResult.setCountryStart("FR");
+        metadataResult.setCountryEnd("FR");
+        metadataResult.setDisabled(false);
+        metadataResult.setDangerousGoods(true);
+        requestEntity.setMetadataResults(new MetadataResults(List.of(metadataResult)));
         //Act and Assert
         assertTrue(metadataRequestService.allRequestsContainsData(List.of(requestEntity)));
     }
