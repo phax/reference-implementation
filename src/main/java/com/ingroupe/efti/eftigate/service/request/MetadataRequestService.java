@@ -36,6 +36,7 @@ import java.util.Objects;
 
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.RECEIVED;
 import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.IDENTIFIERS_TYPES;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 @Slf4j
 @Component
@@ -51,7 +52,8 @@ public class MetadataRequestService extends RequestService {
     @Override
     public boolean allRequestsContainsData(List<RequestEntity> controlEntityRequests) {
         return CollectionUtils.emptyIfNull(controlEntityRequests).stream()
-                .allMatch(requestEntity -> Objects.nonNull(requestEntity.getMetadataResults()));
+                .allMatch(requestEntity -> Objects.nonNull(requestEntity.getMetadataResults()) &&
+                        isNotEmpty(requestEntity.getMetadataResults().getMetadataResult()));
     }
 
     @Override
@@ -140,7 +142,7 @@ public class MetadataRequestService extends RequestService {
     }
 
     public void createRequest(ControlDto savedControl, List<MetadataDto> metadataDtoList){
-        if (CollectionUtils.isNotEmpty(metadataDtoList)){
+        if (isNotEmpty(metadataDtoList)){
             this.createRequest(savedControl, RequestStatusEnum.SUCCESS.name(), metadataDtoList);
         }
         else {
