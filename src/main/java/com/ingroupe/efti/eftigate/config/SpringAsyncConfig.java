@@ -17,7 +17,7 @@ public class SpringAsyncConfig implements AsyncConfigurer {
     private final EftiAsyncExceptionHandler eftiAsyncExceptionHandler;
     @Override
     public Executor getAsyncExecutor() {
-        ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+        final ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
         threadPoolTaskExecutor.initialize();
         return threadPoolTaskExecutor;
     }

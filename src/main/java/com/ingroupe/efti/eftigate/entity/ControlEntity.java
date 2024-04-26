@@ -1,5 +1,7 @@
 package com.ingroupe.efti.eftigate.entity;
 
+import com.ingroupe.efti.commons.enums.RequestTypeEnum;
+import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.commons.model.AbstractModel;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.CascadeType;
@@ -7,6 +9,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -51,10 +55,12 @@ public class ControlEntity extends AbstractModel implements Serializable {
     private String requestUuid;
 
     @Column(name = "requesttype")
-    private String requestType;
+    @Enumerated(EnumType.STRING)
+    private RequestTypeEnum requestType;
 
     @Column(name = "status")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private StatusEnum status;
 
     @Column(name = "eftiplatformurl")
     private String eftiPlatformUrl;

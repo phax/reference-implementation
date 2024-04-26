@@ -53,7 +53,7 @@ class EftiGateUrlResolverTest {
         when(gateRepository.findByCountryIn(anyList())).thenReturn(List.of(frGateEntity, beGateEntity));
 
         //Act
-        List<String> destinationGatesUrls = eftiGateUrlResolver.resolve(metadataRequestDto);
+        final List<String> destinationGatesUrls = eftiGateUrlResolver.resolve(metadataRequestDto);
 
         //Assert
         assertFalse(destinationGatesUrls.isEmpty());
@@ -66,7 +66,7 @@ class EftiGateUrlResolverTest {
         when(gateRepository.findAll()).thenReturn(List.of(frGateEntity, beGateEntity, deGateEntity));
 
         //Act
-        List<String> destinationGatesUrls = eftiGateUrlResolver.resolve(metadataRequestDto);
+        final List<String> destinationGatesUrls = eftiGateUrlResolver.resolve(metadataRequestDto);
 
         //Assert
         assertFalse(destinationGatesUrls.isEmpty());

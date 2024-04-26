@@ -17,7 +17,7 @@ class ControlBatchTest extends AbstractServiceTest {
 
     @Test
     void work_success() {
-        ControlBatch controlBatch = new ControlBatch(controlService);
+        final ControlBatch controlBatch = new ControlBatch(controlService);
         controlBatch.updatePendingControls();
         verify(controlService, times(1)).updatePendingControls();
     }

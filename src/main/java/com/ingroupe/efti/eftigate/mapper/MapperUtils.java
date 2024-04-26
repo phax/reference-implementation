@@ -64,7 +64,7 @@ public class MapperUtils {
                 .toList();
     }
 
-    public List<MetadataResult> metadataResultDtosToMetadataEntities(List<MetadataResultDto> metadataResultDtos) {
+    public List<MetadataResult> metadataResultDtosToMetadataEntities(final List<MetadataResultDto> metadataResultDtos) {
         return CollectionUtils.emptyIfNull(metadataResultDtos).stream()
                 .map(metadataResultDto -> modelMapper.map(metadataResultDto, MetadataResult.class))
                 .toList();

@@ -30,13 +30,13 @@ public class OpenAPISecurityConfig {
     }
 
     private SecurityScheme createOAuthScheme() {
-        OAuthFlows flows = createOAuthFlows();
+        final OAuthFlows flows = createOAuthFlows();
         return new SecurityScheme().type(SecurityScheme.Type.OAUTH2)
                 .flows(flows);
     }
 
     private OAuthFlows createOAuthFlows() {
-        OAuthFlow flow = createAuthorizationCodeFlow();
+        final OAuthFlow flow = createAuthorizationCodeFlow();
         return new OAuthFlows().implicit(flow);
     }
 

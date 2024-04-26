@@ -24,18 +24,18 @@ public class ControlController implements ControlControllerApi {
     private final ControlService controlService;
 
     @Override
-    public ResponseEntity<ControlEntity> getById(@PathVariable long id) {
+    public ResponseEntity<ControlEntity> getById(@PathVariable final long id) {
         return new ResponseEntity<>(controlService.getById(id), HttpStatus.OK);
     }
 
     @Override
-    public ResponseEntity<RequestUuidDto> requestUil(@RequestBody UilDto uilDto) {
+    public ResponseEntity<RequestUuidDto> requestUil(@RequestBody final UilDto uilDto) {
         log.info("POST on /requestUil with param uuid {}", uilDto.getEFTIDataUuid());
         return new ResponseEntity<>(controlService.createUilControl(uilDto), HttpStatus.ACCEPTED);
     }
 
     @Override
-    public ResponseEntity<RequestUuidDto> getRequestUil(@Parameter String requestUuid) {
+    public ResponseEntity<RequestUuidDto> getRequestUil(@Parameter final String requestUuid) {
         log.info("GET on /requestUil with param requestUuid {}", requestUuid);
         return new ResponseEntity<>(controlService.getControlEntity(requestUuid), HttpStatus.OK);
     }

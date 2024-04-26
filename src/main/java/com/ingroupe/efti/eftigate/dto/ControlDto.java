@@ -17,7 +17,6 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,8 +30,8 @@ public class ControlDto {
     private int id;
     private String eftiDataUuid;
     private String requestUuid;
-    private String requestType;
-    private String status;
+    private RequestTypeEnum requestType;
+    private StatusEnum status;
     private String eftiPlatformUrl;
     private String eftiGateUrl;
     private String subsetEuRequested;
@@ -49,9 +48,7 @@ public class ControlDto {
     private ErrorDto error;
     private MetadataResults metadataResults;
 
-    public static ControlDto fromGateToGateMessageBodyDto(MessageBodyDto messageBodyDto, String requestTypeEnum, NotificationDto notificationDto, String eftiGateUrl) {
-        final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
-
+    public static ControlDto fromGateToGateMessageBodyDto(final MessageBodyDto messageBodyDto, final RequestTypeEnum requestTypeEnum, final NotificationDto notificationDto, final String eftiGateUrl) {
         final ControlDto controlDto = new ControlDto();
         controlDto.setEftiDataUuid(messageBodyDto.getEFTIDataUuid());
         controlDto.setEftiGateUrl(eftiGateUrl);
@@ -59,39 +56,33 @@ public class ControlDto {
         controlDto.setEftiPlatformUrl(messageBodyDto.getEFTIPlatformUrl());
         controlDto.setRequestUuid(messageBodyDto.getRequestUuid());
         controlDto.setRequestType(requestTypeEnum);
-        controlDto.setStatus(StatusEnum.PENDING.toString());
+        controlDto.setStatus(StatusEnum.PENDING);
         controlDto.setSubsetEuRequested("SubsetEuRequested");
         controlDto.setSubsetMsRequested("SubsetMsRequested");
-        controlDto.setCreatedDate(localDateTime);
-        controlDto.setLastModifiedDate(localDateTime);
         controlDto.setAuthority(null);
         return controlDto;
     }
 
-    public static ControlDto fromUilControl(final UilDto uilDto, RequestTypeEnum requestTypeEnum) {
+    public static ControlDto fromUilControl(final UilDto uilDto, final RequestTypeEnum requestTypeEnum) {
         final String uuidGenerator = UUID.randomUUID().toString();
-        final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
 
         final ControlDto controlDto = new ControlDto();
         controlDto.setEftiDataUuid(uilDto.getEFTIDataUuid());
         controlDto.setEftiGateUrl(uilDto.getEFTIGateUrl());
         controlDto.setEftiPlatformUrl(uilDto.getEFTIPlatformUrl());
         controlDto.setRequestUuid(uuidGenerator);
-        controlDto.setRequestType(requestTypeEnum.name());
-        controlDto.setStatus(StatusEnum.PENDING.toString());
+        controlDto.setRequestType(requestTypeEnum);
+        controlDto.setStatus(StatusEnum.PENDING);
         controlDto.setSubsetEuRequested("SubsetEuRequested");
         controlDto.setSubsetMsRequested("SubsetMsRequested");
-        controlDto.setCreatedDate(localDateTime);
-        controlDto.setLastModifiedDate(localDateTime);
         controlDto.setAuthority(uilDto.getAuthority());
         return controlDto;
     }
 
-    public static ControlDto fromLocalMetadataControl(final MetadataRequestDto metadataRequestDto, String requestTypeEnum) {
-        final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
-        AuthorityDto authorityDto = metadataRequestDto.getAuthority();
+    public static ControlDto fromLocalMetadataControl(final MetadataRequestDto metadataRequestDto, final RequestTypeEnum requestTypeEnum) {
+        final AuthorityDto authorityDto = metadataRequestDto.getAuthority();
 
-        ControlDto controlDto = getControlFrom(requestTypeEnum, localDateTime, authorityDto, UUID.randomUUID().toString());
+        final ControlDto controlDto = getControlFrom(requestTypeEnum, authorityDto, UUID.randomUUID().toString());
         controlDto.setTransportMetaData(SearchParameter.builder()
                 .vehicleId(metadataRequestDto.getVehicleID())
                 .transportMode(metadataRequestDto.getTransportMode())
@@ -101,10 +92,8 @@ public class ControlDto {
         return controlDto;
     }
 
-    public static ControlDto fromExternalMetadataControl(IdentifiersMessageBodyDto messageBodyDto, String requestTypeEnum, String fromGateUrl, String eftiGateUrl) {
-        final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
-
-        ControlDto controlDto = getControlFrom(requestTypeEnum, localDateTime, null, messageBodyDto.getRequestUuid());
+    public static ControlDto fromExternalMetadataControl(final IdentifiersMessageBodyDto messageBodyDto, final RequestTypeEnum requestTypeEnum, final String fromGateUrl, final String eftiGateUrl) {
+        final ControlDto controlDto = getControlFrom(requestTypeEnum, null, messageBodyDto.getRequestUuid());
         //to check
         controlDto.setEftiGateUrl(eftiGateUrl);
         controlDto.setFromGateUrl(fromGateUrl);
@@ -117,20 +106,18 @@ public class ControlDto {
         return controlDto;
     }
 
-    private static ControlDto getControlFrom(String requestTypeEnum, LocalDateTime localDateTime, AuthorityDto authorityDto, String requestUuid) {
-        ControlDto controlDto = new ControlDto();
+    private static ControlDto getControlFrom(final RequestTypeEnum requestTypeEnum, final AuthorityDto authorityDto, final String requestUuid) {
+        final ControlDto controlDto = new ControlDto();
         controlDto.setRequestUuid(requestUuid);
         controlDto.setRequestType(requestTypeEnum);
-        controlDto.setStatus(PENDING.toString());
+        controlDto.setStatus(PENDING);
         controlDto.setSubsetEuRequested("SubsetEuRequested");
         controlDto.setSubsetMsRequested("SubsetMsRequested");
-        controlDto.setCreatedDate(localDateTime);
-        controlDto.setLastModifiedDate(localDateTime);
         controlDto.setAuthority(authorityDto);
         return controlDto;
     }
 
     public boolean isError() {
-        return StatusEnum.ERROR.name().equals(status);
+        return StatusEnum.ERROR == status;
     }
 }

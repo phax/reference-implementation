@@ -28,7 +28,7 @@ class GateToRequestTypeFunctionTest {
     @Test
     void shouldGetRequestType_WhenMultipleGatesAreGiven(){
         //Act
-        RequestTypeEnum requestType = gateToRequestTypeFunction.apply(List.of("https://efti.gate.fr.eu", "https://efti.gate.be.eu"));
+        final RequestTypeEnum requestType = gateToRequestTypeFunction.apply(List.of("https://efti.gate.fr.eu", "https://efti.gate.be.eu"));
 
         //Assert
         assertEquals(RequestTypeEnum.EXTERNAL_METADATA_SEARCH, requestType);
@@ -37,7 +37,7 @@ class GateToRequestTypeFunctionTest {
     @Test
     void shouldGetRequestType_WhenSingleGateIsGivenAndIsEqualToLocalGate(){
         //Act
-        RequestTypeEnum requestType = gateToRequestTypeFunction.apply(List.of("https://efti.gate.fr.eu"));
+        final RequestTypeEnum requestType = gateToRequestTypeFunction.apply(List.of("https://efti.gate.fr.eu"));
 
         //Assert
         assertEquals(RequestTypeEnum.LOCAL_METADATA_SEARCH, requestType);
@@ -46,7 +46,7 @@ class GateToRequestTypeFunctionTest {
     @Test
     void shouldGetRequestType_WhenSingleGateIsGivenAndIsDifferentFromLocalGate(){
         //Act
-        RequestTypeEnum requestType = gateToRequestTypeFunction.apply(List.of("https://efti.gate.be.eu"));
+        final RequestTypeEnum requestType = gateToRequestTypeFunction.apply(List.of("https://efti.gate.be.eu"));
 
         //Assert
         assertEquals(RequestTypeEnum.EXTERNAL_METADATA_SEARCH, requestType);

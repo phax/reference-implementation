@@ -28,7 +28,9 @@ import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto
 import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.RECEIVE_SUCCESS;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ApIncomingServiceTest extends AbstractServiceTest {
@@ -119,7 +121,7 @@ class ApIncomingServiceTest extends AbstractServiceTest {
                         .url(url)
                         .password(password)
                         .username(username).build()).build();
-        service = new ApIncomingService(notificationService, uilRequestService, metadataRequestService, metadataService, gateProperties);
+        service = new ApIncomingService(notificationService, uilRequestService, metadataRequestService, metadataService, gateProperties, serializeUtils);
     }
 
     @Test

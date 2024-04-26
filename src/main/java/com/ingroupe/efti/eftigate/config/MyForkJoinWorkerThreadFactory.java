@@ -6,7 +6,7 @@ import java.util.concurrent.ForkJoinWorkerThread;
 public class MyForkJoinWorkerThreadFactory implements ForkJoinPool.ForkJoinWorkerThreadFactory {
 
     @Override
-    public final ForkJoinWorkerThread newThread(ForkJoinPool pool) {
+    public final ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
         return new MyForkJoinWorkerThread(pool);
     }
 

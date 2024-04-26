@@ -10,7 +10,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 @Data
 @Builder
@@ -21,7 +20,7 @@ import java.time.ZoneOffset;
         property = "id")
 public class RequestDto {
     private long id;
-    private String status;
+    private RequestStatusEnum status;
     private String edeliveryMessageId;
     private Integer retry;
     private byte[] reponseData;
@@ -35,10 +34,8 @@ public class RequestDto {
 
 
     public RequestDto(final ControlDto controlDto) {
-        LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
-        this.status = RequestStatusEnum.RECEIVED.toString();
+        this.status = RequestStatusEnum.RECEIVED;
         this.retry = 0;
-        this.createdDate = localDateTime;
         this.gateUrlDest = controlDto.getEftiGateUrl();
         this.control = controlDto;
     }

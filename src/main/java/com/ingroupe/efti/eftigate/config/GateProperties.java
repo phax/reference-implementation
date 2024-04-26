@@ -21,7 +21,7 @@ public class GateProperties {
         private String password;
     }
 
-    public boolean isCurrentGate(String gateUrl) {
+    public boolean isCurrentGate(final String gateUrl) {
         return this.owner.equals(gateUrl);
     }
 }

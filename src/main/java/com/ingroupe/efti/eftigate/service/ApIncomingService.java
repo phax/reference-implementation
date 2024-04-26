@@ -1,11 +1,5 @@
 package com.ingroupe.efti.eftigate.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
@@ -16,18 +10,14 @@ import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
+import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
 import com.ingroupe.efti.eftigate.service.request.UilRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
-import com.sun.istack.ByteArrayDataSource;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 @Service
 @AllArgsConstructor
@@ -39,6 +29,7 @@ public class ApIncomingService {
     private final MetadataRequestService metadataRequestService;
     private final MetadataService metadataService;
     private final GateProperties gateProperties;
+    private final SerializeUtils serializeUtils;
 
     public void manageIncomingNotification(final ReceivedNotificationDto receivedNotificationDto) {
          notificationService.consume(createApConfig(), receivedNotificationDto).ifPresent(this::rootResponse);
@@ -60,36 +51,13 @@ public class ApIncomingService {
     }
 
     private MetadataDto parseBodyToMetadata(final NotificationContentDto notificationContent) {
-        try {
-            final ByteArrayDataSource source = (ByteArrayDataSource) notificationContent.getBody();
-            final String body = IOUtils.toString(source.getInputStream(), StandardCharsets.UTF_8);
+        final String body = serializeUtils.readDataSourceOrThrow(notificationContent.getBody());
 
-            return switch (notificationContent.getContentType()) {
-                case MediaType.APPLICATION_JSON_VALUE -> mapFromJson(body);
-                case MediaType.TEXT_XML_VALUE -> mapFromXml(body);
-                default -> throw new RetrieveMessageException("unknown content type: " + notificationContent.getContentType());
-            };
-        } catch (IOException e) {
-            throw new RetrieveMessageException("error while parsing body", e);
-        }
-    }
-
-    private static MetadataDto mapFromXml(final String body) throws JsonProcessingException {
-        final XmlMapper xmlMapper = new XmlMapper();
-        xmlMapper.registerModule(new JavaTimeModule());
-        xmlMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        xmlMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-
-        return xmlMapper.readValue(body, MetadataDto.class);
-    }
-
-    private static MetadataDto mapFromJson(final String body) throws JsonProcessingException {
-        final ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-
-        return objectMapper.readValue(body, MetadataDto.class);
+        return switch (notificationContent.getContentType()) {
+            case MediaType.APPLICATION_JSON_VALUE -> serializeUtils.mapJsonStringToClass(body, MetadataDto.class);
+            case MediaType.TEXT_XML_VALUE -> serializeUtils.mapXmlStringToClass(body, MetadataDto.class);
+            default -> throw new RetrieveMessageException("unknown content type: " + notificationContent.getContentType());
+        };
     }
 
     private ApConfigDto createApConfig() {

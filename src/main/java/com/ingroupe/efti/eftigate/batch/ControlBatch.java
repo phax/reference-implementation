@@ -17,7 +17,7 @@ public class ControlBatch {
             lockAtLeastFor = "PT19S", lockAtMostFor = "PT19S")
     public void updatePendingControls() {
         log.info("Batch of updating control started");
-        int updatePendingControls = controlService.updatePendingControls();
+        final int updatePendingControls = controlService.updatePendingControls();
         log.info("Batch of updating control finished with {} control updated", updatePendingControls);
     }
 }
