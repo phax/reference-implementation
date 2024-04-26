@@ -22,7 +22,7 @@ class MetadataRequestDtoValidatorTest {
         final MetadataRequestDto metadataRequestDto = MetadataRequestDto.builder().build();
 
         final Validator validator;
-        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+        try (final ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
 
@@ -42,7 +42,7 @@ class MetadataRequestDtoValidatorTest {
                 .eFTIGateIndicator(List.of("tutu", "FR", "BE", "PP")).build();
 
         final Validator validator;
-        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+        try (final ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
 
@@ -57,7 +57,7 @@ class MetadataRequestDtoValidatorTest {
     }
 
     private boolean containsError(final Set<ConstraintViolation<MetadataRequestDto>> violations, final ErrorCodesEnum error) {
-        for(ConstraintViolation<MetadataRequestDto> violation : violations ) {
+        for(final ConstraintViolation<MetadataRequestDto> violation : violations ) {
             if(violation.getMessage().equals(error.name())) {
                 return true;
             }

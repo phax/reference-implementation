@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @EnableSchedulerLock(defaultLockAtMostFor = "PT30S")
 public class EftiGateApplication {
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         SpringApplication.run(EftiGateApplication.class, args);
     }
 }

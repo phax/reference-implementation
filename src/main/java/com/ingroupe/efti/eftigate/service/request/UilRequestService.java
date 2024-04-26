@@ -1,14 +1,11 @@
 package com.ingroupe.efti.eftigate.service.request;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
-import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
@@ -18,17 +15,15 @@ import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
+import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.IOUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
@@ -39,18 +34,25 @@ import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.UIL_TYPES;
 @Slf4j
 @Component
 public class UilRequestService extends RequestService {
-    public UilRequestService(RequestRepository requestRepository, MapperUtils mapperUtils, RabbitSenderService rabbitSenderService, ControlService controlService, GateProperties gateProperties, NotificationService notificationService) {
-        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, notificationService);
+
+    public UilRequestService(final RequestRepository requestRepository,
+                             final MapperUtils mapperUtils,
+                             final RabbitSenderService rabbitSenderService,
+                             final ControlService controlService,
+                             final GateProperties gateProperties,
+                             final NotificationService notificationService,
+                             final SerializeUtils serializeUtils) {
+        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, notificationService, serializeUtils);
     }
 
     @Override
-    public boolean allRequestsContainsData(List<RequestEntity> controlEntityRequests) {
+    public boolean allRequestsContainsData(final List<RequestEntity> controlEntityRequests) {
         return CollectionUtils.emptyIfNull(controlEntityRequests).stream()
                 .allMatch(requestEntity -> Objects.nonNull(requestEntity.getReponseData()));
     }
 
     @Override
-    public void setDataFromRequests(ControlEntity controlEntity) {
+    public void setDataFromRequests(final ControlEntity controlEntity) {
         controlEntity.setEftiData(controlEntity.getRequests().stream()
                 .map(RequestEntity::getReponseData).toList().stream()
                 .collect(ByteArrayOutputStream::new, (byteArrayOutputStream, bytes) -> byteArrayOutputStream.write(bytes, 0, bytes.length), (arrayOutputStream, byteArrayOutputStream) -> {
@@ -60,54 +62,52 @@ public class UilRequestService extends RequestService {
 
     @Override
     public void manageMessageReceive(final NotificationDto notificationDto) {
-        MessageBodyDto messageBody = getMessageBodyDtoFromNotificationDto(notificationDto);
+        final MessageBodyDto messageBody =
+                getSerializeUtils().mapDataSourceToClass(notificationDto.getContent().getBody(),MessageBodyDto.class);
 
-        final RequestEntity requestEntity = this.findByRequestUuidOrThrow(messageBody.getRequestUuid());
+        final RequestDto requestDto = this.findByRequestUuidOrThrow(messageBody.getRequestUuid());
         if (messageBody.getStatus().equals(StatusEnum.COMPLETE.name())) {
-            requestEntity.setReponseData(messageBody.getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
-            this.updateStatus(requestEntity, RequestStatusEnum.SUCCESS, notificationDto);
+            requestDto.setReponseData(messageBody.getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
+            this.updateStatus(requestDto, RequestStatusEnum.SUCCESS, notificationDto);
         } else {
-            this.updateStatus(requestEntity, RequestStatusEnum.ERROR, notificationDto);
-            errorReceived(requestEntity, messageBody.getErrorDescription());
+            this.updateStatus(requestDto, RequestStatusEnum.ERROR, notificationDto);
+            errorReceived(requestDto, messageBody.getErrorDescription());
         }
-        responseToOtherGateIfNecessary(requestEntity);
 
+        responseToOtherGateIfNecessary(requestDto);
     }
 
-    private void responseToOtherGateIfNecessary(RequestEntity requestEntity) {
-        if (requestEntity.getControl().getFromGateUrl() != null &&
-                !getGateProperties().isCurrentGate(requestEntity.getControl().getFromGateUrl())) {
-            RequestDto requestDto = getMapperUtils().requestToRequestDto(requestEntity);
+    private void responseToOtherGateIfNecessary(final RequestDto requestDto) {
+        if (requestDto.getControl().getFromGateUrl() != null &&
+                !getGateProperties().isCurrentGate(requestDto.getControl().getFromGateUrl())) {
             requestDto.setGateUrlDest(requestDto.getControl().getFromGateUrl());
+            //todo suspect
             requestDto.getControl().setRequests(null);
             requestDto.getControl().setEftiData(requestDto.getReponseData());
-            requestDto.getControl().setStatus(requestDto.getReponseData() != null ? StatusEnum.COMPLETE.name() : StatusEnum.ERROR.name());
-            if (!StatusEnum.COMPLETE.name().equals(requestDto.getControl().getStatus())) {
-                ErrorDto errorDto = new ErrorDto();
-                errorDto.setErrorCode(ErrorCodesEnum.DATA_NOT_FOUND.name());
-                errorDto.setErrorDescription(ErrorCodesEnum.DATA_NOT_FOUND.getMessage());
-                requestDto.getControl().setError(errorDto);
+            requestDto.getControl().setStatus(requestDto.getReponseData() != null ? StatusEnum.COMPLETE : StatusEnum.ERROR);
+            if (!StatusEnum.COMPLETE.equals(requestDto.getControl().getStatus())) {
+                requestDto.getControl().setError(ErrorDto.fromErrorCode(ErrorCodesEnum.DATA_NOT_FOUND));
             }
             getControlService().save(requestDto.getControl());
             this.sendRequest(requestDto);
         }
     }
 
-    private RequestEntity findByRequestUuidOrThrow(String requestId) {
-        return Optional.ofNullable(this.getRequestRepository().findByControlRequestUuidAndStatus(requestId, RequestStatusEnum.IN_PROGRESS.name()))
-                .orElseThrow(() -> new RequestNotFoundException("couldn't find request for requestUuid: " + requestId));
+    private RequestDto findByRequestUuidOrThrow(final String requestId) {
+        return getMapperUtils().requestToRequestDto(Optional.ofNullable(
+                this.getRequestRepository().findByControlRequestUuidAndStatus(requestId, RequestStatusEnum.IN_PROGRESS))
+                .orElseThrow(() -> new RequestNotFoundException("couldn't find request for requestUuid: " + requestId)));
     }
 
-
     public void receiveGateRequest(final NotificationDto notificationDto) {
-        MessageBodyDto messageBody = getMessageBodyDtoFromNotificationDto(notificationDto);
+        final MessageBodyDto messageBody = getSerializeUtils().mapDataSourceToClass(notificationDto.getContent().getBody(), MessageBodyDto.class);
 
-        RequestEntity requestEntity = getRequestRepository()
-                .findByControlRequestUuidAndStatus(messageBody.getRequestUuid(), RequestStatusEnum.IN_PROGRESS.name());
+        final RequestEntity requestEntity = getRequestRepository()
+                .findByControlRequestUuidAndStatus(messageBody.getRequestUuid(), RequestStatusEnum.IN_PROGRESS);
         manageRequestAndSend(notificationDto, requestEntity, messageBody);
     }
 
-    private void manageRequestAndSend(NotificationDto notificationDto, RequestEntity requestEntity, MessageBodyDto messageBody) {
+    private void manageRequestAndSend(final NotificationDto notificationDto, final RequestEntity requestEntity, final MessageBodyDto messageBody) {
         if (requestEntity == null) {
             askReception(notificationDto, messageBody);
         } else {
@@ -115,49 +115,33 @@ public class UilRequestService extends RequestService {
         }
     }
 
-    private MessageBodyDto getMessageBodyDtoFromNotificationDto(NotificationDto notificationDto) {
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        try {
-            final String body = IOUtils.toString(notificationDto.getContent().getBody().getInputStream(), StandardCharsets.UTF_8);
-            return mapper.readValue(body, MessageBodyDto.class);
-        } catch (final IOException e) {
-            throw new RetrieveMessageException("error while sending retrieve message request", e);
-        }
-    }
-
-    private void receptionOfResponse(RequestEntity requestEntity, MessageBodyDto messageBody) {
+    private void receptionOfResponse(final RequestEntity requestEntity, final MessageBodyDto messageBody) {
         if (messageBody.getEFTIData() != null) {
             requestEntity.setReponseData(messageBody.getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
-            requestEntity.setStatus(RequestStatusEnum.SUCCESS.name());
+            requestEntity.setStatus(RequestStatusEnum.SUCCESS);
         } else {
-            ErrorDto errorDto = new ErrorDto();
-            errorDto.setErrorCode(ErrorCodesEnum.DATA_NOT_FOUND.name());
-            errorDto.setErrorDescription(ErrorCodesEnum.DATA_NOT_FOUND.getMessage());
-            requestEntity.setError(getMapperUtils().errorDtoToErrorEntity(errorDto));
-            requestEntity.setStatus(RequestStatusEnum.ERROR.name());
+            requestEntity.setError(getMapperUtils().errorDtoToErrorEntity(ErrorDto.fromErrorCode(ErrorCodesEnum.DATA_NOT_FOUND)));
+            requestEntity.setStatus(RequestStatusEnum.ERROR);
         }
         getRequestRepository().save(requestEntity);
     }
 
-    private void askReception(NotificationDto notificationDto, MessageBodyDto messageBody) {
-        ControlDto controlDto = ControlDto
-                .fromGateToGateMessageBodyDto(messageBody, RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH.name(),
+    private void askReception(final NotificationDto notificationDto, final MessageBodyDto messageBody) {
+        final ControlDto controlDto = ControlDto
+                .fromGateToGateMessageBodyDto(messageBody, RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH,
                         notificationDto, getGateProperties().getOwner());
-        controlDto = getControlService().save(controlDto);
-        this.createAndSendRequest(controlDto);
+        this.createAndSendRequest(getControlService().save(controlDto));
     }
 
-    public RequestDto createAndSendRequest(final ControlDto controlDto) {
-        RequestDto requestDto = new RequestDto(controlDto);
+    public void createAndSendRequest(final ControlDto controlDto) {
+        final RequestDto requestDto = new RequestDto(controlDto);
         log.info("Request has been register with controlId : {}", requestDto.getControl().getId());
         final RequestDto result = this.save(requestDto);
         this.sendRequest(result);
-        return result;
     }
 
     @Override
-    public boolean supports(String requestTypeEnum) {
+    public boolean supports(final RequestTypeEnum requestTypeEnum) {
         return UIL_TYPES.contains(requestTypeEnum);
     }
 }

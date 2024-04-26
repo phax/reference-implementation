@@ -6,7 +6,7 @@ import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.constant.EftiGateConstants;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
-import io.micrometer.common.util.StringUtils;
+import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -21,32 +21,30 @@ public class RequestToEDeliveryActionFunction implements Function<RequestDto, ED
     private final GateProperties gateProperties;
 
     @Override
-    public EDeliveryAction apply(RequestDto requestDto) {
-        String requestType = requestDto.getControl().getRequestType();
-        if (StringUtils.isNotBlank(requestType)) {
-            if (EftiGateConstants.IDENTIFIERS_TYPES.contains(requestType)) {
-                return EDeliveryAction.GET_IDENTIFIERS;
-            } else if (EftiGateConstants.UIL_TYPES.contains(requestType)) {
-                return getEDeliveryActionForGateToGateOrGetUil(requestDto);
-            } else return null;
+    public EDeliveryAction apply(final RequestDto requestDto) {
+        final RequestTypeEnum requestType = requestDto.getControl().getRequestType();
+        if (requestType == null) {
+            throw new TechnicalException("Empty Request type for requestId " + requestDto.getId());
         }
-        return null;
+        if (EftiGateConstants.IDENTIFIERS_TYPES.contains(requestType)) {
+            return EDeliveryAction.GET_IDENTIFIERS;
+        } else if (EftiGateConstants.UIL_TYPES.contains(requestType)) {
+            return getEDeliveryActionForGateToGateOrGetUil(requestType, requestDto);
+        } else return null;
     }
 
-    private EDeliveryAction getEDeliveryActionForGateToGateOrGetUil(RequestDto requestDto) {
-        if (RequestTypeEnum.LOCAL_UIL_SEARCH.name().equals(requestDto.getControl().getRequestType())) {
-            return EDeliveryAction.GET_UIL;
-        } else if (RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH.name().equals(requestDto.getControl().getRequestType())) {
-            return getEDeliveryActionResponseOrPlatformAsk(requestDto);
-        } else if (RequestTypeEnum.EXTERNAL_UIL_SEARCH.name().equals(requestDto.getControl().getRequestType())) {
-            return EDeliveryAction.FORWARD_UIL;
-        }
-        return null;
+    private EDeliveryAction getEDeliveryActionForGateToGateOrGetUil(final RequestTypeEnum requestType, final RequestDto requestDto) {
+        return switch (requestType) {
+            case LOCAL_UIL_SEARCH -> EDeliveryAction.GET_UIL;
+            case EXTERNAL_ASK_UIL_SEARCH -> getEDeliveryActionResponseOrPlatformAsk(requestDto);
+            case EXTERNAL_UIL_SEARCH -> EDeliveryAction.FORWARD_UIL;
+            default -> throw new TechnicalException("Empty Request type for requestId " + requestDto.getId());
+        };
     }
 
-    private EDeliveryAction getEDeliveryActionResponseOrPlatformAsk(RequestDto requestDto) {
+    private EDeliveryAction getEDeliveryActionResponseOrPlatformAsk(final RequestDto requestDto) {
         if (gateProperties.isCurrentGate(requestDto.getControl().getEftiGateUrl())
-                && StatusEnum.PENDING.name().equals(requestDto.getControl().getStatus())) {
+                && StatusEnum.PENDING == requestDto.getControl().getStatus()) {
             return EDeliveryAction.GET_UIL;
         } else {
             return EDeliveryAction.FORWARD_UIL;

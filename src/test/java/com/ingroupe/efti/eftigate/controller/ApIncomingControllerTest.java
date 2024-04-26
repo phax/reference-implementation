@@ -45,12 +45,12 @@ class ApIncomingControllerTest {
 
     @Test
     void getByIdTestWithData() {
-        Map<String, Map<String, String>> body = Map.of(SENT_SUCCESS, Map.of(MESSAGE_ID, "test"));
+        final Map<String, Map<String, String>> body = Map.of(SENT_SUCCESS, Map.of(MESSAGE_ID, "test"));
 
-        ReceivedNotificationDto receivedNotificationDto = new ReceivedNotificationDto();
+        final ReceivedNotificationDto receivedNotificationDto = new ReceivedNotificationDto();
         receivedNotificationDto.setBody(body);
 
-        ResponseEntity<String> result = apIncomingController.incoming(receivedNotificationDto);
+        final ResponseEntity<String> result = apIncomingController.incoming(receivedNotificationDto);
 
         Assertions.assertEquals(HttpStatus.OK, result.getStatusCode());
     }

@@ -6,6 +6,7 @@ import com.ingroupe.efti.commons.dto.TransportVehicleDto;
 import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
+import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
@@ -35,9 +36,18 @@ import java.util.List;
 
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SUCCESS;
 import static com.ingroupe.efti.eftigate.EftiTestUtils.testFile;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class MetadataRequestServiceTest extends BaseServiceTest {
@@ -63,8 +73,8 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .eFTIDataUuid(DATA_UUID)
                 .eFTIPlatformUrl(PLATFORM_URL)
                 .transportVehicles(List.of(TransportVehicleDto.builder()
-                        .vehicleId("abc123").countryStart("FR").countryEnd("toto").build(), TransportVehicleDto.builder()
-                        .vehicleId("abc124").countryStart("BE").countryEnd("IT").build())).build();
+                        .vehicleId("abc123").countryStart("FR").vehicleCountry("FR").countryEnd("toto").build(), TransportVehicleDto.builder()
+                        .vehicleId("abc124").countryStart("BE").vehicleCountry("BE").countryEnd("IT").build())).build();
 
         metadataResult = MetadataResult.builder()
                 .eFTIDataUuid(DATA_UUID)
@@ -72,14 +82,13 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .transportVehicles(List.of(TransportVehicle.builder()
                         .vehicleId("abc123").vehicleCountry(CountryIndicator.FR).build(), TransportVehicle.builder()
                         .vehicleId("abc124").vehicleCountry(CountryIndicator.BE).build())).build();
-        metadataRequestService = new MetadataRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, notificationService, metadataService);
+        metadataRequestService = new MetadataRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, metadataService, notificationService, serializeUtils);
     }
 
     @Test
     void shouldCreateAndSendRequest() {
         //Arrange
         when(requestRepository.save(any())).then(AdditionalAnswers.returnsFirstArg());
-        when(mapperUtils.requestToRequestDto(any())).thenReturn(requestDto);
 
         //Act
         metadataRequestService.createAndSendRequest(controlDto, "https://efti.platform.borduria.eu");
@@ -93,47 +102,43 @@ class MetadataRequestServiceTest extends BaseServiceTest {
     void shouldCreateRequest() {
         //Arrange
         when(requestRepository.save(any())).thenReturn(requestEntity);
-        when(mapperUtils.requestDtoToRequestEntity(any())).thenReturn(requestEntity);
-        when(mapperUtils.requestToRequestDto(any())).thenReturn(requestDto);
-        when(mapperUtils.metadataDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
 
         //Act
-        metadataRequestService.createRequest(controlDto, SUCCESS.name(), Collections.singletonList(metadataDto));
+        metadataRequestService.createRequest(controlDto, SUCCESS, Collections.singletonList(metadataDto));
 
         //Assert
         verify(mapperUtils).requestDtoToRequestEntity(requestDtoArgumentCaptor.capture());
-        assertEquals(List.of(metadataResult), requestDtoArgumentCaptor.getValue().getMetadataResults().getMetadataResult());
-        assertEquals("SUCCESS", requestDtoArgumentCaptor.getValue().getStatus());
+        assertEquals(metadataResult.getMetadataUUID(), requestDtoArgumentCaptor.getValue().getMetadataResults().getMetadataResult().get(0).getMetadataUUID());
+        assertEquals(metadataResult.getEFTIDataUuid(), requestDtoArgumentCaptor.getValue().getMetadataResults().getMetadataResult().get(0).getEFTIDataUuid());
+        assertEquals(metadataResult.getEFTIPlatformUrl(), requestDtoArgumentCaptor.getValue().getMetadataResults().getMetadataResult().get(0).getEFTIPlatformUrl());
+        assertEquals(metadataResult.getTransportVehicles().size(), requestDtoArgumentCaptor.getValue().getMetadataResults().getMetadataResult().get(0).getTransportVehicles().size());
+        assertEquals(SUCCESS, requestDtoArgumentCaptor.getValue().getStatus());
     }
 
     @Test
     void shouldCreateRequestWithErrorStatus_WhenNoMetadata() {
         //Arrange
         when(requestRepository.save(any())).thenReturn(requestEntity);
-        when(mapperUtils.requestDtoToRequestEntity(any())).thenReturn(requestEntity);
-        when(mapperUtils.requestToRequestDto(any())).thenReturn(requestDto);
 
         //Act
         metadataRequestService.createRequest(controlDto, Collections.emptyList());
 
         //Assert
         verify(mapperUtils).requestDtoToRequestEntity(requestDtoArgumentCaptor.capture());
-        assertEquals("ERROR", requestDtoArgumentCaptor.getValue().getStatus());
+        assertEquals(RequestStatusEnum.ERROR, requestDtoArgumentCaptor.getValue().getStatus());
     }
 
     @Test
     void shouldCreateRequestWithSuccessStatus_WhenMetadataNotEmpty() {
         //Arrange
         when(requestRepository.save(any())).thenReturn(requestEntity);
-        when(mapperUtils.requestDtoToRequestEntity(any())).thenReturn(requestEntity);
-        when(mapperUtils.requestToRequestDto(any())).thenReturn(requestDto);
 
         //Act
         metadataRequestService.createRequest(controlDto, Collections.singletonList(metadataDto));
 
         //Assert
         verify(mapperUtils).requestDtoToRequestEntity(requestDtoArgumentCaptor.capture());
-        assertEquals("SUCCESS", requestDtoArgumentCaptor.getValue().getStatus());
+        assertEquals(SUCCESS, requestDtoArgumentCaptor.getValue().getStatus());
     }
     @Test
     void trySendDomibusSuccessTest() throws SendRequestException, JsonProcessingException {
@@ -152,22 +157,17 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .build();
         when(controlService.getControlByRequestUuid(anyString())).thenReturn(controlDto);
         when(controlService.createControlFrom(any(), any())).thenReturn(controlDto);
-        when(mapperUtils.requestToRequestDto(any())).thenReturn(requestDto);
-
+        when(requestRepository.save(any())).thenReturn(requestEntity);
         //Act
         metadataRequestService.manageMessageReceive(notificationDto);
 
         //assert
-        verify(controlService).getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS");
+        verify(controlService).getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", RequestStatusEnum.IN_PROGRESS);
         verify(controlService).createControlFrom(any(), any());
         verify(requestRepository, times(1)).save(any());
         verify(metadataService).search(any());
         verify(rabbitSenderService).sendMessageToRabbit(any(), any(), any());
     }
-
-
-
-
 
     @Test
     void shouldManageMessageReceiveAndUpdateExistingControlStatusAsComplete() throws IOException {
@@ -179,10 +179,10 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                         .fromPartyId("gate")
                         .build())
                 .build();
-        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH.name());
-        requestEntity.setStatus("IN_PROGRESS");
+        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);
+        requestEntity.setStatus(RequestStatusEnum.IN_PROGRESS);
         controlEntity.setRequests(List.of(requestEntity));
-        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS")).thenReturn(controlEntity);
+        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", RequestStatusEnum.IN_PROGRESS)).thenReturn(controlEntity);
         when(mapperUtils.metadataResultDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
 
         //Act
@@ -194,8 +194,8 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
 
         verify(controlService).save(controlEntityArgumentCaptor.capture());
-        assertEquals("COMPLETE", controlEntityArgumentCaptor.getValue().getStatus());
-        assertEquals("SUCCESS", controlEntityArgumentCaptor.getValue().getRequests().iterator().next().getStatus());
+        assertEquals(StatusEnum.COMPLETE, controlEntityArgumentCaptor.getValue().getStatus());
+        assertEquals(SUCCESS, controlEntityArgumentCaptor.getValue().getRequests().iterator().next().getStatus());
         assertFalse(controlEntityArgumentCaptor.getValue().getMetadataResults().getMetadataResult().isEmpty());
         assertFalse(controlEntityArgumentCaptor.getValue().getRequests().iterator().next().getMetadataResults().getMetadataResult().isEmpty());
     }
@@ -210,11 +210,11 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                         .fromPartyId("gate")
                         .build())
                 .build();
-        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH.name());
-        secondRequestEntity.setStatus("ERROR");
-        requestEntity.setStatus("IN_PROGRESS");
+        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);
+        secondRequestEntity.setStatus(RequestStatusEnum.ERROR);
+        requestEntity.setStatus(RequestStatusEnum.IN_PROGRESS);
         controlEntity.setRequests(List.of(requestEntity, secondRequestEntity));
-        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS")).thenReturn(controlEntity);
+        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", RequestStatusEnum.IN_PROGRESS)).thenReturn(controlEntity);
         when(mapperUtils.metadataResultDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
 
         //Act
@@ -226,7 +226,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
 
         verify(controlService).save(controlEntityArgumentCaptor.capture());
-        assertEquals("ERROR", controlEntityArgumentCaptor.getValue().getStatus());
+        assertEquals(StatusEnum.ERROR, controlEntityArgumentCaptor.getValue().getStatus());
         assertFalse(controlEntityArgumentCaptor.getValue().getMetadataResults().getMetadataResult().isEmpty());
         assertFalse(controlEntityArgumentCaptor.getValue().getRequests().iterator().next().getMetadataResults().getMetadataResult().isEmpty());
     }
@@ -241,11 +241,11 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                         .fromPartyId("gate")
                         .build())
                 .build();
-        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH.name());
-        secondRequestEntity.setStatus("TIMEOUT");
-        requestEntity.setStatus("IN_PROGRESS");
+        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);
+        secondRequestEntity.setStatus(RequestStatusEnum.TIMEOUT);
+        requestEntity.setStatus(RequestStatusEnum.IN_PROGRESS);
         controlEntity.setRequests(List.of(requestEntity, secondRequestEntity));
-        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS")).thenReturn(controlEntity);
+        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", RequestStatusEnum.IN_PROGRESS)).thenReturn(controlEntity);
         when(mapperUtils.metadataResultDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
 
         //Act
@@ -257,7 +257,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
 
         verify(controlService).save(controlEntityArgumentCaptor.capture());
-        assertEquals("TIMEOUT", controlEntityArgumentCaptor.getValue().getStatus());
+        assertEquals(StatusEnum.TIMEOUT, controlEntityArgumentCaptor.getValue().getStatus());
         assertFalse(controlEntityArgumentCaptor.getValue().getMetadataResults().getMetadataResult().isEmpty());
         assertFalse(controlEntityArgumentCaptor.getValue().getRequests().iterator().next().getMetadataResults().getMetadataResult().isEmpty());
     }
@@ -272,11 +272,11 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                         .fromPartyId("gate")
                         .build())
                 .build();
-        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH.name());
-        secondRequestEntity.setStatus("TIMEOUT");
-        requestEntity.setStatus("ERROR");
+        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);
+        secondRequestEntity.setStatus(RequestStatusEnum.TIMEOUT);
+        requestEntity.setStatus(RequestStatusEnum.ERROR);
         controlEntity.setRequests(List.of(requestEntity, secondRequestEntity));
-        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS")).thenReturn(controlEntity);
+        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", RequestStatusEnum.IN_PROGRESS)).thenReturn(controlEntity);
         when(mapperUtils.metadataResultDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
 
         //Act
@@ -288,7 +288,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
 
         verify(controlService).save(controlEntityArgumentCaptor.capture());
-        assertEquals("ERROR", controlEntityArgumentCaptor.getValue().getStatus());
+        assertEquals(StatusEnum.ERROR, controlEntityArgumentCaptor.getValue().getStatus());
         assertFalse(controlEntityArgumentCaptor.getValue().getMetadataResults().getMetadataResult().isEmpty());
     }
 
@@ -301,13 +301,13 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                         .body(new ByteArrayDataSource(testFile("/json/FTI020.json"), "application/json"))
                         .build())
                 .build();
-        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH.name());
-        requestEntity.setStatus("IN_PROGRESS");
+        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);
+        requestEntity.setStatus(RequestStatusEnum.IN_PROGRESS);
         requestEntity.setMetadataResults(metadataResults);
         controlEntity.setRequests(List.of(requestEntity));
         controlEntity.setMetadataResults(metadataResults);
 
-        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS")).thenReturn(controlEntity);
+        when(controlService.getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", RequestStatusEnum.IN_PROGRESS)).thenReturn(controlEntity);
         when(mapperUtils.metadataResultDtosToMetadataEntities(anyList())).thenReturn(List.of(metadataResult));
 
         //Act
@@ -335,7 +335,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         metadataRequestService.updateWithResponse(notificationDto);
         verify(requestRepository).save(argumentCaptor.capture());
         assertNotNull(argumentCaptor.getValue());
-        assertEquals(RequestStatusEnum.SEND_ERROR.name(), argumentCaptor.getValue().getStatus());
+        assertEquals(RequestStatusEnum.SEND_ERROR, argumentCaptor.getValue().getStatus());
     }
 
     @Test
@@ -372,22 +372,22 @@ class MetadataRequestServiceTest extends BaseServiceTest {
     @Test
     void getDataFromRequestsTest() {
         //Arrange
-        MetadataResult metadataResult1 = new MetadataResult();
+        final MetadataResult metadataResult1 = new MetadataResult();
         metadataResult1.setCountryStart("FR");
         metadataResult1.setCountryEnd("FR");
         metadataResult1.setDisabled(false);
         metadataResult1.setDangerousGoods(true);
 
-        MetadataResults metadataResults1 = new MetadataResults();
+        final MetadataResults metadataResults1 = new MetadataResults();
         metadataResults1.setMetadataResult(List.of(metadataResult1));
 
-        MetadataResult metadataResult2 = new MetadataResult();
+        final MetadataResult metadataResult2 = new MetadataResult();
         metadataResult2.setCountryStart("FR");
         metadataResult2.setCountryEnd("FR");
         metadataResult2.setDisabled(false);
         metadataResult2.setDangerousGoods(true);
 
-        MetadataResults metadataResults2 = new MetadataResults();
+        final MetadataResults metadataResults2 = new MetadataResults();
         metadataResults2.setMetadataResult(List.of(metadataResult2));
 
         requestEntity.setMetadataResults(metadataResults1);

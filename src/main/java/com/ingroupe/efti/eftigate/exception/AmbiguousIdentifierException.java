@@ -1,15 +1,15 @@
 package com.ingroupe.efti.eftigate.exception;
 
 public class AmbiguousIdentifierException extends RuntimeException{
-    public AmbiguousIdentifierException(String message) {
+    public AmbiguousIdentifierException(final String message) {
         super(message);
     }
 
-    public AmbiguousIdentifierException(Throwable cause) {
+    public AmbiguousIdentifierException(final Throwable cause) {
         super(cause);
     }
 
-    public AmbiguousIdentifierException(String message, Throwable cause) {
+    public AmbiguousIdentifierException(final String message, final Throwable cause) {
         super(message, cause);
     }
 }

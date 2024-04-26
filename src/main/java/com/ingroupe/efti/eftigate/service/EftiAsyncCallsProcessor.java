@@ -21,8 +21,8 @@ public class EftiAsyncCallsProcessor {
     private final MetadataService metadataService;
     @Async
     @Transactional("metadataTransactionManager")
-    public void checkLocalRepoAsync(final MetadataRequestDto metadataRequestDto, ControlDto savedControl) {
-        List<MetadataDto> metadataDtoList = metadataService.search(metadataRequestDto);
+    public void checkLocalRepoAsync(final MetadataRequestDto metadataRequestDto, final ControlDto savedControl) {
+        final List<MetadataDto> metadataDtoList = metadataService.search(metadataRequestDto);
         metadataRequestService.createRequest(savedControl, metadataDtoList);
     }
 }

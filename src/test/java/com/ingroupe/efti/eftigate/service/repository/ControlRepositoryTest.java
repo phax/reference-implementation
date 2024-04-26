@@ -1,5 +1,7 @@
 package com.ingroupe.efti.eftigate.service.repository;
 
+import com.ingroupe.efti.commons.enums.RequestStatusEnum;
+import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
@@ -31,19 +33,19 @@ class ControlRepositoryTest {
     @Test
     void shouldFindControlByCriteria(){
         //Arrange
-        RequestEntity firstRequest = new RequestEntity();
-        firstRequest.setStatus("IN_PROGRESS");
-        RequestEntity secondRequest = new RequestEntity();
-        secondRequest.setStatus("RECEIVED");
-        ControlEntity firstControl = ControlEntity.builder().requestUuid("67fe38bd-6bf7-4b06-b20e-206264bd639c").status("PENDING").requests(List.of(firstRequest)).build();
+        final RequestEntity firstRequest = new RequestEntity();
+        firstRequest.setStatus(RequestStatusEnum.IN_PROGRESS);
+        final RequestEntity secondRequest = new RequestEntity();
+        secondRequest.setStatus(RequestStatusEnum.RECEIVED);
+        final ControlEntity firstControl = ControlEntity.builder().requestUuid("67fe38bd-6bf7-4b06-b20e-206264bd639c").status(StatusEnum.PENDING).requests(List.of(firstRequest)).build();
         firstRequest.setControl(firstControl);
-        ControlEntity firstSavedControl = controlRepository.save(firstControl);
-        ControlEntity secondControl = ControlEntity.builder().requestUuid("23fe38bd-6bf7-4b06-b20e-206264bd66c").status("ERROR").requests(List.of(secondRequest)).build();
+        final ControlEntity firstSavedControl = controlRepository.save(firstControl);
+        final ControlEntity secondControl = ControlEntity.builder().requestUuid("23fe38bd-6bf7-4b06-b20e-206264bd66c").status(StatusEnum.ERROR).requests(List.of(secondRequest)).build();
         secondRequest.setControl(secondControl);
-        ControlEntity secondSavedControl = controlRepository.save(secondControl);
+        controlRepository.save(secondControl);
 
         //Act
-        List<ControlEntity> controls = controlRepository.findByCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", "IN_PROGRESS");
+        final List<ControlEntity> controls = controlRepository.findByCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", RequestStatusEnum.IN_PROGRESS);
 
         //Assert
         assertThat(controls).containsExactlyInAnyOrder(firstSavedControl);

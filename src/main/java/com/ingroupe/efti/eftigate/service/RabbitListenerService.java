@@ -1,14 +1,9 @@
 package com.ingroupe.efti.eftigate.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
-import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
+import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
@@ -16,13 +11,13 @@ import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.requestbody.MetadataRequestBodyDto;
 import com.ingroupe.efti.eftigate.dto.requestbody.RequestBodyDto;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
-import com.ingroupe.efti.eftigate.mapper.MapperUtils;
-import com.ingroupe.efti.eftigate.repository.RequestRepository;
+import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
+import com.ingroupe.efti.eftigate.service.request.RequestService;
+import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -30,8 +25,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.LinkedList;
 import java.util.function.Function;
 
@@ -46,18 +39,17 @@ public class RabbitListenerService {
     @Lazy
     private final ControlService controlService;
     private final GateProperties gateProperties;
-    private ObjectMapper objectMapper;
+    private final SerializeUtils serializeUtils;
     private final RequestSendingService requestSendingService;
-    private final MapperUtils mapperUtils;
-    private final RequestRepository requestRepository;
+    private final RequestServiceFactory requestServiceFactory;
     private final ApIncomingService apIncomingService;
     private final Function<RequestDto, EDeliveryAction> requestToEDeliveryActionFunction;
 
     @RabbitListener(queues = "${spring.rabbitmq.queues.eftiReceiveMessageQueue:efti.receive-messages.q}")
     public void listenReceiveMessage(final String message) {
         log.info("Receive message from Domibus : {}", message);
-        ReceivedNotificationDto receivedNotificationDto = mapReceivedNotificationDto(message);
-        apIncomingService.manageIncomingNotification(receivedNotificationDto);
+        apIncomingService.manageIncomingNotification(
+                serializeUtils.mapJsonStringToClass(message, ReceivedNotificationDto.class));
     }
 
     @RabbitListener(queues = "${spring.rabbitmq.queues.messageReceiveDeadLetterQueue:messageReceiveDeadLetterQueue}")
@@ -68,97 +60,46 @@ public class RabbitListenerService {
     @RabbitListener(queues = "${spring.rabbitmq.queues.eftiSendMessageQueue:efti.send-messages.q}")
     public void listenSendMessage(final String message) {
         log.info("receive message from rabbimq queue");
-        RequestDto requestDto = mapRequestDto(message);
-        final ApRequestDto apRequestDto;
-        try {
-            apRequestDto = buildApRequestDto(requestDto);
-        } catch (TechnicalException e) {
-            log.error("error while building request", e);
-            this.updateStatus(requestDto, RequestStatusEnum.SEND_ERROR);
-            return;
-        }
-        trySendDomibus(requestDto, apRequestDto);
+        trySendDomibus(serializeUtils.mapJsonStringToClass(message, RequestDto.class));
     }
 
     @RabbitListener(queues = "${spring.rabbitmq.queues.messageSendDeadLetterQueue:message-send-dead-letter-queue}")
     public void listenSendMessageDeadLetter(final String message) {
         log.error("Receive message for dead queue");
-        RequestDto requestDto = mapRequestDto(message);
-        manageSendError(requestDto);
+        final RequestDto requestDto = serializeUtils.mapJsonStringToClass(message, RequestDto.class);
+        this.getRequestService(requestDto.getControl().getRequestType()).manageSendError(requestDto);
     }
 
-    private ReceivedNotificationDto mapReceivedNotificationDto(final String message) {
-        try {
-            objectMapper = new ObjectMapper();
-            objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-            objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-            objectMapper.registerModule(new JavaTimeModule());
-            return objectMapper.readValue(message, ReceivedNotificationDto.class);
-        } catch (JsonProcessingException e) {
-            log.error("Error when try to parse message to RequestDto", e);
-            throw new TechnicalException("Error when try to map requestDto with message : " + message);
-        }
-    }
-
-    private RequestDto mapRequestDto(String message) {
-        try {
-            objectMapper = new ObjectMapper();
-            objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-            objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-            objectMapper.registerModule(new JavaTimeModule());
-            return objectMapper.readValue(message, RequestDto.class);
-        } catch (JsonProcessingException e) {
-            log.error("Error when try to parse message to RequestDto", e);
-            throw new TechnicalException("Error when try to map requestDto with message : " + message);
-        }
-    }
-
-    private String buildBody(final RequestDto requestDto) throws TechnicalException {
-        ControlDto controlDto = requestDto.getControl();
-        if (controlDto != null){
-            if (IDENTIFIERS_TYPES.contains(controlDto.getRequestType())){
-                return getBodyForIdentifiersRequest(requestDto);
-            } else {
-                final RequestBodyDto requestBodyDto = RequestBodyDto.builder()
-                        .eFTIData(requestDto.getReponseData() != null ? new String(requestDto.getReponseData(), StandardCharsets.UTF_8) : null)
-                        .eFTIPlatformUrl(requestDto.getControl().getEftiPlatformUrl())
-                        .requestUuid(controlDto.getRequestUuid())
-                        .eFTIDataUuid(controlDto.getEftiDataUuid())
-                        .subsetEU(new LinkedList<>())
-                        .subsetMS(new LinkedList<>())
-                        .build();
-                return getValueAsString(requestBodyDto);
-            }
-        } else {
-            log.error("control was null for request");
-            throw new TechnicalException("control was null for request ");
-        }
-    }
-
-    private String getBodyForIdentifiersRequest(RequestDto requestDto) {
-        if (EXTERNAL_ASK_METADATA_SEARCH.name().equalsIgnoreCase(requestDto.getControl().getRequestType())){ //remote sending response
-            MetadataResponseDto metadataResponseDto = controlService.buildMetadataResponse(requestDto.getControl());
-            return getValueAsString(metadataResponseDto);
+    private String getBodyForIdentifiersRequest(final RequestDto requestDto) {
+        if (EXTERNAL_ASK_METADATA_SEARCH == requestDto.getControl().getRequestType()) { //remote sending response
+            final MetadataResponseDto metadataResponseDto = controlService.buildMetadataResponse(requestDto.getControl());
+            return serializeUtils.mapObjectToJsonString(metadataResponseDto);
         } else { //local sending request
-            MetadataRequestBodyDto metadataRequestBodyDto = MetadataRequestBodyDto.fromControl(requestDto.getControl());
-            return getValueAsString(metadataRequestBodyDto);
+            final MetadataRequestBodyDto metadataRequestBodyDto = MetadataRequestBodyDto.fromControl(requestDto.getControl());
+            return serializeUtils.mapObjectToJsonString(metadataRequestBodyDto);
         }
     }
 
-    private <T> String getValueAsString(T requestBodyDto) {
-        try {
-            return objectMapper.writeValueAsString(requestBodyDto);
-        } catch (JsonProcessingException e) {
-            throw new TechnicalException("error while building request body", e);
-        }
+    private String getBodyForUilRequest(final RequestDto requestDto) {
+        final ControlDto controlDto = requestDto.getControl();
+        final RequestBodyDto requestBodyDto = RequestBodyDto.builder()
+                .eFTIData(requestDto.getReponseData() != null ? new String(requestDto.getReponseData(), StandardCharsets.UTF_8) : null)
+                .eFTIPlatformUrl(requestDto.getControl().getEftiPlatformUrl())
+                .requestUuid(controlDto.getRequestUuid())
+                .eFTIDataUuid(controlDto.getEftiDataUuid())
+                .subsetEU(new LinkedList<>())
+                .subsetMS(new LinkedList<>())
+                .build();
+        return serializeUtils.mapObjectToJsonString((requestBodyDto));
     }
 
-    private ApRequestDto buildApRequestDto(final RequestDto requestDto) throws TechnicalException {
-        String receiver = gateProperties.isCurrentGate(requestDto.getGateUrlDest()) ? requestDto.getControl().getEftiPlatformUrl() : requestDto.getGateUrlDest();
+    private ApRequestDto buildApRequestDto(final RequestDto requestDto) {
+        final String receiver = gateProperties.isCurrentGate(requestDto.getGateUrlDest()) ? requestDto.getControl().getEftiPlatformUrl() : requestDto.getGateUrlDest();
         return ApRequestDto.builder()
                 .sender(gateProperties.getOwner())
                 .receiver(receiver)
-                .body(buildBody(requestDto))
+                .body(IDENTIFIERS_TYPES.contains(requestDto.getControl().getRequestType()) ?
+                        getBodyForIdentifiersRequest(requestDto) : getBodyForUilRequest(requestDto))
                 .apConfig(ApConfigDto.builder()
                         .username(gateProperties.getAp().getUsername())
                         .password(gateProperties.getAp().getPassword())
@@ -167,39 +108,19 @@ public class RabbitListenerService {
                 .build();
     }
 
-    private void trySendDomibus(final RequestDto requestDto, final ApRequestDto apRequestDto) {
+    private void trySendDomibus(final RequestDto requestDto) {
         try {
-            EDeliveryAction eDeliveryAction = requestToEDeliveryActionFunction.apply(requestDto);
-            final String result = this.requestSendingService.sendRequest(apRequestDto, eDeliveryAction);
+            final EDeliveryAction eDeliveryAction = requestToEDeliveryActionFunction.apply(requestDto);
+            final String result = this.requestSendingService.sendRequest(buildApRequestDto(requestDto), eDeliveryAction);
             requestDto.setEdeliveryMessageId(result);
-            if (!RequestStatusEnum.SUCCESS.name().equals(requestDto.getStatus())) {
-                this.updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
-            } else {
-                requestDto.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
-                this.save(requestDto);
-            }
-        } catch (SendRequestException e) {
-            log.error("error while sending request");
-            throw new TechnicalException("Error when try to send message to domibus");
+            this.getRequestService(requestDto.getControl().getRequestType()).updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
+        } catch (final SendRequestException e) {
+            log.error("error while sending request" + e);
+            throw new TechnicalException("Error when try to send message to domibus", e);
         }
     }
 
-    private void manageSendError(final RequestDto requestDto) {
-        final ErrorDto errorDto = ErrorDto.builder()
-                .errorCode(ErrorCodesEnum.AP_SUBMISSION_ERROR.name())
-                .errorDescription(ErrorCodesEnum.AP_SUBMISSION_ERROR.getMessage()).build();
-        requestDto.setError(errorDto);
-        controlService.setError(requestDto.getControl(), errorDto);
-        this.updateStatus(requestDto, RequestStatusEnum.ERROR);
-    }
-
-    private void updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {
-        requestDto.setStatus(status.name());
-        requestDto.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
-        this.save(requestDto);
-    }
-
-    private void save(final RequestDto requestDto) {
-         mapperUtils.requestToRequestDto(requestRepository.save(mapperUtils.requestDtoToRequestEntity(requestDto)));
+    private RequestService getRequestService(final RequestTypeEnum requestType) {
+        return  requestServiceFactory.getRequestServiceByRequestType(requestType);
     }
 }

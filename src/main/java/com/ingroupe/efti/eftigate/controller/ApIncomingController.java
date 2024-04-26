@@ -39,7 +39,7 @@ public class ApIncomingController {
         log.info("receive notification from domibus");
         try {
             rabbitSenderService.sendMessageToRabbit(eftiReceiveMessageExchange, eftiKeySendMessage, receivedNotificationDto);
-        } catch (JsonProcessingException e) {
+        } catch (final JsonProcessingException e) {
             log.error("Error when try to parse message and send it to the rabbitmq", e);
         }
         return ResponseEntity.ok().body(SOAP_RESULT);

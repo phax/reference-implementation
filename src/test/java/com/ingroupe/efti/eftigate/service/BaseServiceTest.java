@@ -13,7 +13,6 @@ import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.MetadataResult;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
-import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -25,11 +24,9 @@ import java.util.Collections;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
-public abstract class BaseServiceTest {
+public abstract class BaseServiceTest extends AbstractServiceTest {
     @Mock
     protected RequestRepository requestRepository;
-    @Mock
-    protected MapperUtils mapperUtils;
     @Mock
     protected RabbitSenderService rabbitSenderService;
     @Mock
@@ -55,8 +52,8 @@ public abstract class BaseServiceTest {
         gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).owner("owner").build();
 
 
-        LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
-        String requestUuid = "67fe38bd-6bf7-4b06-b20e-206264bd639c";
+        final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
+        final String requestUuid = "67fe38bd-6bf7-4b06-b20e-206264bd639c";
 
         this.uilDto.setEFTIGateUrl("gate");
         this.uilDto.setEFTIDataUuid("uuid");
@@ -65,8 +62,8 @@ public abstract class BaseServiceTest {
         this.controlDto.setEftiGateUrl(uilDto.getEFTIGateUrl());
         this.controlDto.setEftiPlatformUrl(uilDto.getEFTIPlatformUrl());
         this.controlDto.setRequestUuid(requestUuid);
-        this.controlDto.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH.toString());
-        this.controlDto.setStatus(StatusEnum.PENDING.toString());
+        this.controlDto.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH);
+        this.controlDto.setStatus(StatusEnum.PENDING);
         this.controlDto.setSubsetEuRequested("oki");
         this.controlDto.setSubsetMsRequested("oki");
         this.controlDto.setCreatedDate(localDateTime);
@@ -86,7 +83,7 @@ public abstract class BaseServiceTest {
         this.controlEntity.setTransportMetadata(controlDto.getTransportMetaData());
         this.controlEntity.setFromGateUrl(controlDto.getFromGateUrl());
 
-        this.requestDto.setStatus(RequestStatusEnum.RECEIVED.toString());
+        this.requestDto.setStatus(RequestStatusEnum.RECEIVED);
         this.requestDto.setRetry(0);
         this.requestDto.setCreatedDate(localDateTime);
         this.requestDto.setGateUrlDest(controlEntity.getEftiGateUrl());

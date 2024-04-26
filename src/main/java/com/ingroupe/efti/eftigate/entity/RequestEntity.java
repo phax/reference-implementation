@@ -1,5 +1,6 @@
 package com.ingroupe.efti.eftigate.entity;
 
+import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.model.AbstractModel;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.CascadeType;
@@ -7,6 +8,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -38,7 +41,8 @@ public class RequestEntity extends AbstractModel implements Serializable {
     private long id;
     
     @Column(name = "status")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private RequestStatusEnum status;
     
     @Column(name = "edeliverymessageid")
     private String edeliveryMessageId;

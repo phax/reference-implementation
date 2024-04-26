@@ -23,7 +23,7 @@ class UilDtoValidatorTest {
         final UilDto uilDto = UilDto.builder().build();
 
         final Validator validator;
-        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+        try (final ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
 
@@ -45,7 +45,7 @@ class UilDtoValidatorTest {
                 .authority(AuthorityDto.builder().build()).build();
 
         final Validator validator;
-        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+        try (final ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
 
@@ -83,7 +83,7 @@ class UilDtoValidatorTest {
                         .build()).build();
 
         final Validator validator;
-        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+        try (final ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
 
@@ -101,7 +101,7 @@ class UilDtoValidatorTest {
     }
 
     private boolean containsError(final Set<ConstraintViolation<UilDto>> violations, final ErrorCodesEnum error) {
-        for(ConstraintViolation<UilDto> violation : violations ) {
+        for(final ConstraintViolation<UilDto> violation : violations ) {
             if(violation.getMessage().equals(error.name())) {
                 return true;
             }

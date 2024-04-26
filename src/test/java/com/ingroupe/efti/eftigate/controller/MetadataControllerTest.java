@@ -3,6 +3,7 @@ package com.ingroupe.efti.eftigate.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.dto.MetadataResponseDto;
+import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import org.junit.jupiter.api.Assertions;
@@ -42,7 +43,7 @@ class MetadataControllerTest {
     ControlService controlService;
     @BeforeEach
     void before() {
-        metadataResponseDto.setStatus("COMPLETED");
+        metadataResponseDto.setStatus(StatusEnum.COMPLETE);
         metadataResponseDto.setRequestUuid(REQUEST_UUID);
     }
 
@@ -53,7 +54,7 @@ class MetadataControllerTest {
 
         Mockito.when(controlService.createMetadataControl(metadataRequestDto)).thenReturn(
                 RequestUuidDto.builder()
-                .status("PENDING")
+                .status(StatusEnum.PENDING)
                 .requestUuid(REQUEST_UUID)
                 .build());
 
@@ -70,13 +71,13 @@ class MetadataControllerTest {
     void requestUilGetTest() throws Exception {
         Mockito.when(controlService.getMetadataResponse(REQUEST_UUID)).thenReturn(metadataResponseDto);
 
-        MvcResult result = mockMvc.perform(get("/v1/getMetadata").param("requestUuid", REQUEST_UUID))
+        final MvcResult result = mockMvc.perform(get("/v1/getMetadata").param("requestUuid", REQUEST_UUID))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
-        String contentAsString = result.getResponse().getContentAsString();
+        final String contentAsString = result.getResponse().getContentAsString();
 
-        MetadataResponseDto response = new ObjectMapper().readValue(contentAsString, MetadataResponseDto.class);
+        final MetadataResponseDto response = new ObjectMapper().readValue(contentAsString, MetadataResponseDto.class);
         Assertions.assertNotNull(response);
         Assertions.assertEquals(REQUEST_UUID, response.getRequestUuid());
     }

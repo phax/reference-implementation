@@ -28,9 +28,16 @@ import java.io.IOException;
 import java.util.List;
 
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.ERROR;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UilRequestServiceTest extends BaseServiceTest {
@@ -43,7 +50,7 @@ class UilRequestServiceTest extends BaseServiceTest {
     @BeforeEach
     public void before() {
         super.before();
-        uilRequestService = new UilRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, notificationService);
+        uilRequestService = new UilRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, notificationService, serializeUtils);
     }
 
     @Test
@@ -69,7 +76,7 @@ class UilRequestServiceTest extends BaseServiceTest {
         uilRequestService.receiveGateRequest(notificationDto);
 
         verify(requestRepository).save(requestEntityArgumentCaptor.capture());
-        assertEquals(RequestStatusEnum.SUCCESS.name(), requestEntityArgumentCaptor.getValue().getStatus());
+        assertEquals(RequestStatusEnum.SUCCESS, requestEntityArgumentCaptor.getValue().getStatus());
     }
 
     @Test
@@ -96,7 +103,7 @@ class UilRequestServiceTest extends BaseServiceTest {
         uilRequestService.receiveGateRequest(notificationDto);
 
         verify(requestRepository).save(argumentCaptorRequestEntity.capture());
-        assertEquals(RequestStatusEnum.ERROR.name(), argumentCaptorRequestEntity.getValue().getStatus());
+        assertEquals(RequestStatusEnum.ERROR, argumentCaptorRequestEntity.getValue().getStatus());
     }
 
     @Test
@@ -115,16 +122,17 @@ class UilRequestServiceTest extends BaseServiceTest {
                         .messageId(messageId)
                         .build())
                 .build();
-        ControlDto controlDto = ControlDto.fromGateToGateMessageBodyDto(mapper.readValue(content, MessageBodyDto.class), RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH.name(), notificationDto, "http://france.fr");
+        final ControlDto controlDto = ControlDto.fromGateToGateMessageBodyDto(mapper.readValue(content, MessageBodyDto.class), RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH, notificationDto, "http://france.fr");
         final ArgumentCaptor<ControlDto> argumentCaptorControlDto = ArgumentCaptor.forClass(ControlDto.class);
         final ArgumentCaptor<RequestEntity> argumentCaptorRequestEntity = ArgumentCaptor.forClass(RequestEntity.class);
 
         Mockito.when(controlService.save(any(ControlDto.class))).thenReturn(controlDto);
+        when(requestRepository.save(any())).thenReturn(requestEntity);
 
         uilRequestService.receiveGateRequest(notificationDto);
 
         verify(controlService).save(argumentCaptorControlDto.capture());
-        assertEquals(RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH.name(), argumentCaptorControlDto.getValue().getRequestType());
+        assertEquals(RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH, argumentCaptorControlDto.getValue().getRequestType());
     }
 
     @Test
@@ -153,7 +161,7 @@ class UilRequestServiceTest extends BaseServiceTest {
                     "status": "COMPLETE",
                     "eFTIData": "<data>vive les datas<data>"
                   }""";
-        this.requestDto.getControl().setRequestType(RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH.toString());
+        this.requestEntity.getControl().setRequestType(RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH);
         final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
@@ -164,13 +172,12 @@ class UilRequestServiceTest extends BaseServiceTest {
         final ArgumentCaptor<ControlDto> argumentCaptorControlDto = ArgumentCaptor.forClass(ControlDto.class);
         requestEntity.getControl().setFromGateUrl("other");
         when(requestRepository.findByControlRequestUuidAndStatus(any(), any())).thenReturn(requestEntity);
-        when(mapperUtils.requestToRequestDto(any())).thenReturn(requestDto);
         when(requestRepository.save(any())).thenReturn(requestEntity);
 
         uilRequestService.updateWithResponse(notificationDto);
 
         verify(controlService).save(argumentCaptorControlDto.capture());
-        assertEquals(RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH.name(), argumentCaptorControlDto.getValue().getRequestType());
+        assertEquals(RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH, argumentCaptorControlDto.getValue().getRequestType());
     }
 
     @Test
@@ -196,7 +203,7 @@ class UilRequestServiceTest extends BaseServiceTest {
 
         verify(requestRepository).save(argumentCaptor.capture());
         assertNotNull(argumentCaptor.getValue());
-        assertEquals(RequestStatusEnum.SUCCESS.name(), argumentCaptor.getValue().getStatus());
+        assertEquals(RequestStatusEnum.SUCCESS, argumentCaptor.getValue().getStatus());
     }
 
     @Test
@@ -222,16 +229,17 @@ class UilRequestServiceTest extends BaseServiceTest {
 
         verify(requestRepository, times(2)).save(argumentCaptor.capture());
         assertNotNull(argumentCaptor.getValue());
-        assertEquals(RequestStatusEnum.ERROR.name(), argumentCaptor.getValue().getStatus());
+        assertEquals(RequestStatusEnum.ERROR, argumentCaptor.getValue().getStatus());
     }
 
     @Test
     void shouldUpdateStatus() {
-        ArgumentCaptor<RequestEntity> requestEntityArgumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
-        uilRequestService.updateStatus(requestEntity, ERROR, new NotificationDto());
+        final ArgumentCaptor<RequestEntity> requestEntityArgumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
+        when(requestRepository.save(any())).thenReturn(requestEntity);
+        uilRequestService.updateStatus(requestDto, ERROR, new NotificationDto());
         verify(requestRepository).save(requestEntityArgumentCaptor.capture());
         verify(requestRepository,  Mockito.times(1)).save(any(RequestEntity.class));
-        assertEquals(ERROR.name(), requestEntityArgumentCaptor.getValue().getStatus());
+        assertEquals(ERROR, requestEntityArgumentCaptor.getValue().getStatus());
     }
 
     @Test
@@ -251,7 +259,7 @@ class UilRequestServiceTest extends BaseServiceTest {
 
         verify(requestRepository).save(argumentCaptor.capture());
         assertNotNull(argumentCaptor.getValue());
-        assertEquals(RequestStatusEnum.SEND_ERROR.name(), argumentCaptor.getValue().getStatus());
+        assertEquals(RequestStatusEnum.SEND_ERROR, argumentCaptor.getValue().getStatus());
     }
 
     @Test
@@ -300,7 +308,7 @@ class UilRequestServiceTest extends BaseServiceTest {
     @Test
     void allRequestsContainsDataTest_whenTrue() {
         //Arrange
-        byte[] data = {10, 20, 30, 40};
+        final byte[] data = {10, 20, 30, 40};
         requestEntity.setReponseData(data);
         requestEntity.setReponseData(data);
         //Act and Assert
@@ -310,8 +318,8 @@ class UilRequestServiceTest extends BaseServiceTest {
     @Test
     void getDataFromRequestsTest() {
         //Arrange
-        byte[] data1 = {10, 20, 30, 40};
-        byte[] data2 = {60, 80, 70, 10};
+        final byte[] data1 = {10, 20, 30, 40};
+        final byte[] data2 = {60, 80, 70, 10};
 
         requestEntity.setReponseData(data1);
         secondRequestEntity.setReponseData(data2);

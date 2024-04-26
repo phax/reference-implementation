@@ -27,9 +27,9 @@ public class MetadataRequestBodyDto {
     @JsonProperty("eFTIGateIndicator")
     private List<@Valid @ValueOfEnum(enumClass = CountryIndicator.class, message = "GATE_INDICATOR_INCORRECT") String> eFTIGateIndicator;
 
-    public static MetadataRequestBodyDto fromControl(ControlDto controlDto){
-        SearchParameter transportMetaData = controlDto.getTransportMetaData();
-        MetadataRequestBodyDto metadataRequestBodyDto = new MetadataRequestBodyDto();
+    public static MetadataRequestBodyDto fromControl(final ControlDto controlDto){
+        final SearchParameter transportMetaData = controlDto.getTransportMetaData();
+        final MetadataRequestBodyDto metadataRequestBodyDto = new MetadataRequestBodyDto();
         metadataRequestBodyDto.setRequestUuid(controlDto.getRequestUuid());
         if (transportMetaData != null){
             metadataRequestBodyDto.setVehicleID(transportMetaData.getVehicleId());

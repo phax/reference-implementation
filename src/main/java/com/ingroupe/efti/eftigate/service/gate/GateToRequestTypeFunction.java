@@ -17,7 +17,7 @@ public class GateToRequestTypeFunction implements Function<List<String>, Request
     private final GateProperties gateProperties;
 
     @Override
-    public RequestTypeEnum apply(List<String> gatesUrls) {
+    public RequestTypeEnum apply(final List<String> gatesUrls) {
         if (CollectionUtils.isNotEmpty(gatesUrls)) {
             if (gatesUrls.size() == 1 && gateProperties.isCurrentGate(gatesUrls.get(0))) {
                 return RequestTypeEnum.LOCAL_METADATA_SEARCH;

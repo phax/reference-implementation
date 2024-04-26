@@ -15,7 +15,7 @@ public class SchedulerConfiguration {
     String defaultSchema;
 
     @Bean
-    public LockProvider lockProvider(DataSource dataSource) {
+    public LockProvider lockProvider(final DataSource dataSource) {
         return new JdbcTemplateLockProvider(dataSource, defaultSchema + ".shedlock");
     }
 }

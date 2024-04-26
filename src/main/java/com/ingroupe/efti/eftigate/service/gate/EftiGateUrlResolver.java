@@ -18,10 +18,10 @@ import java.util.List;
 public class EftiGateUrlResolver {
 
     private final GateRepository gateRepository;
-    public List<String> resolve(MetadataRequestDto metadataRequestDto){
-        List<GateEntity> destinationGates;
+    public List<String> resolve(final MetadataRequestDto metadataRequestDto){
+        final List<GateEntity> destinationGates;
         if (CollectionUtils.isNotEmpty(metadataRequestDto.getEFTIGateIndicator())){
-            List<CountryIndicator> countryIndicators = metadataRequestDto.getEFTIGateIndicator().stream().map(CountryIndicator::valueOf).toList();
+            final List<CountryIndicator> countryIndicators = metadataRequestDto.getEFTIGateIndicator().stream().map(CountryIndicator::valueOf).toList();
             destinationGates = gateRepository.findByCountryIn(countryIndicators);
         } else {
              destinationGates = gateRepository.findAll();
