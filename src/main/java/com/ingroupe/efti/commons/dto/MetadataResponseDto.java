@@ -2,6 +2,7 @@ package com.ingroupe.efti.commons.dto;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.ingroupe.efti.commons.enums.CountryIndicator;
+import com.ingroupe.efti.commons.enums.StatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +24,7 @@ import java.util.List;
 public class MetadataResponseDto {
     private CountryIndicator eFTIGate;
     private String requestUuid;
-    private String status;
+    private StatusEnum status;
     private String errorCode;
     private String errorDescription;
     private List<MetadataResultDto> metadata;
