@@ -81,7 +81,7 @@ class NotificationServiceTest {
         final ApConfigDto apConfigDto = ApConfigDto.builder().build();
         final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
                 .body(Map.of(SENT_FAILURE, Map.of(MESSAGE_ID, messageId))).build();
-        Optional<NotificationDto> result  = service.consume(apConfigDto, receivedNotificationDto);
+        final Optional<NotificationDto> result  = service.consume(apConfigDto, receivedNotificationDto);
         verify(requestRetrievingService, never()).retrieveMessage(apConfigDto, messageId);
         assertTrue(result.isPresent());
         assertEquals(messageId, result.get().getMessageId());
@@ -94,7 +94,7 @@ class NotificationServiceTest {
         final ApConfigDto apConfigDto = ApConfigDto.builder().build();
         final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
                 .body(Map.of(SENT_SUCCESS, Map.of(MESSAGE_ID, messageId))).build();
-        Optional<NotificationDto> result  = service.consume(apConfigDto, receivedNotificationDto);
+        final Optional<NotificationDto> result  = service.consume(apConfigDto, receivedNotificationDto);
         verify(requestRetrievingService, never()).retrieveMessage(apConfigDto, messageId);
         assertTrue(result.isEmpty());
     }

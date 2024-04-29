@@ -41,7 +41,7 @@ public class RequestRetrievingService extends AbstractApService {
                     .action(holderMessaging.value.getUserMessage().getCollaborationInfo().getAction())
                     .fromPartyId(holderMessaging.value.getUserMessage().getPartyInfo().getFrom().getPartyId().getValue())
                     .build();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new SendRequestException("error while sending retrieve message request", e);
         }
     }
@@ -55,7 +55,7 @@ public class RequestRetrievingService extends AbstractApService {
 
         try {
             initApWebService(apConfigDto).markMessageAsDownloaded(markMessageAsDownloadedRequest, holderResponse, holderMessaging);
-        } catch (MarkMessageAsDownloadedFault | MalformedURLException e) {
+        } catch (final MarkMessageAsDownloadedFault | MalformedURLException e) {
             throw new MalformedURLException("Error while try to set message marked as downloaded");
         }
     }

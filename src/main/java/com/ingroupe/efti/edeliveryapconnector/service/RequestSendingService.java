@@ -68,7 +68,7 @@ public class RequestSendingService extends AbstractApService {
     private SubmitResponse sendRequestToAPOrThrow(final ApRequestDto requestDto, final SubmitRequest submitRequest, final Messaging messaging) throws SendRequestException {
         try {
             return initApWebService(requestDto.getApConfig()).submitMessage(submitRequest, messaging);
-        } catch (SubmitMessageFault | MalformedURLException | InaccessibleWSDLException | ClientTransportException e ) {
+        } catch (final SubmitMessageFault | MalformedURLException | InaccessibleWSDLException | ClientTransportException e ) {
             throw new SendRequestException("error while sending request", e);
         }
     }
@@ -79,10 +79,10 @@ public class RequestSendingService extends AbstractApService {
 
         largePayloadType.setContentType(APPLICATION_JSON_VALUE);
         largePayloadType.setPayloadId(PAYLOAD_HREF);
-        DataSource ds;
+        final DataSource ds;
         try {
             ds = new ByteArrayDataSource(requestDto.getBody(), TEXT_PLAIN);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new SendRequestException("error while building request body for request " + requestDto.getRequestId(), e);
         }
         largePayloadType.setValue(new DataHandler(ds));

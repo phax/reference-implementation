@@ -42,7 +42,7 @@ public class NotificationService {
         requestRetrievingService.setMarkedAsDownload(apConfigDto, messageId);
     }
 
-    private Optional<NotificationDto> onSendFailure(ReceivedNotificationDto receivedNotificationDto) {
+    private Optional<NotificationDto> onSendFailure(final ReceivedNotificationDto receivedNotificationDto) {
         log.info(" sent message {} failed", receivedNotificationDto.getMessageId().orElse(null));
 
         return Optional.of(NotificationDto.builder()
@@ -56,7 +56,7 @@ public class NotificationService {
                     .messageId(receivedNotificationDto.getMessageId().orElse(null))
                     .notificationType(NotificationType.RECEIVED)
                     .content(this.requestRetrievingService.retrieveMessage(apConfigDto, receivedNotificationDto.getMessageId().orElse(null))).build());
-        } catch (SendRequestException | RetrieveMessageFault e) {
+        } catch (final SendRequestException | RetrieveMessageFault e) {
             log.error("error while retrieving message " + receivedNotificationDto.getMessageId());
             throw new RetrieveMessageException("error while retrieving message " + receivedNotificationDto.getMessageId().orElse(null)
                     + " " + e.getMessage());
