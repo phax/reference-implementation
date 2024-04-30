@@ -10,6 +10,7 @@ import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
+import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.service.request.EftiRequestUpdater;
 import com.ingroupe.efti.eftigate.service.request.RequestService;
@@ -45,7 +46,7 @@ public class ApIncomingService {
             eftiRequestUpdater.manageSendFailure(notificationDto);
             return;
         }
-        final EDeliveryAction action = EDeliveryAction.getFromValue(notificationDto.getContent().getAction());
+        final EDeliveryAction action = getAction(notificationDto);
         RequestService requestService = getRequestService(action);
         switch (action) {
             case GET_UIL, GET_IDENTIFIERS -> requestService.updateWithResponse(notificationDto);
@@ -53,6 +54,15 @@ public class ApIncomingService {
             case UPLOAD_METADATA -> metadataService.createOrUpdate(parseBodyToMetadata(notificationDto.getContent()));
             default -> log.warn("unmanaged notification type {}", notificationDto.getContent().getAction());
         }
+    }
+
+    private static EDeliveryAction getAction(NotificationDto notificationDto) {
+        final EDeliveryAction action = EDeliveryAction.getFromValue(notificationDto.getContent().getAction());
+        if(action == null) {
+            log.error("unknown edelivery action {}", notificationDto.getContent().getAction());
+            throw new TechnicalException("unknown edelivery action " + notificationDto.getContent().getAction());
+        }
+        return action;
     }
 
     private MetadataDto parseBodyToMetadata(final NotificationContentDto notificationContent) {

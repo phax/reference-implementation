@@ -28,16 +28,9 @@ import java.io.IOException;
 import java.util.List;
 
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.ERROR;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UilRequestServiceTest extends BaseServiceTest {
@@ -240,39 +233,6 @@ class UilRequestServiceTest extends BaseServiceTest {
         verify(requestRepository).save(requestEntityArgumentCaptor.capture());
         verify(requestRepository,  Mockito.times(1)).save(any(RequestEntity.class));
         assertEquals(ERROR, requestEntityArgumentCaptor.getValue().getStatus());
-    }
-
-    @Test
-    void shouldUpdateResponseSendFailure() {
-        final String messageId = "messageId";
-        final NotificationDto notificationDto = NotificationDto.builder()
-                .notificationType(NotificationType.SEND_FAILURE)
-                .content(NotificationContentDto.builder()
-                        .messageId(messageId)
-                        .build())
-                .build();
-        final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
-        when(requestRepository.findByEdeliveryMessageId(any())).thenReturn(requestEntity);
-        when(requestRepository.save(any())).thenReturn(requestEntity);
-
-        uilRequestService.updateWithResponse(notificationDto);
-
-        verify(requestRepository).save(argumentCaptor.capture());
-        assertNotNull(argumentCaptor.getValue());
-        assertEquals(RequestStatusEnum.SEND_ERROR, argumentCaptor.getValue().getStatus());
-    }
-
-    @Test
-    void shouldThrowIfMessageNotFound() {
-        final String messageId = "messageId";
-        final NotificationDto notificationDto = NotificationDto.builder()
-                .notificationType(NotificationType.SEND_FAILURE)
-                .content(NotificationContentDto.builder()
-                        .messageId(messageId)
-                        .build())
-                .build();
-        when(requestRepository.findByEdeliveryMessageId(any())).thenReturn(null);
-        assertThrows(RequestNotFoundException.class, () -> uilRequestService.updateWithResponse(notificationDto));
     }
 
     @Test

@@ -34,6 +34,7 @@ public class EftiRequestUpdater {
         if (externalRequest == null) {
             log.info(" sent message {} successfully", notificationDto.getMessageId());
         } else {
+            externalRequest.getControl().setStatus(StatusEnum.COMPLETE);
             this.updateStatus(externalRequest, SUCCESS);
         }
     }
@@ -44,7 +45,6 @@ public class EftiRequestUpdater {
     }
 
     public void updateStatus(final RequestEntity request, final RequestStatusEnum status) {
-        request.getControl().setStatus(StatusEnum.COMPLETE);
         request.setStatus(status);
         controlService.save(request.getControl());
     }
