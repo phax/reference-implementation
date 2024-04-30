@@ -1,12 +1,14 @@
 package com.ingroupe.efti.eftigate.service.request;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
@@ -14,7 +16,6 @@ import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
-import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
@@ -33,10 +34,9 @@ import org.springframework.stereotype.Component;
 
 import java.net.MalformedURLException;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.ERROR;
-import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SEND_ERROR;
 
 @Slf4j
 @Component
@@ -65,6 +65,10 @@ public abstract class RequestService {
 
     public abstract boolean supports(final RequestTypeEnum requestTypeEnum);
 
+    public abstract boolean supports(final EDeliveryAction eDeliveryAction);
+
+    public abstract void receiveGateRequest(final NotificationDto notificationDto);
+
     public void createAndSendRequest(final ControlDto controlDto, final String destinationUrl){
         final RequestDto requestDto = new RequestDto(controlDto);
         requestDto.setGateUrlDest(StringUtils.isNotBlank(destinationUrl) ? destinationUrl : controlDto.getEftiPlatformUrl());
@@ -73,7 +77,7 @@ public abstract class RequestService {
         this.sendRequest(result);
     }
 
-    protected RequestDto save(final RequestDto requestDto) {
+    public RequestDto save(final RequestDto requestDto) {
         return mapperUtils.requestToRequestDto(requestRepository.save(mapperUtils.requestDtoToRequestEntity(requestDto)));
     }
 
@@ -91,25 +95,16 @@ public abstract class RequestService {
     }
 
     public void updateWithResponse(final NotificationDto notificationDto) {
-        switch (notificationDto.getNotificationType()) {
-            case RECEIVED -> manageMessageReceive(notificationDto);
-            case SEND_FAILURE -> manageSendFailure(notificationDto);
-            default -> log.warn("unknown notification {} ", notificationDto.getNotificationType());
+        if (Objects.requireNonNull(notificationDto.getNotificationType()) == NotificationType.RECEIVED) {
+            manageMessageReceive(notificationDto);
+        } else {
+            log.warn("unknown notification {} ", notificationDto.getNotificationType());
         }
-    }
-
-    protected void manageSendFailure(final NotificationDto notificationDto) {
-        this.updateStatus(findRequestByMessageIdOrThrow(notificationDto.getMessageId()), SEND_ERROR, notificationDto);
     }
 
     protected String getRequestUuid(final String bodyJsonString) {
         final JsonObject parsed = JsonParser.parseString(bodyJsonString).getAsJsonObject();
         return parsed.get("requestUuid").getAsString();
-    }
-
-    protected RequestDto findRequestByMessageIdOrThrow(final String messageId) {
-        return mapperUtils.requestToRequestDto(Optional.ofNullable(this.requestRepository.findByEdeliveryMessageId(messageId))
-                .orElseThrow(() -> new RequestNotFoundException("couldn't find request for messageId: " + messageId)));
     }
 
     public void updateStatus(final RequestDto requestDto, final RequestStatusEnum status, final NotificationDto notificationDto) {

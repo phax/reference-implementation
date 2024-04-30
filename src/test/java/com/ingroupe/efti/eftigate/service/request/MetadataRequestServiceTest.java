@@ -156,14 +156,14 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                         .build())
                 .build();
         when(controlService.getControlByRequestUuid(anyString())).thenReturn(controlDto);
-        when(controlService.createControlFrom(any(), any())).thenReturn(controlDto);
+        when(controlService.createControlFrom(any(), any(), metadataResults)).thenReturn(controlDto);
         when(requestRepository.save(any())).thenReturn(requestEntity);
         //Act
         metadataRequestService.manageMessageReceive(notificationDto);
 
         //assert
         verify(controlService).getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", RequestStatusEnum.IN_PROGRESS);
-        verify(controlService).createControlFrom(any(), any());
+        verify(controlService).createControlFrom(any(), any(), metadataResults);
         verify(requestRepository, times(1)).save(any());
         verify(metadataService).search(any());
         verify(rabbitSenderService).sendMessageToRabbit(any(), any(), any());
@@ -189,7 +189,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         metadataRequestService.manageMessageReceive(notificationDto);
 
         //assert
-        verify(controlService, never()).createControlFrom(any(), any());
+        verify(controlService, never()).createControlFrom(any(), any(), metadataResults);
         verify(metadataService, never()).search(any());
         verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
 
@@ -221,7 +221,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         metadataRequestService.manageMessageReceive(notificationDto);
 
         //assert
-        verify(controlService, never()).createControlFrom(any(), any());
+        verify(controlService, never()).createControlFrom(any(), any(), metadataResults);
         verify(metadataService, never()).search(any());
         verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
 
@@ -252,7 +252,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         metadataRequestService.manageMessageReceive(notificationDto);
 
         //assert
-        verify(controlService, never()).createControlFrom(any(), any());
+        verify(controlService, never()).createControlFrom(any(), any(), metadataResults);
         verify(metadataService, never()).search(any());
         verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
 
@@ -283,7 +283,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         metadataRequestService.manageMessageReceive(notificationDto);
 
         //assert
-        verify(controlService, never()).createControlFrom(any(), any());
+        verify(controlService, never()).createControlFrom(any(), any(), metadataResults);
         verify(metadataService, never()).search(any());
         verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
 

@@ -584,7 +584,7 @@ class ControlServiceTest extends AbstractServiceTest {
         when(controlRepository.save(any())).thenReturn(metadataControl);
 
         //Act
-        final ControlDto controlDto = controlService.createControlFrom(messageBodyDto, "https://efti.gate.france.eu");
+        final ControlDto controlDto = controlService.createControlFrom(messageBodyDto, "https://efti.gate.france.eu", metadataResults);
 
         //Assert
         assertThat(controlDto)

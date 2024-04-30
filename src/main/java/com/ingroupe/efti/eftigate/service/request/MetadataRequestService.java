@@ -4,6 +4,7 @@ import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.commons.dto.MetadataResultDto;
+import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.RECEIVED;
+import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.IDENTIFIERS_ACTIONS;
 import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.IDENTIFIERS_TYPES;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
@@ -89,8 +91,9 @@ public class MetadataRequestService extends RequestService {
 
     private void handleNewControlRequest(final NotificationDto notificationDto, final String bodyFromNotification) {
         final IdentifiersMessageBodyDto requestMessage = getSerializeUtils().mapJsonStringToClass(bodyFromNotification, IdentifiersMessageBodyDto.class);
-        final ControlDto controlDto = getControlService().createControlFrom(requestMessage, notificationDto.getContent().getFromPartyId());
         final List<MetadataDto> metadataDtoList = metadataService.search(buildMetadataRequestDtoFrom(requestMessage));
+        MetadataResults metadataResults = buildMetadataResult(metadataDtoList);
+        final ControlDto controlDto = getControlService().createControlFrom(requestMessage, notificationDto.getContent().getFromPartyId(), metadataResults);
         final RequestDto request = createReceivedRequest(controlDto, metadataDtoList);
         sendRequest(request);
     }
@@ -213,5 +216,15 @@ public class MetadataRequestService extends RequestService {
     @Override
     public boolean supports(final RequestTypeEnum requestTypeEnum) {
         return IDENTIFIERS_TYPES.contains(requestTypeEnum);
+    }
+
+    @Override
+    public boolean supports(EDeliveryAction eDeliveryAction) {
+        return IDENTIFIERS_ACTIONS.contains(eDeliveryAction);
+    }
+
+    @Override
+    public void receiveGateRequest(NotificationDto notificationDto) {
+        throw new UnsupportedOperationException("Forward Operations not supported for Identifiers");
     }
 }

@@ -92,7 +92,7 @@ public class ControlDto {
         return controlDto;
     }
 
-    public static ControlDto fromExternalMetadataControl(final IdentifiersMessageBodyDto messageBodyDto, final RequestTypeEnum requestTypeEnum, final String fromGateUrl, final String eftiGateUrl) {
+    public static ControlDto fromExternalMetadataControl(final IdentifiersMessageBodyDto messageBodyDto, final RequestTypeEnum requestTypeEnum, final String fromGateUrl, final String eftiGateUrl, MetadataResults metadataResults) {
         final ControlDto controlDto = getControlFrom(requestTypeEnum, null, messageBodyDto.getRequestUuid());
         //to check
         controlDto.setEftiGateUrl(eftiGateUrl);
@@ -103,6 +103,7 @@ public class ControlDto {
                 .vehicleCountry(messageBodyDto.getVehicleCountry())
                 .isDangerousGoods(messageBodyDto.getIsDangerousGoods())
                 .build());
+        controlDto.setMetadataResults(metadataResults);
         return controlDto;
     }
 

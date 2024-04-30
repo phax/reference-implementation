@@ -1,5 +1,6 @@
 package com.ingroupe.efti.eftigate.service.request;
 
+import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.UIL_ACTIONS;
 import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.UIL_TYPES;
 
 @Slf4j
@@ -99,6 +101,7 @@ public class UilRequestService extends RequestService {
                 .orElseThrow(() -> new RequestNotFoundException("couldn't find request for requestUuid: " + requestId)));
     }
 
+    @Override
     public void receiveGateRequest(final NotificationDto notificationDto) {
         final MessageBodyDto messageBody = getSerializeUtils().mapDataSourceToClass(notificationDto.getContent().getBody(), MessageBodyDto.class);
 
@@ -143,5 +146,10 @@ public class UilRequestService extends RequestService {
     @Override
     public boolean supports(final RequestTypeEnum requestTypeEnum) {
         return UIL_TYPES.contains(requestTypeEnum);
+    }
+
+    @Override
+    public boolean supports(EDeliveryAction eDeliveryAction) {
+        return UIL_ACTIONS.contains(eDeliveryAction);
     }
 }
