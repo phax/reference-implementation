@@ -20,7 +20,6 @@ import java.util.Optional;
 public class NotificationService {
 
     private final RequestRetrievingService requestRetrievingService;
-
     public Optional<NotificationDto> consume(final ApConfigDto apConfigDto, final ReceivedNotificationDto receivedNotificationDto) {
         if(receivedNotificationDto.getMessageId().isEmpty()) {
             log.error("no message id found for notification {}", receivedNotificationDto);
@@ -31,8 +30,7 @@ public class NotificationService {
         } else if (receivedNotificationDto.isSendFailure()) {
             return onSendFailure(receivedNotificationDto);
         } else if (receivedNotificationDto.isSentSuccess()) {
-            log.info(" sent message {} successfull", receivedNotificationDto.getMessageId().orElse(null));
-            return Optional.empty();
+            return onSendSuccess(receivedNotificationDto);
         }
         log.info("received a notification of type {}", receivedNotificationDto.getBody().keySet());
         return Optional.empty();
@@ -47,6 +45,14 @@ public class NotificationService {
 
         return Optional.of(NotificationDto.builder()
                 .notificationType(NotificationType.SEND_FAILURE)
+                .messageId(receivedNotificationDto.getMessageId().orElse(null)).build());
+    }
+
+    private Optional<NotificationDto> onSendSuccess(final ReceivedNotificationDto receivedNotificationDto) {
+        log.info(" sent message {} successfull", receivedNotificationDto.getMessageId().orElse(null));
+
+        return Optional.of(NotificationDto.builder()
+                .notificationType(NotificationType.SEND_SUCCESS)
                 .messageId(receivedNotificationDto.getMessageId().orElse(null)).build());
     }
 
