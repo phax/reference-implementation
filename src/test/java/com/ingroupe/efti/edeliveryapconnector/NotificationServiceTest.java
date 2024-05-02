@@ -22,18 +22,10 @@ import java.net.MalformedURLException;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.MESSAGE_ID;
-import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.RECEIVE_SUCCESS;
-import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.SENT_FAILURE;
-import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.SENT_SUCCESS;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
 class NotificationServiceTest {
@@ -96,7 +88,9 @@ class NotificationServiceTest {
                 .body(Map.of(SENT_SUCCESS, Map.of(MESSAGE_ID, messageId))).build();
         final Optional<NotificationDto> result  = service.consume(apConfigDto, receivedNotificationDto);
         verify(requestRetrievingService, never()).retrieveMessage(apConfigDto, messageId);
-        assertTrue(result.isEmpty());
+        assertTrue(result.isPresent());
+        assertEquals(messageId, result.get().getMessageId());
+        assertEquals(NotificationType.SEND_SUCCESS, result.get().getNotificationType());
     }
 
     @Test
