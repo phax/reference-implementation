@@ -15,8 +15,6 @@ import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.MetadataResult;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
-import com.ingroupe.efti.eftigate.entity.RequestEntity;
-import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.service.BaseServiceTest;
 import com.ingroupe.efti.metadataregistry.entity.TransportVehicle;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
@@ -36,18 +34,9 @@ import java.util.List;
 
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SUCCESS;
 import static com.ingroupe.efti.eftigate.EftiTestUtils.testFile;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MetadataRequestServiceTest extends BaseServiceTest {
@@ -156,14 +145,14 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                         .build())
                 .build();
         when(controlService.getControlByRequestUuid(anyString())).thenReturn(controlDto);
-        when(controlService.createControlFrom(any(), any())).thenReturn(controlDto);
+        when(controlService.createControlFrom(any(), any(), any())).thenReturn(controlDto);
         when(requestRepository.save(any())).thenReturn(requestEntity);
         //Act
         metadataRequestService.manageMessageReceive(notificationDto);
 
         //assert
         verify(controlService).getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", RequestStatusEnum.IN_PROGRESS);
-        verify(controlService).createControlFrom(any(), any());
+        verify(controlService).createControlFrom(any(), any(), any());
         verify(requestRepository, times(1)).save(any());
         verify(metadataService).search(any());
         verify(rabbitSenderService).sendMessageToRabbit(any(), any(), any());
@@ -189,7 +178,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         metadataRequestService.manageMessageReceive(notificationDto);
 
         //assert
-        verify(controlService, never()).createControlFrom(any(), any());
+        verify(controlService, never()).createControlFrom(any(), any(), any());
         verify(metadataService, never()).search(any());
         verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
 
@@ -221,7 +210,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         metadataRequestService.manageMessageReceive(notificationDto);
 
         //assert
-        verify(controlService, never()).createControlFrom(any(), any());
+        verify(controlService, never()).createControlFrom(any(), any(), any());
         verify(metadataService, never()).search(any());
         verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
 
@@ -252,7 +241,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         metadataRequestService.manageMessageReceive(notificationDto);
 
         //assert
-        verify(controlService, never()).createControlFrom(any(), any());
+        verify(controlService, never()).createControlFrom(any(), any(), any());
         verify(metadataService, never()).search(any());
         verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
 
@@ -283,7 +272,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         metadataRequestService.manageMessageReceive(notificationDto);
 
         //assert
-        verify(controlService, never()).createControlFrom(any(), any());
+        verify(controlService, never()).createControlFrom(any(), any(), any());
         verify(metadataService, never()).search(any());
         verify(rabbitSenderService, never()).sendMessageToRabbit(any(), any(), any());
 
@@ -317,38 +306,6 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         verify(controlService).save(controlEntityArgumentCaptor.capture());
         assertEquals(2, controlEntityArgumentCaptor.getValue().getMetadataResults().getMetadataResult().size());
         assertEquals(1, controlEntityArgumentCaptor.getValue().getRequests().iterator().next().getMetadataResults().getMetadataResult().size());
-    }
-
-
-    @Test
-    void shouldUpdateResponseSendFailure() {
-        final String messageId = "messageId";
-        final NotificationDto notificationDto = NotificationDto.builder()
-                .notificationType(NotificationType.SEND_FAILURE)
-                .content(NotificationContentDto.builder()
-                        .messageId(messageId)
-                        .build())
-                .build();
-        final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
-        when(requestRepository.findByEdeliveryMessageId(any())).thenReturn(requestEntity);
-        when(requestRepository.save(any())).thenReturn(requestEntity);
-        metadataRequestService.updateWithResponse(notificationDto);
-        verify(requestRepository).save(argumentCaptor.capture());
-        assertNotNull(argumentCaptor.getValue());
-        assertEquals(RequestStatusEnum.SEND_ERROR, argumentCaptor.getValue().getStatus());
-    }
-
-    @Test
-    void shouldThrowIfMessageNotFound() {
-        final String messageId = "messageId";
-        final NotificationDto notificationDto = NotificationDto.builder()
-                .notificationType(NotificationType.SEND_FAILURE)
-                .content(NotificationContentDto.builder()
-                        .messageId(messageId)
-                        .build())
-                .build();
-        when(requestRepository.findByEdeliveryMessageId(any())).thenReturn(null);
-        assertThrows(RequestNotFoundException.class, () -> metadataRequestService.updateWithResponse(notificationDto));
     }
 
     @Test

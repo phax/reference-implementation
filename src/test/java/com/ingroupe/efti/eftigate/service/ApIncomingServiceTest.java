@@ -10,7 +10,9 @@ import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
+import com.ingroupe.efti.eftigate.service.request.EftiRequestUpdater;
 import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
+import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
 import com.ingroupe.efti.eftigate.service.request.UilRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import com.sun.istack.ByteArrayDataSource;
@@ -28,15 +30,17 @@ import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto
 import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.RECEIVE_SUCCESS;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ApIncomingServiceTest extends AbstractServiceTest {
     private ApIncomingService service;
     @Mock
     private NotificationService notificationService;
+    @Mock
+    private RequestServiceFactory requestServiceFactory;
+    @Mock
+    private EftiRequestUpdater eftiRequestUpdater;
     @Mock
     private UilRequestService uilRequestService;
     @Mock
@@ -121,7 +125,7 @@ class ApIncomingServiceTest extends AbstractServiceTest {
                         .url(url)
                         .password(password)
                         .username(username).build()).build();
-        service = new ApIncomingService(notificationService, uilRequestService, metadataRequestService, metadataService, gateProperties, serializeUtils);
+        service = new ApIncomingService(notificationService, requestServiceFactory, eftiRequestUpdater, metadataService, gateProperties, serializeUtils);
     }
 
     @Test
@@ -144,6 +148,7 @@ class ApIncomingServiceTest extends AbstractServiceTest {
                 .build();
 
         when(notificationService.consume(apConfigDto, receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
+        when(requestServiceFactory.getRequestServiceByEdeliveryActionType(any())).thenReturn(uilRequestService);
         service.manageIncomingNotification(receivedNotificationDto);
 
         verify(notificationService).consume(apConfigDto, receivedNotificationDto);
@@ -170,6 +175,8 @@ class ApIncomingServiceTest extends AbstractServiceTest {
                 .build();
 
         when(notificationService.consume(apConfigDto, receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
+        when(requestServiceFactory.getRequestServiceByEdeliveryActionType(any())).thenReturn(uilRequestService);
+
         service.manageIncomingNotification(receivedNotificationDto);
 
         verify(notificationService).consume(apConfigDto, receivedNotificationDto);

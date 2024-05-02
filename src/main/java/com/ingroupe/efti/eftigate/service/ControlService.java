@@ -86,14 +86,13 @@ public class ControlService {
                 .fromUilControl(uilDto, gateProperties.isCurrentGate(uilDto.getEFTIGateUrl()) ? RequestTypeEnum.LOCAL_UIL_SEARCH : RequestTypeEnum.EXTERNAL_UIL_SEARCH));
     }
 
-    @Transactional("controlTransactionManager")
     public RequestUuidDto createMetadataControl(final MetadataRequestDto metadataRequestDto) {
         log.info("create metadata control for vehicleId : {}", metadataRequestDto.getVehicleID());
         return createControl(metadataRequestDto, ControlDto.fromLocalMetadataControl(metadataRequestDto, RequestTypeEnum.LOCAL_METADATA_SEARCH));
     }
 
-    public ControlDto createControlFrom(final IdentifiersMessageBodyDto messageBody, final String fromGateUrl) {
-        final ControlDto controlDto = ControlDto.fromExternalMetadataControl(messageBody, EXTERNAL_ASK_METADATA_SEARCH, fromGateUrl, gateProperties.getOwner());
+    public ControlDto createControlFrom(final IdentifiersMessageBodyDto messageBody, final String fromGateUrl, MetadataResults metadataResults) {
+        final ControlDto controlDto = ControlDto.fromExternalMetadataControl(messageBody, EXTERNAL_ASK_METADATA_SEARCH, fromGateUrl, gateProperties.getOwner(), metadataResults);
         return this.save(controlDto);
     }
 
