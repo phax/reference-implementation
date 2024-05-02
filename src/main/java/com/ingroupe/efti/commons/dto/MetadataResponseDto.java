@@ -1,5 +1,6 @@
 package com.ingroupe.efti.commons.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.enums.StatusEnum;
@@ -21,6 +22,7 @@ import java.util.List;
         "errorDescription",
         "metadata"
 })
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MetadataResponseDto {
     private CountryIndicator eFTIGate;
     private String requestUuid;
