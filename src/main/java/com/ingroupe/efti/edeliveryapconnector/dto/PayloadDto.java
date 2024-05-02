@@ -9,10 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class NotificationContentDto {
-    private String messageId;
-    private String action;
-    private String contentType;
-    private String fromPartyId;
-    private String body;
+public class PayloadDto {
+    private String value;
+    private String payloadId;
+    private String mimeType;
 }
