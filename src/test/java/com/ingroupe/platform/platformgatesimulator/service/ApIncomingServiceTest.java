@@ -8,8 +8,6 @@ import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.platform.platformgatesimulator.config.GateProperties;
-import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
-import com.sun.istack.ByteArrayDataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,17 +17,16 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 
 @RunWith(SpringRunner.class)
 @EnableConfigurationProperties(GateProperties.class)
-@TestPropertySource("classpath:application-test.properties")
 class ApIncomingServiceTest {
 
     AutoCloseable openMocks;
@@ -72,7 +69,7 @@ class ApIncomingServiceTest {
     }
 
     @Test
-    void manageIncomingNotificationBadFilesTest() throws IOException, UuidFileNotFoundException, InterruptedException {
+    void manageIncomingNotificationBadFilesTest() throws IOException, InterruptedException {
         final String body = """
         {
             "requestUuid" : "reques",
@@ -83,19 +80,20 @@ class ApIncomingServiceTest {
         }
         """;
 
-        NotificationDto notificationDto = new NotificationDto();
+        final NotificationDto notificationDto = new NotificationDto();
         notificationDto.setContent(NotificationContentDto.builder()
                 .messageId("messageId")
-                .body(new ByteArrayDataSource(body.getBytes(), "osef"))
+                .body(body)
                 .action(EDeliveryAction.GET_UIL.getValue())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .build());
-        Mockito.when(notificationService.consume(any(), any())).thenReturn(Optional.of(notificationDto));
+        Mockito.when(notificationService.consume(any())).thenReturn(Optional.of(notificationDto));
         apIncomingService.manageIncomingNotification(new ReceivedNotificationDto());
+        verify(readerService).readFromFile(any());
     }
 
     @Test
-    void manageIncomingNotificationTest() throws IOException, UuidFileNotFoundException, InterruptedException {
+    void manageIncomingNotificationTest() throws IOException, InterruptedException {
         final String body = """
         {
             "requestUuid" : "12345678-ab12-4ab6-8999-123456789abc",
@@ -106,15 +104,16 @@ class ApIncomingServiceTest {
         }
         """;
 
-        NotificationDto notificationDto = new NotificationDto();
+        final NotificationDto notificationDto = new NotificationDto();
         notificationDto.setContent(NotificationContentDto.builder()
                 .messageId("messageId")
-                .body(new ByteArrayDataSource(body.getBytes(), "osef"))
+                .body(body)
                 .action(EDeliveryAction.GET_UIL.getValue())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .build());
-        Mockito.when(notificationService.consume(any(), any())).thenReturn(Optional.of(notificationDto));
+        Mockito.when(notificationService.consume(any())).thenReturn(Optional.of(notificationDto));
         Mockito.when(readerService.readFromFile(any())).thenReturn("eftidata");
         apIncomingService.manageIncomingNotification(new ReceivedNotificationDto());
+        verify(readerService).readFromFile(any());
     }
 }

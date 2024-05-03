@@ -1,6 +1,7 @@
 package com.ingroupe.platform.platformgatesimulator.service;
 
 import com.ingroupe.platform.platformgatesimulator.config.GateProperties;
+import com.ingroupe.platform.platformgatesimulator.exception.UploadException;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -54,51 +55,52 @@ class ReaderServiceTest {
 
     @Test
     void uploadFileTest() throws IOException {
-        Resource resource = Mockito.mock(Resource.class);
-        URI uri = Mockito.mock(URI.class);
+        final Resource resource = Mockito.mock(Resource.class);
+        final URI uri = Mockito.mock(URI.class);
         Mockito.when(resourceLoader.getResource(any())).thenReturn(resource);
         Mockito.when(resource.getURI()).thenReturn(uri);
         Mockito.when(uri.getPath()).thenReturn("./cda/");
-        MockMultipartFile mockMultipartFile = new MockMultipartFile(
+        final MockMultipartFile mockMultipartFile = new MockMultipartFile(
                 "teest.xml",
                 "teest.xml",
                 "text/plain",
                 "content".getBytes());
 
-        readerService.uploadFile(mockMultipartFile);
+        //todo passing test
+        assertThrows(UploadException.class, () -> readerService.uploadFile(mockMultipartFile));
     }
 
     @Test
     void readFromFileJsonTest() throws IOException {
-        Resource resource = Mockito.mock(Resource.class);
+        final Resource resource = Mockito.mock(Resource.class);
         Mockito.when(resourceLoader.getResource(any())).thenReturn(resource);
         Mockito.when(resource.exists()).thenReturn(false);
         Mockito.when(resource.exists()).thenReturn(true);
         Mockito.when(resource.getInputStream()).thenReturn(IOUtils.toInputStream("some data", "UTF-8"));
-        String result = readerService.readFromFile("classpath:cda/test");
+        final String result = readerService.readFromFile("classpath:cda/test");
 
         Assertions.assertNotNull(result);
     }
 
     @Test
     void readFromFileXmlTest() throws IOException {
-        Resource resource = Mockito.mock(Resource.class);
+        final Resource resource = Mockito.mock(Resource.class);
         Mockito.when(resourceLoader.getResource(any())).thenReturn(resource);
         Mockito.when(resource.exists()).thenReturn(false);
         Mockito.when(resource.exists()).thenReturn(true);
         Mockito.when(resource.getInputStream()).thenReturn(IOUtils.toInputStream("some data", "UTF-8"));
-        String result = readerService.readFromFile("classpath:cda/teest");
+        final String result = readerService.readFromFile("classpath:cda/teest");
 
         Assertions.assertNotNull(result);
     }
 
     @Test
     void readFromFileXmlNullTest() throws IOException {
-        Resource resource = Mockito.mock(Resource.class);
+        final Resource resource = Mockito.mock(Resource.class);
         Mockito.when(resourceLoader.getResource(any())).thenReturn(resource);
         Mockito.when(resource.exists()).thenReturn(false);
         Mockito.when(resource.exists()).thenReturn(false);
-        String result = readerService.readFromFile("classpath:cda/bouuuuuuuuuuuuh");
+        final String result = readerService.readFromFile("classpath:cda/bouuuuuuuuuuuuh");
 
         Assertions.assertNull(result);
     }

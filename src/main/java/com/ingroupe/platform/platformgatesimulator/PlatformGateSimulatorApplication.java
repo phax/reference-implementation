@@ -10,7 +10,7 @@ import org.springframework.context.annotation.PropertySource;
 @SpringBootApplication
 public class PlatformGateSimulatorApplication {
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         SpringApplication.run(PlatformGateSimulatorApplication.class, args);
     }
 
