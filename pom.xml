@@ -28,7 +28,7 @@
 	</distributionManagement>
 
 	<scm>
-		<connection>scm:git:http://gitlab.imprimerienationale.fr/efti/metadata-registry.git</connection>
+		<connection>scm:git:https://gitlab.imprimerienationale.fr/efti/metadata-registry.git</connection>
 	</scm>
 
 	<properties>
@@ -112,6 +112,12 @@
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
 			<version>2.13.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
 		</dependency>
 
 	</dependencies>

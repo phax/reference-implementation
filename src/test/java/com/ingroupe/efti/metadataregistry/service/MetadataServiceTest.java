@@ -65,7 +65,7 @@ class MetadataServiceTest extends AbstractServiceTest {
     @Test
     void shouldCreateMetadata() {
         when(repository.save(any())).thenReturn(metadata);
-        ArgumentCaptor<MetadataEntity> argumentCaptor = ArgumentCaptor.forClass(MetadataEntity.class);
+        final ArgumentCaptor<MetadataEntity> argumentCaptor = ArgumentCaptor.forClass(MetadataEntity.class);
 
         service.createOrUpdate(metadataDto);
 
@@ -78,7 +78,7 @@ class MetadataServiceTest extends AbstractServiceTest {
     @Test
     void shouldCreateMetadataAndIgnoreWrongsFields() {
         when(repository.save(any())).thenReturn(metadata);
-        ArgumentCaptor<MetadataEntity> argumentCaptor = ArgumentCaptor.forClass(MetadataEntity.class);
+        final ArgumentCaptor<MetadataEntity> argumentCaptor = ArgumentCaptor.forClass(MetadataEntity.class);
 
         service.createOrUpdate(metadataDto);
 
@@ -96,7 +96,7 @@ class MetadataServiceTest extends AbstractServiceTest {
     void shouldCreateIfUilNotFound() {
         when(repository.save(any())).thenReturn(metadata);
         when(repository.findByUil(GATE_URL, DATA_UUID, PLATFORM_URL)).thenReturn(Optional.empty());
-        ArgumentCaptor<MetadataEntity> argumentCaptor = ArgumentCaptor.forClass(MetadataEntity.class);
+        final ArgumentCaptor<MetadataEntity> argumentCaptor = ArgumentCaptor.forClass(MetadataEntity.class);
 
         service.createOrUpdate(metadataDto);
 
@@ -111,7 +111,7 @@ class MetadataServiceTest extends AbstractServiceTest {
     void shouldUpdateIfUILFound() {
         when(repository.save(any())).thenReturn(metadata);
         when(repository.findByUil(GATE_URL, DATA_UUID, PLATFORM_URL)).thenReturn(Optional.of(MetadataEntity.builder().build()));
-        ArgumentCaptor<MetadataEntity> argumentCaptor = ArgumentCaptor.forClass(MetadataEntity.class);
+        final ArgumentCaptor<MetadataEntity> argumentCaptor = ArgumentCaptor.forClass(MetadataEntity.class);
 
         service.createOrUpdate(metadataDto);
 

@@ -65,7 +65,7 @@ public class MetadataService {
         metadataDto.setEFTIGateUrl(gateFrom);
 
         final Validator validator;
-        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+        try (final ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
 
