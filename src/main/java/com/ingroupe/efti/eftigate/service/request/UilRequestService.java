@@ -65,7 +65,7 @@ public class UilRequestService extends RequestService {
     @Override
     public void manageMessageReceive(final NotificationDto notificationDto) {
         final MessageBodyDto messageBody =
-                getSerializeUtils().mapJsonStringToClass(notificationDto.getContent().getBody(),MessageBodyDto.class);
+                getSerializeUtils().mapXmlStringToClass(notificationDto.getContent().getBody(),MessageBodyDto.class);
 
         final RequestDto requestDto = this.findByRequestUuidOrThrow(messageBody.getRequestUuid());
         if (messageBody.getStatus().equals(StatusEnum.COMPLETE.name())) {
@@ -103,7 +103,7 @@ public class UilRequestService extends RequestService {
 
     @Override
     public void receiveGateRequest(final NotificationDto notificationDto) {
-        final MessageBodyDto messageBody = getSerializeUtils().mapJsonStringToClass(notificationDto.getContent().getBody(), MessageBodyDto.class);
+        final MessageBodyDto messageBody = getSerializeUtils().mapXmlStringToClass(notificationDto.getContent().getBody(), MessageBodyDto.class);
 
         final RequestEntity requestEntity = getRequestRepository()
                 .findByControlRequestUuidAndStatus(messageBody.getRequestUuid(), RequestStatusEnum.IN_PROGRESS);

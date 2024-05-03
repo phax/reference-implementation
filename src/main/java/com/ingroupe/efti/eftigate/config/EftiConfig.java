@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.cfg.CoercionAction;
 import com.fasterxml.jackson.databind.cfg.CoercionInputShape;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.jakarta.xmlbind.JakartaXmlBindAnnotationModule;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.AbstractConverter;
@@ -154,6 +155,7 @@ public class EftiConfig {
         xmlMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         xmlMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         xmlMapper.registerModule(new JavaTimeModule());
+        xmlMapper.registerModule(new JakartaXmlBindAnnotationModule());
         return xmlMapper;
     }
 }

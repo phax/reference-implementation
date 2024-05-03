@@ -5,9 +5,7 @@ import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
-import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
-import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.service.request.EftiRequestUpdater;
 import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
@@ -85,46 +83,9 @@ class ApIncomingServiceTest extends AbstractServiceTest {
         </transportVehicles>
     </metadata>
     """;
-    private final static String html_body = """
-    {
-        "eFTIPlatformUrl" : "https://efti.platform.001.eu",
-        "eFTIDataUuid" : "ac0bbbc9-f46e-4093-b523-830431fb1001",
-        "eFTIGateUrl": "https://efti.gate.001.eu",
-        "isDangerousGoods" : true,
-        "journeyStart" : "2023-06-11T12:2:00+0000",
-        "countryStart" : null,
-        "journeyEnd" : "2023-08-13T12:23:00+0000",
-        "countryEnd" : "DE",
-        "transportVehicles" : [{
-            "transportMode" : "tututu",
-            "sequence" : 1,
-            "vehicleId" : "abc123",
-            "vehicleCountry" : "IT",
-            "journeyStart" : "2023-06-11T12:23:00+0000",
-            "countryStart" : "IT",
-            "journeyEnd" : "2023-06-12T12:02:00+0000",
-            "countryEnd" : "IT"
-        }, {
-            "transportMode" : "ROAD",
-            "sequence" : 221,
-            "vehicleId" : "abc124",
-            "vehicleCountry" : null,
-            "journeyStart" : "2023-06-12T12:03:00+0000",
-            "countryStart" : "gITggggg",
-            "journeyEnd" : "2023-08-13T12:02:00+0000",
-            "countryEnd" : "DE"
-        }]\s
-    }
-    """;
 
     @BeforeEach
     public void before() {
-        final GateProperties gateProperties = GateProperties.builder()
-                .owner("france")
-                .ap(GateProperties.ApConfig.builder()
-                        .url(url)
-                        .password(password)
-                        .username(username).build()).build();
         service = new ApIncomingService(notificationService, requestServiceFactory, eftiRequestUpdater, metadataService, serializeUtils);
     }
 
@@ -196,28 +157,6 @@ class ApIncomingServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    void shouldManageIncomingNotificationCreateMetadataJson() {
-        final String messageId = "messageId";
-        final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
-                .body(Map.of(SUBMIT_MESSAGE, Map.of(MESSAGE_ID, messageId))).build();
-        final NotificationDto notificationDto = NotificationDto.builder()
-                .content(NotificationContentDto.builder()
-                        .messageId(messageId)
-                        .body(html_body)
-                        .action(EDeliveryAction.UPLOAD_METADATA.getValue())
-                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-                        .build())
-                .notificationType(NotificationType.RECEIVED)
-                .build();
-
-        when(notificationService.consume(receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
-        service.manageIncomingNotification(receivedNotificationDto);
-
-        verify(notificationService).consume(receivedNotificationDto);
-        verify(metadataService).createOrUpdate(any());
-    }
-
-    @Test
     void shouldThrowIfActionNotFound() {
         final String messageId = "messageId";
         final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
@@ -225,7 +164,7 @@ class ApIncomingServiceTest extends AbstractServiceTest {
         final NotificationDto notificationDto = NotificationDto.builder()
                 .content(NotificationContentDto.builder()
                         .messageId(messageId)
-                        .body(html_body)
+                        .body(xml_body)
                         .action("osef")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .build())
@@ -234,25 +173,6 @@ class ApIncomingServiceTest extends AbstractServiceTest {
 
         when(notificationService.consume(receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
         assertThrows(TechnicalException.class, () -> service.manageIncomingNotification(receivedNotificationDto));
-    }
-
-    @Test
-    void shouldThrowIfContentTypeNotFound() {
-        final String messageId = "messageId";
-        final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
-                .body(Map.of(SUBMIT_MESSAGE, Map.of(MESSAGE_ID, messageId))).build();
-        final NotificationDto notificationDto = NotificationDto.builder()
-                .content(NotificationContentDto.builder()
-                        .messageId(messageId)
-                        .body(html_body)
-                        .action("uploadMetadata")
-                        .contentType(MediaType.APPLICATION_CBOR_VALUE)
-                        .build())
-                .notificationType(NotificationType.RECEIVED)
-                .build();
-
-        when(notificationService.consume(receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
-        assertThrows(RetrieveMessageException.class, () -> service.manageIncomingNotification(receivedNotificationDto));
     }
 
     @Test

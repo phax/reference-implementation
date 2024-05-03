@@ -90,7 +90,7 @@ public class MetadataRequestService extends RequestService {
     }
 
     private void handleNewControlRequest(final NotificationDto notificationDto, final String bodyFromNotification) {
-        final IdentifiersMessageBodyDto requestMessage = getSerializeUtils().mapJsonStringToClass(bodyFromNotification, IdentifiersMessageBodyDto.class);
+        final IdentifiersMessageBodyDto requestMessage = getSerializeUtils().mapXmlStringToClass(bodyFromNotification, IdentifiersMessageBodyDto.class);
         final List<MetadataDto> metadataDtoList = metadataService.search(buildMetadataRequestDtoFrom(requestMessage));
         MetadataResults metadataResults = buildMetadataResult(metadataDtoList);
         final ControlDto controlDto = getControlService().createControlFrom(requestMessage, notificationDto.getContent().getFromPartyId(), metadataResults);
@@ -99,7 +99,7 @@ public class MetadataRequestService extends RequestService {
     }
 
     private void updateExistingControl(final String bodyFromNotification, final ControlEntity existingControl, final NotificationDto notificationDto) {
-        final MetadataResponseDto response = getSerializeUtils().mapJsonStringToClass(bodyFromNotification, MetadataResponseDto.class);
+        final MetadataResponseDto response = getSerializeUtils().mapXmlStringToClass(bodyFromNotification, MetadataResponseDto.class);
         final List<MetadataResultDto> metadataResultDtos = response.getMetadata();
         final MetadataResults metadataResults = buildMetadataResultFrom(metadataResultDtos);
         updateControlMetadata(existingControl, metadataResults, metadataResultDtos);

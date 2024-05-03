@@ -37,9 +37,9 @@ public class SerializeUtils {
         }
     }
 
-    public <T> String mapObjectToJsonString(final T content) {
+    public <T> String mapObjectToXmlString(final T content) {
         try {
-            return objectMapper.writeValueAsString(content);
+            return xmlMapper.writeValueAsString(content);
         } catch (final JsonProcessingException e) {
             throw new TechnicalException("error while writing content", e);
         }

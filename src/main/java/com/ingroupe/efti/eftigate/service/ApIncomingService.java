@@ -6,7 +6,6 @@ import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
-import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
@@ -16,7 +15,6 @@ import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -61,13 +59,7 @@ public class ApIncomingService {
     }
 
     private MetadataDto parseBodyToMetadata(final NotificationContentDto notificationContent) {
-        final String body = notificationContent.getBody();
-
-        return switch (notificationContent.getContentType()) {
-            case MediaType.APPLICATION_JSON_VALUE -> serializeUtils.mapJsonStringToClass(body, MetadataDto.class);
-            case MediaType.TEXT_XML_VALUE -> serializeUtils.mapXmlStringToClass(body, MetadataDto.class);
-            default -> throw new RetrieveMessageException("unknown content type: " + notificationContent.getContentType());
-        };
+        return serializeUtils.mapXmlStringToClass(notificationContent.getBody(), MetadataDto.class);
     }
 
     private RequestService getRequestService(final EDeliveryAction eDeliveryAction) {
