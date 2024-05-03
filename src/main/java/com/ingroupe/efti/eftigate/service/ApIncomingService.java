@@ -2,14 +2,12 @@ package com.ingroupe.efti.eftigate.service;
 
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
-import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
-import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.service.request.EftiRequestUpdater;
@@ -30,15 +28,13 @@ public class ApIncomingService {
     private final RequestServiceFactory requestServiceFactory;
     private final EftiRequestUpdater eftiRequestUpdater;
     private final MetadataService metadataService;
-    private final GateProperties gateProperties;
     private final SerializeUtils serializeUtils;
 
     public void manageIncomingNotification(final ReceivedNotificationDto receivedNotificationDto) {
-         notificationService.consume(createApConfig(), receivedNotificationDto).ifPresent(this::rootResponse);
+         notificationService.consume(receivedNotificationDto).ifPresent(this::rootResponse);
     }
 
     private void rootResponse(final NotificationDto notificationDto) {
-
         if (NotificationType.SEND_SUCCESS.equals(notificationDto.getNotificationType())) {
             eftiRequestUpdater.manageSendSuccess(notificationDto);
             return;
@@ -65,21 +61,13 @@ public class ApIncomingService {
     }
 
     private MetadataDto parseBodyToMetadata(final NotificationContentDto notificationContent) {
-        final String body = serializeUtils.readDataSourceOrThrow(notificationContent.getBody());
+        final String body = notificationContent.getBody();
 
         return switch (notificationContent.getContentType()) {
             case MediaType.APPLICATION_JSON_VALUE -> serializeUtils.mapJsonStringToClass(body, MetadataDto.class);
             case MediaType.TEXT_XML_VALUE -> serializeUtils.mapXmlStringToClass(body, MetadataDto.class);
             default -> throw new RetrieveMessageException("unknown content type: " + notificationContent.getContentType());
         };
-    }
-
-    private ApConfigDto createApConfig() {
-        return ApConfigDto.builder()
-                .username(gateProperties.getAp().getUsername())
-                .password(gateProperties.getAp().getPassword())
-                .url(gateProperties.getAp().getUrl())
-                .build();
     }
 
     private RequestService getRequestService(final EDeliveryAction eDeliveryAction) {
