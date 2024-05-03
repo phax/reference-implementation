@@ -17,13 +17,13 @@ public class RequestServiceFactory {
     {
         return requestServices.stream()
                 .filter(requestService -> requestService.supports(requestType)).findFirst()
-                .orElseThrow();
+                .orElse(null);
     }
 
     public RequestService getRequestServiceByEdeliveryActionType(final EDeliveryAction eDeliveryAction)
     {
         return requestServices.stream()
                 .filter(requestService -> requestService.supports(eDeliveryAction)).findFirst()
-                .orElseThrow();
+                .orElse(null);
     }
 }
