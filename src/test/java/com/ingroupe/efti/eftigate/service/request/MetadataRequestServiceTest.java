@@ -27,16 +27,23 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.mail.util.ByteArrayDataSource;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SUCCESS;
 import static com.ingroupe.efti.eftigate.EftiTestUtils.testFile;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class MetadataRequestServiceTest extends BaseServiceTest {
@@ -71,7 +78,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .transportVehicles(List.of(TransportVehicle.builder()
                         .vehicleId("abc123").vehicleCountry(CountryIndicator.FR).build(), TransportVehicle.builder()
                         .vehicleId("abc124").vehicleCountry(CountryIndicator.BE).build())).build();
-        metadataRequestService = new MetadataRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, metadataService, notificationService, serializeUtils);
+        metadataRequestService = new MetadataRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, metadataService, requestUpdaterService, serializeUtils);
     }
 
     @Test
@@ -141,7 +148,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId("messageId")
-                        .body(new ByteArrayDataSource(testFile("/json/FTI019.json"), "application/json"))
+                        .body(testFile("/json/FTI019.json"))
                         .build())
                 .build();
         when(controlService.getControlByRequestUuid(anyString())).thenReturn(controlDto);
@@ -164,7 +171,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId("messageId")
-                        .body(new ByteArrayDataSource(testFile("/json/FTI020.json"), "application/json"))
+                        .body(testFile("/json/FTI020.json"))
                         .fromPartyId("gate")
                         .build())
                 .build();
@@ -195,7 +202,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId("messageId")
-                        .body(new ByteArrayDataSource(testFile("/json/FTI020.json"), "application/json"))
+                        .body(testFile("/json/FTI020.json"))
                         .fromPartyId("gate")
                         .build())
                 .build();
@@ -226,7 +233,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId("messageId")
-                        .body(new ByteArrayDataSource(testFile("/json/FTI020.json"), "application/json"))
+                        .body(testFile("/json/FTI020.json"))
                         .fromPartyId("gate")
                         .build())
                 .build();
@@ -257,7 +264,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId("messageId")
-                        .body(new ByteArrayDataSource(testFile("/json/FTI020.json"), "application/json"))
+                        .body(testFile("/json/FTI020.json"))
                         .fromPartyId("gate")
                         .build())
                 .build();
@@ -287,7 +294,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId("messageId")
-                        .body(new ByteArrayDataSource(testFile("/json/FTI020.json"), "application/json"))
+                        .body(testFile("/json/FTI020.json"))
                         .build())
                 .build();
         controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);

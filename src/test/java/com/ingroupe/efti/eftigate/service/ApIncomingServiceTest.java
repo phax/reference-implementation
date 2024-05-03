@@ -1,7 +1,6 @@
 package com.ingroupe.efti.eftigate.service;
 
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
-import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
@@ -15,7 +14,6 @@ import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
 import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
 import com.ingroupe.efti.eftigate.service.request.UilRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
-import com.sun.istack.ByteArrayDataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,10 +25,12 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.MESSAGE_ID;
-import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.RECEIVE_SUCCESS;
+import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.SUBMIT_MESSAGE;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ApIncomingServiceTest extends AbstractServiceTest {
@@ -125,19 +125,14 @@ class ApIncomingServiceTest extends AbstractServiceTest {
                         .url(url)
                         .password(password)
                         .username(username).build()).build();
-        service = new ApIncomingService(notificationService, requestServiceFactory, eftiRequestUpdater, metadataService, gateProperties, serializeUtils);
+        service = new ApIncomingService(notificationService, requestServiceFactory, eftiRequestUpdater, metadataService, serializeUtils);
     }
 
     @Test
     void shouldManageIncomingNotificationForwardUil() {
         final String messageId = "messageId";
         final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
-                .body(Map.of(RECEIVE_SUCCESS, Map.of(MESSAGE_ID, messageId))).build();
-        final ApConfigDto apConfigDto = ApConfigDto.builder()
-                .username(username)
-                .password(password)
-                .url(url)
-                .build();
+                .body(Map.of(SUBMIT_MESSAGE, Map.of(MESSAGE_ID, messageId))).build();
         final NotificationDto notificationDto = NotificationDto.builder()
                 .content(NotificationContentDto.builder()
                         .messageId(messageId)
@@ -147,11 +142,11 @@ class ApIncomingServiceTest extends AbstractServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .build();
 
-        when(notificationService.consume(apConfigDto, receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
+        when(notificationService.consume(receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
         when(requestServiceFactory.getRequestServiceByEdeliveryActionType(any())).thenReturn(uilRequestService);
         service.manageIncomingNotification(receivedNotificationDto);
 
-        verify(notificationService).consume(apConfigDto, receivedNotificationDto);
+        verify(notificationService).consume(receivedNotificationDto);
         verify(uilRequestService).receiveGateRequest(notificationDto);
     }
 
@@ -159,12 +154,7 @@ class ApIncomingServiceTest extends AbstractServiceTest {
     void shouldManageIncomingNotification() {
         final String messageId = "messageId";
         final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
-                .body(Map.of(RECEIVE_SUCCESS, Map.of(MESSAGE_ID, messageId))).build();
-        final ApConfigDto apConfigDto = ApConfigDto.builder()
-                .username(username)
-                .password(password)
-                .url(url)
-                .build();
+                .body(Map.of(SUBMIT_MESSAGE, Map.of(MESSAGE_ID, messageId))).build();
         final NotificationDto notificationDto = NotificationDto.builder()
                 .content(NotificationContentDto.builder()
                         .messageId(messageId)
@@ -174,12 +164,12 @@ class ApIncomingServiceTest extends AbstractServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .build();
 
-        when(notificationService.consume(apConfigDto, receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
+        when(notificationService.consume(receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
         when(requestServiceFactory.getRequestServiceByEdeliveryActionType(any())).thenReturn(uilRequestService);
 
         service.manageIncomingNotification(receivedNotificationDto);
 
-        verify(notificationService).consume(apConfigDto, receivedNotificationDto);
+        verify(notificationService).consume(receivedNotificationDto);
         verify(uilRequestService).updateWithResponse(notificationDto);
     }
 
@@ -187,26 +177,21 @@ class ApIncomingServiceTest extends AbstractServiceTest {
     void shouldManageIncomingNotificationCreateMetadataXml() {
         final String messageId = "messageId";
         final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
-                .body(Map.of(RECEIVE_SUCCESS, Map.of(MESSAGE_ID, messageId))).build();
-        final ApConfigDto apConfigDto = ApConfigDto.builder()
-                .username(username)
-                .password(password)
-                .url(url)
-                .build();
+                .body(Map.of(SUBMIT_MESSAGE, Map.of(MESSAGE_ID, messageId))).build();
         final NotificationDto notificationDto = NotificationDto.builder()
                 .content(NotificationContentDto.builder()
                         .messageId(messageId)
-                        .body(new ByteArrayDataSource(xml_body.getBytes(), "osef"))
+                        .body(xml_body)
                         .action(EDeliveryAction.UPLOAD_METADATA.getValue())
                         .contentType(MediaType.TEXT_XML_VALUE)
                         .build())
                 .notificationType(NotificationType.RECEIVED)
                 .build();
 
-        when(notificationService.consume(apConfigDto, receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
+        when(notificationService.consume(receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
         service.manageIncomingNotification(receivedNotificationDto);
 
-        verify(notificationService).consume(apConfigDto, receivedNotificationDto);
+        verify(notificationService).consume(receivedNotificationDto);
         verify(metadataService).createOrUpdate(any());
     }
 
@@ -214,26 +199,21 @@ class ApIncomingServiceTest extends AbstractServiceTest {
     void shouldManageIncomingNotificationCreateMetadataJson() {
         final String messageId = "messageId";
         final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
-                .body(Map.of(RECEIVE_SUCCESS, Map.of(MESSAGE_ID, messageId))).build();
-        final ApConfigDto apConfigDto = ApConfigDto.builder()
-                .username(username)
-                .password(password)
-                .url(url)
-                .build();
+                .body(Map.of(SUBMIT_MESSAGE, Map.of(MESSAGE_ID, messageId))).build();
         final NotificationDto notificationDto = NotificationDto.builder()
                 .content(NotificationContentDto.builder()
                         .messageId(messageId)
-                        .body(new ByteArrayDataSource(html_body.getBytes(), "osef"))
+                        .body(html_body)
                         .action(EDeliveryAction.UPLOAD_METADATA.getValue())
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .build())
                 .notificationType(NotificationType.RECEIVED)
                 .build();
 
-        when(notificationService.consume(apConfigDto, receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
+        when(notificationService.consume(receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
         service.manageIncomingNotification(receivedNotificationDto);
 
-        verify(notificationService).consume(apConfigDto, receivedNotificationDto);
+        verify(notificationService).consume(receivedNotificationDto);
         verify(metadataService).createOrUpdate(any());
     }
 
@@ -241,23 +221,18 @@ class ApIncomingServiceTest extends AbstractServiceTest {
     void shouldThrowIfActionNotFound() {
         final String messageId = "messageId";
         final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
-                .body(Map.of(RECEIVE_SUCCESS, Map.of(MESSAGE_ID, messageId))).build();
-        final ApConfigDto apConfigDto = ApConfigDto.builder()
-                .username(username)
-                .password(password)
-                .url(url)
-                .build();
+                .body(Map.of(SUBMIT_MESSAGE, Map.of(MESSAGE_ID, messageId))).build();
         final NotificationDto notificationDto = NotificationDto.builder()
                 .content(NotificationContentDto.builder()
                         .messageId(messageId)
-                        .body(new ByteArrayDataSource(html_body.getBytes(), "osef"))
+                        .body(html_body)
                         .action("osef")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .build())
                 .notificationType(NotificationType.RECEIVED)
                 .build();
 
-        when(notificationService.consume(apConfigDto, receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
+        when(notificationService.consume(receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
         assertThrows(TechnicalException.class, () -> service.manageIncomingNotification(receivedNotificationDto));
     }
 
@@ -265,23 +240,18 @@ class ApIncomingServiceTest extends AbstractServiceTest {
     void shouldThrowIfContentTypeNotFound() {
         final String messageId = "messageId";
         final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
-                .body(Map.of(RECEIVE_SUCCESS, Map.of(MESSAGE_ID, messageId))).build();
-        final ApConfigDto apConfigDto = ApConfigDto.builder()
-                .username(username)
-                .password(password)
-                .url(url)
-                .build();
+                .body(Map.of(SUBMIT_MESSAGE, Map.of(MESSAGE_ID, messageId))).build();
         final NotificationDto notificationDto = NotificationDto.builder()
                 .content(NotificationContentDto.builder()
                         .messageId(messageId)
-                        .body(new ByteArrayDataSource(html_body.getBytes(), "osef"))
+                        .body(html_body)
                         .action("uploadMetadata")
                         .contentType(MediaType.APPLICATION_CBOR_VALUE)
                         .build())
                 .notificationType(NotificationType.RECEIVED)
                 .build();
 
-        when(notificationService.consume(apConfigDto, receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
+        when(notificationService.consume(receivedNotificationDto)).thenReturn(Optional.of(notificationDto));
         assertThrows(RetrieveMessageException.class, () -> service.manageIncomingNotification(receivedNotificationDto));
     }
 
@@ -289,17 +259,12 @@ class ApIncomingServiceTest extends AbstractServiceTest {
     void shouldNotUpdateResponseIfNoMessage() {
         final String messageId = "messageId";
         final ReceivedNotificationDto receivedNotificationDto = ReceivedNotificationDto.builder()
-                .body(Map.of(RECEIVE_SUCCESS, Map.of(MESSAGE_ID, messageId))).build();
-        final ApConfigDto apConfigDto = ApConfigDto.builder()
-                .username(username)
-                .password(password)
-                .url(url)
-                .build();
+                .body(Map.of(SUBMIT_MESSAGE, Map.of(MESSAGE_ID, messageId))).build();
 
-        when(notificationService.consume(apConfigDto, receivedNotificationDto)).thenReturn(Optional.empty());
+        when(notificationService.consume(receivedNotificationDto)).thenReturn(Optional.empty());
         service.manageIncomingNotification(receivedNotificationDto);
 
-        verify(notificationService).consume(apConfigDto, receivedNotificationDto);
+        verify(notificationService).consume(receivedNotificationDto);
         verify(uilRequestService, never()).updateWithResponse(any());
     }
 }

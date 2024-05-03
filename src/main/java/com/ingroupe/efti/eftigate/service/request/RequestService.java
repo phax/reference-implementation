@@ -9,7 +9,7 @@ import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
-import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
+import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
@@ -49,7 +49,7 @@ public abstract class RequestService {
     @Lazy
     private final ControlService controlService;
     private final GateProperties gateProperties;
-    private final NotificationService notificationService;
+    private final RequestUpdaterService requestUpdaterService;
     private final SerializeUtils serializeUtils;
 
     @Value("${spring.rabbitmq.queues.eftiSendMessageExchange:efti.send-message.exchange}")
@@ -110,7 +110,7 @@ public abstract class RequestService {
     public void updateStatus(final RequestDto requestDto, final RequestStatusEnum status, final NotificationDto notificationDto) {
         this.updateStatus(requestDto, status);
         try {
-            notificationService.setMarkedAsDownload(createApConfig(), notificationDto.getMessageId());
+            requestUpdaterService.setMarkedAsDownload(createApConfig(), notificationDto.getMessageId());
         } catch (final MalformedURLException e) {
             log.error("Error while try to set mark as download", e);
         }

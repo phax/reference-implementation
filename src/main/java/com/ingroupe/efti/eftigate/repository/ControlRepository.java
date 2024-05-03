@@ -1,7 +1,6 @@
 package com.ingroupe.efti.eftigate.repository;
 
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
-import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.repository.JpaRepository;

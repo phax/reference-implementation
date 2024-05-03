@@ -4,15 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.springframework.stereotype.Component;
-
-import javax.activation.DataSource;
-import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
@@ -48,17 +43,5 @@ public class SerializeUtils {
         } catch (final JsonProcessingException e) {
             throw new TechnicalException("error while writing content", e);
         }
-    }
-
-    public String readDataSourceOrThrow(final DataSource dataSource) {
-        try {
-            return IOUtils.toString(dataSource.getInputStream());
-        } catch (final IOException e) {
-            throw new RetrieveMessageException("error while managing message received", e);
-        }
-    }
-
-    public <T> T mapDataSourceToClass(final DataSource dataSource, final Class<T> className) {
-        return this.mapJsonStringToClass(readDataSourceOrThrow(dataSource), className);
     }
 }
