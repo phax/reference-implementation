@@ -2,11 +2,15 @@ package com.ingroupe.efti.eftigate.service;
 
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
+import com.ingroupe.efti.commons.enums.RequestStatusEnum;
+import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
+import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -18,9 +22,19 @@ import java.util.List;
 public class EftiAsyncCallsProcessor {
     private final MetadataRequestService metadataRequestService;
     private final MetadataService metadataService;
+
     @Async
     public void checkLocalRepoAsync(final MetadataRequestDto metadataRequestDto, final ControlDto savedControl) {
         final List<MetadataDto> metadataDtoList = metadataService.search(metadataRequestDto);
-        metadataRequestService.createRequest(savedControl, metadataDtoList);
+        RequestDto request = metadataRequestService.createRequest(savedControl, metadataDtoList);
+        if (shouldUpdateControl(savedControl, request, metadataDtoList)) {
+            metadataRequestService.updateControlMetadata(request.getControl(), metadataDtoList);
+        }
+    }
+
+    private static boolean shouldUpdateControl(ControlDto savedControl, RequestDto request, List<MetadataDto> metadataDtoList) {
+        return request != null && RequestStatusEnum.SUCCESS.equals(request.getStatus())
+                && CollectionUtils.isNotEmpty(metadataDtoList)
+                && RequestTypeEnum.EXTERNAL_METADATA_SEARCH.equals(savedControl.getRequestType());
     }
 }

@@ -147,12 +147,16 @@ public class ControlService {
 
     public ControlDto getControlByRequestUuid(final String requestUuid) {
         log.info("get ControlEntity with uuid : {}", requestUuid);
-        final Optional<ControlEntity> optionalControlEntity = controlRepository.findByRequestUuid(requestUuid);
+        final Optional<ControlEntity> optionalControlEntity = getByRequestUuid(requestUuid);
         if (optionalControlEntity.isPresent()) {
             return updateExistingControl(optionalControlEntity.get());
         } else {
             return buildNotFoundControlEntity();
         }
+    }
+
+    public Optional<ControlEntity> getByRequestUuid(String requestUuid) {
+        return controlRepository.findByRequestUuid(requestUuid);
     }
 
     public ControlDto updateExistingControl(final ControlEntity controlEntity) {
