@@ -45,7 +45,7 @@ import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.PAYLOAD
 import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.SERVICE_TYPE;
 import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.SERVICE_VALUE;
 import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.TEXT_PLAIN;
-import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
+import static org.springframework.util.MimeTypeUtils.TEXT_XML_VALUE;
 
 @Slf4j
 @Component
@@ -77,7 +77,7 @@ public class RequestSendingService extends AbstractApService {
         final SubmitRequest submitRequest = new SubmitRequest();
         final LargePayloadType largePayloadType = new LargePayloadType();
 
-        largePayloadType.setContentType(APPLICATION_JSON_VALUE);
+        largePayloadType.setContentType(TEXT_XML_VALUE);
         largePayloadType.setPayloadId(PAYLOAD_HREF);
         final DataSource ds;
         try {
@@ -124,7 +124,7 @@ public class RequestSendingService extends AbstractApService {
         partInfo.setHref(PAYLOAD_HREF);
         final PartProperties partProperties = new PartProperties();
         final Property property1 = new Property();
-        property1.setValue(APPLICATION_JSON_VALUE);
+        property1.setValue(TEXT_XML_VALUE);
         property1.setName(MIME_TYPE);
         partProperties.getProperty().add(property1);
         partInfo.setPartProperties(partProperties);
