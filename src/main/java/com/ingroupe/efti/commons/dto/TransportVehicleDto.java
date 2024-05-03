@@ -12,12 +12,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TransportVehicleDto {
+public class TransportVehicleDto implements Serializable {
     @JsonIgnore
     private long id;
     private String transportMode;
