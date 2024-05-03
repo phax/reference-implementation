@@ -110,7 +110,7 @@ public class ControlService {
 
     private void createUilControl(final ControlDto controlDto) {
         final ControlDto saveControl = this.save(controlDto);
-        figetRequestService(controlDto.getRequestType()).createAndSendRequest(saveControl, !gateProperties.isCurrentGate(controlDto.getEftiGateUrl()) ? controlDto.getEftiGateUrl() : null);
+        getRequestService(controlDto.getRequestType()).createAndSendRequest(saveControl, !gateProperties.isCurrentGate(controlDto.getEftiGateUrl()) ? controlDto.getEftiGateUrl() : null);
         log.info("Uil control with request uuid '{}' has been register", saveControl.getRequestUuid());
     }
 
