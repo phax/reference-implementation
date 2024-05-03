@@ -45,7 +45,7 @@ class ApIncomingControllerTest {
 
     @Test
     void getByIdTestWithData() {
-        final Map<String, Map<String, String>> body = Map.of(SENT_SUCCESS, Map.of(MESSAGE_ID, "test"));
+        final Map<String, Map<String, Object>> body = Map.of(SENT_SUCCESS, Map.of(MESSAGE_ID, "test"));
 
         final ReceivedNotificationDto receivedNotificationDto = new ReceivedNotificationDto();
         receivedNotificationDto.setBody(body);

@@ -4,7 +4,7 @@ import com.ingroupe.efti.commons.dto.MetadataResultDto;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
-import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
+import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
@@ -32,7 +32,7 @@ public abstract class BaseServiceTest extends AbstractServiceTest {
     @Mock
     protected ControlService controlService;
     @Mock
-    protected NotificationService notificationService;
+    protected RequestUpdaterService requestUpdaterService;
 
 
     protected GateProperties gateProperties;

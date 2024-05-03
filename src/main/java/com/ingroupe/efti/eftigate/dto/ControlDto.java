@@ -27,6 +27,8 @@ import static com.ingroupe.efti.commons.enums.StatusEnum.PENDING;
 @AllArgsConstructor
 @Builder
 public class ControlDto {
+    public static final String SUBSET_EU_REQUESTED = "SubsetEuRequested";
+    public static final String SUBSET_MS_REQUESTED = "SubsetMsRequested";
     private int id;
     private String eftiDataUuid;
     private String requestUuid;
@@ -57,8 +59,8 @@ public class ControlDto {
         controlDto.setRequestUuid(messageBodyDto.getRequestUuid());
         controlDto.setRequestType(requestTypeEnum);
         controlDto.setStatus(StatusEnum.PENDING);
-        controlDto.setSubsetEuRequested("SubsetEuRequested");
-        controlDto.setSubsetMsRequested("SubsetMsRequested");
+        controlDto.setSubsetEuRequested(SUBSET_EU_REQUESTED);
+        controlDto.setSubsetMsRequested(SUBSET_MS_REQUESTED);
         controlDto.setAuthority(null);
         return controlDto;
     }
@@ -73,8 +75,8 @@ public class ControlDto {
         controlDto.setRequestUuid(uuidGenerator);
         controlDto.setRequestType(requestTypeEnum);
         controlDto.setStatus(StatusEnum.PENDING);
-        controlDto.setSubsetEuRequested("SubsetEuRequested");
-        controlDto.setSubsetMsRequested("SubsetMsRequested");
+        controlDto.setSubsetEuRequested(SUBSET_EU_REQUESTED);
+        controlDto.setSubsetMsRequested(SUBSET_MS_REQUESTED);
         controlDto.setAuthority(uilDto.getAuthority());
         return controlDto;
     }
@@ -112,8 +114,8 @@ public class ControlDto {
         controlDto.setRequestUuid(requestUuid);
         controlDto.setRequestType(requestTypeEnum);
         controlDto.setStatus(PENDING);
-        controlDto.setSubsetEuRequested("SubsetEuRequested");
-        controlDto.setSubsetMsRequested("SubsetMsRequested");
+        controlDto.setSubsetEuRequested(SUBSET_EU_REQUESTED);
+        controlDto.setSubsetMsRequested(SUBSET_MS_REQUESTED);
         controlDto.setAuthority(authorityDto);
         return controlDto;
     }

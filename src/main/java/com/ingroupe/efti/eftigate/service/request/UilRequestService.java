@@ -7,7 +7,7 @@ import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
-import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
+import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
@@ -42,9 +42,9 @@ public class UilRequestService extends RequestService {
                              final RabbitSenderService rabbitSenderService,
                              final ControlService controlService,
                              final GateProperties gateProperties,
-                             final NotificationService notificationService,
+                             final RequestUpdaterService requestUpdaterService,
                              final SerializeUtils serializeUtils) {
-        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, notificationService, serializeUtils);
+        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class UilRequestService extends RequestService {
     @Override
     public void manageMessageReceive(final NotificationDto notificationDto) {
         final MessageBodyDto messageBody =
-                getSerializeUtils().mapDataSourceToClass(notificationDto.getContent().getBody(),MessageBodyDto.class);
+                getSerializeUtils().mapJsonStringToClass(notificationDto.getContent().getBody(),MessageBodyDto.class);
 
         final RequestDto requestDto = this.findByRequestUuidOrThrow(messageBody.getRequestUuid());
         if (messageBody.getStatus().equals(StatusEnum.COMPLETE.name())) {
@@ -103,7 +103,7 @@ public class UilRequestService extends RequestService {
 
     @Override
     public void receiveGateRequest(final NotificationDto notificationDto) {
-        final MessageBodyDto messageBody = getSerializeUtils().mapDataSourceToClass(notificationDto.getContent().getBody(), MessageBodyDto.class);
+        final MessageBodyDto messageBody = getSerializeUtils().mapJsonStringToClass(notificationDto.getContent().getBody(), MessageBodyDto.class);
 
         final RequestEntity requestEntity = getRequestRepository()
                 .findByControlRequestUuidAndStatus(messageBody.getRequestUuid(), RequestStatusEnum.IN_PROGRESS);

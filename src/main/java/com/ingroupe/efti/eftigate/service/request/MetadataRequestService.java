@@ -10,7 +10,7 @@ import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.IdentifiersMessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
-import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
+import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
@@ -53,9 +53,9 @@ public class MetadataRequestService extends RequestService {
                                   final ControlService controlService,
                                   final GateProperties gateProperties,
                                   final MetadataService metadataService,
-                                  final NotificationService notificationService,
+                                  final RequestUpdaterService requestUpdaterService,
                                   final SerializeUtils serializeUtils) {
-        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, notificationService, serializeUtils);
+        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils);
         this.metadataService = metadataService;
     }
 
@@ -77,7 +77,7 @@ public class MetadataRequestService extends RequestService {
 
     @Override
     public void manageMessageReceive(final NotificationDto notificationDto) {
-        final String bodyFromNotification = getSerializeUtils().readDataSourceOrThrow(notificationDto.getContent().getBody());
+        final String bodyFromNotification = notificationDto.getContent().getBody();
         if (StringUtils.isNotBlank(bodyFromNotification)){
             final String requestUuid = getRequestUuid(bodyFromNotification);
             final ControlEntity existingControl = getControlService().getControlForCriteria(requestUuid, RequestStatusEnum.IN_PROGRESS);
