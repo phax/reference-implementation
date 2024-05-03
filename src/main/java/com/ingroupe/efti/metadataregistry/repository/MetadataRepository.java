@@ -30,7 +30,7 @@ public interface MetadataRepository extends JpaRepository<MetadataEntity, Long>,
 
     default List<MetadataEntity> searchByCriteria(final MetadataRequestDto request) {
         return this.findAll((root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
+            final List<Predicate> predicates = new ArrayList<>();
 
             if(request.getIsDangerousGoods() != null) {
                 predicates.add(cb.equal(root.get(IS_DANGEROUS_GOODS), request.getIsDangerousGoods()));
