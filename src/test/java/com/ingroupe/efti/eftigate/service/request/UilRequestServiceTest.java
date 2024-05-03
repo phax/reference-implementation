@@ -23,14 +23,20 @@ import org.mockito.Captor;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.mail.util.ByteArrayDataSource;
 import java.io.IOException;
 import java.util.List;
 
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.ERROR;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UilRequestServiceTest extends BaseServiceTest {
@@ -43,7 +49,7 @@ class UilRequestServiceTest extends BaseServiceTest {
     @BeforeEach
     public void before() {
         super.before();
-        uilRequestService = new UilRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, notificationService, serializeUtils);
+        uilRequestService = new UilRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils);
     }
 
     @Test
@@ -56,7 +62,7 @@ class UilRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .action("forwardUil")
-                        .body(new ByteArrayDataSource(content, "application/json"))
+                        .body(content)
                         .contentType("application/json")
                         .fromPartyId("http://efti.gate.listenbourg.eu")
                         .messageId(messageId)
@@ -82,7 +88,7 @@ class UilRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .action("forwardUil")
-                        .body(new ByteArrayDataSource(content, "application/json"))
+                        .body(content)
                         .contentType("application/json")
                         .fromPartyId("http://efti.gate.listenbourg.eu")
                         .messageId(messageId)
@@ -109,7 +115,7 @@ class UilRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .action("forwardUil")
-                        .body(new ByteArrayDataSource(content, "osef"))
+                        .body(content)
                         .contentType("application/json")
                         .fromPartyId("http://efti.gate.listenbourg.eu")
                         .messageId(messageId)
@@ -117,7 +123,6 @@ class UilRequestServiceTest extends BaseServiceTest {
                 .build();
         final ControlDto controlDto = ControlDto.fromGateToGateMessageBodyDto(mapper.readValue(content, MessageBodyDto.class), RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH, notificationDto, "http://france.fr");
         final ArgumentCaptor<ControlDto> argumentCaptorControlDto = ArgumentCaptor.forClass(ControlDto.class);
-        final ArgumentCaptor<RequestEntity> argumentCaptorRequestEntity = ArgumentCaptor.forClass(RequestEntity.class);
 
         Mockito.when(controlService.save(any(ControlDto.class))).thenReturn(controlDto);
         when(requestRepository.save(any())).thenReturn(requestEntity);
@@ -159,7 +164,7 @@ class UilRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId(messageId)
-                        .body(new ByteArrayDataSource(eftiData, "osef"))
+                        .body(eftiData)
                         .build())
                 .build();
         final ArgumentCaptor<ControlDto> argumentCaptorControlDto = ArgumentCaptor.forClass(ControlDto.class);
@@ -186,7 +191,7 @@ class UilRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId(messageId)
-                        .body(new ByteArrayDataSource(eftiData, "osef"))
+                        .body(eftiData)
                         .build())
                 .build();
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
@@ -212,7 +217,7 @@ class UilRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId(messageId)
-                        .body(new ByteArrayDataSource(eftiData, "osef"))
+                        .body(eftiData)
                         .build())
                 .build();
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
@@ -248,7 +253,7 @@ class UilRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId(messageId)
-                        .body(new ByteArrayDataSource(eftiData, "osef"))
+                        .body(eftiData)
                         .build())
                 .build();
         final ArgumentCaptor<RequestEntity> argumentCaptor = ArgumentCaptor.forClass(RequestEntity.class);
