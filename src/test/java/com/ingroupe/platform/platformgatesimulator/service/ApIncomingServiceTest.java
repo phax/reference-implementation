@@ -1,6 +1,5 @@
 package com.ingroupe.platform.platformgatesimulator.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
@@ -27,10 +26,9 @@ import static org.mockito.Mockito.verify;
 
 @RunWith(SpringRunner.class)
 @EnableConfigurationProperties(GateProperties.class)
-class ApIncomingServiceTest {
+class ApIncomingServiceTest extends AbstractTest {
 
     AutoCloseable openMocks;
-
 
     @Mock
     private RequestSendingService requestSendingService;
@@ -42,9 +40,6 @@ class ApIncomingServiceTest {
 
     @Mock
     private ReaderService readerService;
-
-    @Mock
-    private ObjectMapper objectMapper;
 
     private ApIncomingService apIncomingService;
 
@@ -60,7 +55,7 @@ class ApIncomingServiceTest {
                         .password("password")
                         .username("username").build()).build();
         openMocks = MockitoAnnotations.openMocks(this);
-        apIncomingService = new ApIncomingService(requestSendingService, notificationService, gateProperties, readerService, objectMapper);
+        apIncomingService = new ApIncomingService(requestSendingService, notificationService, gateProperties, readerService, xmlMapper);
     }
 
     @AfterEach
@@ -71,13 +66,13 @@ class ApIncomingServiceTest {
     @Test
     void manageIncomingNotificationBadFilesTest() throws IOException, InterruptedException {
         final String body = """
-        {
-            "requestUuid" : "reques",
-            "eFTIDataUuid" : "oki",
-            "status": "oki",
-            "errorDescription": "oki",
-            "eftiData": "oki"
-        }
+        <body>
+            <requestUuid>reques</requestUuid>
+            <eFTIDataUuid>oki</eFTIDataUuid>
+            <status>oki</status>
+            <errorDescription>oki</errorDescription>
+            <eftiData>oki</eftiData>
+        </body>
         """;
 
         final NotificationDto notificationDto = new NotificationDto();
@@ -95,13 +90,13 @@ class ApIncomingServiceTest {
     @Test
     void manageIncomingNotificationTest() throws IOException, InterruptedException {
         final String body = """
-        {
-            "requestUuid" : "12345678-ab12-4ab6-8999-123456789abc",
-            "eFTIDataUuid" : "12345678-ab12-4ab6-8999-123456789abc",
-            "status": "oki",
-            "errorDescription": "oki",
-            "eftiData": "oki"
-        }
+        <body>
+            <requestUuid>12345678-ab12-4ab6-8999-123456789abc</requestUuid>
+            <eFTIDataUuid>12345678-ab12-4ab6-8999-123456789abc</eFTIDataUuid>
+            <status>oki</status>
+            <errorDescription>oki</errorDescription>
+            <eftiData>oki</eftiData>
+        </body>
         """;
 
         final NotificationDto notificationDto = new NotificationDto();

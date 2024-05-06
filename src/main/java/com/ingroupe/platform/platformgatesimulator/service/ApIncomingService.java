@@ -1,8 +1,7 @@
 package com.ingroupe.platform.platformgatesimulator.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
@@ -10,12 +9,12 @@ import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.platform.platformgatesimulator.config.GateProperties;
-import com.ingroupe.platform.platformgatesimulator.dto.BodyDto;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,11 +39,11 @@ public class ApIncomingService {
     private final GateProperties gateProperties;
     private final ReaderService readerService;
 
-    private final ObjectMapper objectMapper;
+    private final XmlMapper xmlMapper;
 
     public void uploadMetadata(final MetadataDto metadataDto) throws JsonProcessingException {
         final ApRequestDto apRequestDto = ApRequestDto.builder()
-                .requestId(1L).body(objectMapper.writeValueAsString(metadataDto))
+                .requestId(1L).body(xmlMapper.writeValueAsString(metadataDto))
                 .apConfig(buildApConf())
                 .receiver(gateProperties.getGate())
                 .sender(gateProperties.getOwner())
@@ -62,14 +61,13 @@ public class ApIncomingService {
         sleep(rand);
 
         final Optional<NotificationDto> notificationDto = notificationService.consume(receivedNotificationDto);
-        if (notificationDto.isEmpty()) {
+        if (notificationDto.isEmpty() || notificationDto.get().getNotificationType() == NotificationType.SEND_SUCCESS
+                || notificationDto.get().getNotificationType() == NotificationType.SEND_FAILURE) {
             return;
         }
         final NotificationContentDto notificationContentDto = notificationDto.get().getContent();
 
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        final MessageBodyDto messageBody = mapper.readValue(notificationContentDto.getBody(), MessageBodyDto.class);
+        final MessageBodyDto messageBody = xmlMapper.readValue(notificationContentDto.getBody(), MessageBodyDto.class);
 
         final String eftidataUuid = messageBody.getEFTIDataUuid();
         if (eftidataUuid.endsWith("1")) {
@@ -95,7 +93,7 @@ public class ApIncomingService {
     }
 
     private String buildBody(final String eftiData, final String requestUuid, final String eftidataUuid, final String status, final String errorDescription) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(BodyDto.builder()
+        return xmlMapper.writeValueAsString(MessageBodyDto.builder()
                 .requestUuid(requestUuid)
                 .eFTIData(eftiData)
                 .status(status)
