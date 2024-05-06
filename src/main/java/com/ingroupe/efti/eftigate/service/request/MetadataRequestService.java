@@ -181,7 +181,7 @@ public class MetadataRequestService extends RequestService {
         final RequestDto request = createRequest(controlDto, RECEIVED, metadataDtoList);
         final ControlDto updatedControl = getControlService().getControlByRequestUuid(controlDto.getRequestUuid());
         if (StatusEnum.COMPLETE == updatedControl.getStatus()) {
-            request.setStatus(RequestStatusEnum.SUCCESS);
+            request.setStatus(RequestStatusEnum.RESPONSE_IN_PROGRESS);
         }
         request.setControl(updatedControl);
         return request;

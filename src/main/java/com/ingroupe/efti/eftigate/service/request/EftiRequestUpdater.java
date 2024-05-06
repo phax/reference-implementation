@@ -30,7 +30,10 @@ public class EftiRequestUpdater {
     }
 
     public void manageSendSuccess(final NotificationDto notificationDto) {
-        RequestEntity externalRequest = this.requestRepository.findByControlRequestTypeInAndEdeliveryMessageId(List.of(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH, RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH), notificationDto.getMessageId());
+        RequestEntity externalRequest = this.requestRepository.findByControlRequestTypeInAndStatusAndEdeliveryMessageId(
+                List.of(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH, RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH),
+                RequestStatusEnum.RESPONSE_IN_PROGRESS,
+                notificationDto.getMessageId());
         if (externalRequest == null) {
             log.info(" sent message {} successfully", notificationDto.getMessageId());
         } else {

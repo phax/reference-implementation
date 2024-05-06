@@ -80,19 +80,12 @@ public class UilRequestService extends RequestService {
     }
 
     private void responseToOtherGateIfNecessary(final RequestDto requestDto) {
-        if (requestDto.getControl().getFromGateUrl() != null &&
-                !getGateProperties().isCurrentGate(requestDto.getControl().getFromGateUrl())) {
-            requestDto.setGateUrlDest(requestDto.getControl().getFromGateUrl());
-            //todo suspect
-            requestDto.getControl().setRequests(null);
-            requestDto.getControl().setEftiData(requestDto.getReponseData());
-            requestDto.getControl().setStatus(requestDto.getReponseData() != null ? StatusEnum.COMPLETE : StatusEnum.ERROR);
-            if (!StatusEnum.COMPLETE.equals(requestDto.getControl().getStatus())) {
-                requestDto.getControl().setError(ErrorDto.fromErrorCode(ErrorCodesEnum.DATA_NOT_FOUND));
-            }
-            getControlService().save(requestDto.getControl());
-            this.sendRequest(requestDto);
-        }
+        if(!requestDto.getControl().isExternalAsk()) return;
+        this.updateStatus(requestDto, RequestStatusEnum.RESPONSE_IN_PROGRESS);
+        requestDto.setGateUrlDest(requestDto.getControl().getFromGateUrl());
+        requestDto.getControl().setEftiData(requestDto.getReponseData());
+        getControlService().save(requestDto.getControl());
+        this.sendRequest(requestDto);
     }
 
     private RequestDto findByRequestUuidOrThrow(final String requestId) {

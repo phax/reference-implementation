@@ -77,7 +77,7 @@ class EftiRequestUpdaterTest extends BaseServiceTest {
                         .build())
                 .build();
         final ArgumentCaptor<ControlEntity> controlEntityArgumentCaptor = ArgumentCaptor.forClass(ControlEntity.class);
-        when(requestRepository.findByControlRequestTypeInAndEdeliveryMessageId(anyList(), any())).thenReturn(requestEntity);
+        when(requestRepository.findByControlRequestTypeInAndStatusAndEdeliveryMessageId(anyList(), any(), any())).thenReturn(requestEntity);
 
         eftiRequestUpdater.manageSendSuccess(notificationDto);
 

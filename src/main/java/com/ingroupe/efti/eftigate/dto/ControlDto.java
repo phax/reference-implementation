@@ -123,4 +123,8 @@ public class ControlDto {
     public boolean isError() {
         return StatusEnum.ERROR == status;
     }
+
+public boolean isExternalAsk() {
+        return this.getRequestType() != null && this.getRequestType().isExternalAsk();
+    }
 }

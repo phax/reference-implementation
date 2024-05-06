@@ -13,5 +13,5 @@ public interface RequestRepository extends JpaRepository<RequestEntity, Long> {
 
     RequestEntity findByEdeliveryMessageId(final String messageId);
 
-    RequestEntity findByControlRequestTypeInAndEdeliveryMessageId(final List<RequestTypeEnum> controlRequestTypeIn, final String messageId);
+    RequestEntity findByControlRequestTypeInAndStatusAndEdeliveryMessageId(final List<RequestTypeEnum> controlRequestTypeIn, final RequestStatusEnum requestStatusEnum, final String messageId);
 }

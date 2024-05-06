@@ -36,7 +36,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
@@ -445,19 +444,6 @@ class ControlServiceTest extends AbstractServiceTest {
 
         verify(controlRepository).save(argumentCaptor.capture());
         assertEquals(StatusEnum.ERROR, argumentCaptor.getValue().getStatus());
-    }
-
-    @Test
-    void shouldSetData() {
-        final ArgumentCaptor<ControlEntity> argumentCaptor = ArgumentCaptor.forClass(ControlEntity.class);
-        when(controlRepository.save(any())).thenReturn(controlEntity);
-
-        final String datas = "les grosses datas";
-        controlService.setEftiData(controlDto, datas.getBytes(StandardCharsets.UTF_8));
-
-        verify(controlRepository).save(argumentCaptor.capture());
-        assertEquals(datas, new String(argumentCaptor.getValue().getEftiData(), StandardCharsets.UTF_8));
-        assertEquals(StatusEnum.COMPLETE, argumentCaptor.getValue().getStatus());
     }
 
     @Test

@@ -136,6 +136,7 @@ public abstract class RequestService {
         controlService.setError(requestDto.getControl(), errorDto);
         this.updateStatus(requestDto, RequestStatusEnum.ERROR);
     }
+
     protected void errorReceived(final RequestDto requestDto, final String errorDescription) {
         log.error("Error received, change status of requestId : {}", requestDto.getControl().getRequestUuid());
         final ErrorDto errorDto = ErrorDto.builder()

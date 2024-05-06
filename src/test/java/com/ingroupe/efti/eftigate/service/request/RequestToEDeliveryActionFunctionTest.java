@@ -60,7 +60,7 @@ class RequestToEDeliveryActionFunctionTest {
                 arguments(buildRequestDto(EXTERNAL_ASK_METADATA_SEARCH, FR_GATE_URL, PENDING), EDeliveryAction.GET_IDENTIFIERS),
                 arguments(buildRequestDto(LOCAL_UIL_SEARCH, FR_GATE_URL, PENDING), EDeliveryAction.GET_UIL),
                 arguments(buildRequestDto(EXTERNAL_UIL_SEARCH, FR_GATE_URL, PENDING), EDeliveryAction.FORWARD_UIL),
-                arguments(buildRequestDto(EXTERNAL_ASK_UIL_SEARCH, FR_GATE_URL, PENDING), EDeliveryAction.GET_UIL),
+                arguments(buildRequestDto(EXTERNAL_ASK_UIL_SEARCH, FR_GATE_URL, PENDING), EDeliveryAction.FORWARD_UIL),
                 arguments(buildRequestDto(EXTERNAL_ASK_UIL_SEARCH, DE_GATE_URL, PENDING), EDeliveryAction.FORWARD_UIL),
                 arguments(buildRequestDto(EXTERNAL_ASK_UIL_SEARCH, FR_GATE_URL, COMPLETE), EDeliveryAction.FORWARD_UIL),
                 arguments(buildRequestDto(NOTE_SEND, FR_GATE_URL, PENDING), null)

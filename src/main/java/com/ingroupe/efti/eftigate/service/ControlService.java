@@ -160,7 +160,7 @@ public class ControlService {
     }
 
     public ControlDto updateExistingControl(final ControlEntity controlEntity) {
-        if (PENDING == controlEntity.getStatus() && isLocalRequest(controlEntity.getRequestType())) {
+        if (PENDING == controlEntity.getStatus()) {
             return updatePendingControl(controlEntity);
         } else{
             return mapperUtils.controlEntityToControlDto(controlEntity);
@@ -253,18 +253,6 @@ public class ControlService {
     public void setError(final ControlDto controlDto, final ErrorDto errorDto) {
         controlDto.setStatus(StatusEnum.ERROR);
         controlDto.setError(errorDto);
-        this.save(controlDto);
-    }
-
-    public void setError(final ControlEntity controlEntity, final ErrorEntity errorEntity) {
-        controlEntity.setStatus(StatusEnum.ERROR);
-        controlEntity.setError(errorEntity);
-        controlRepository.save(controlEntity);
-    }
-
-    public void setEftiData(final ControlDto controlDto, final byte[] data) {
-        controlDto.setStatus(StatusEnum.COMPLETE);
-        controlDto.setEftiData(data);
         this.save(controlDto);
     }
 

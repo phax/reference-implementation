@@ -25,7 +25,8 @@
     "fromGateUrl":null,
     "authority":null,
     "error":null,
-    "metadataResults":null
+    "metadataResults":null,
+    "externalAsk":false
   },
   "error":null,
   "metadataResults":null
