@@ -1,6 +1,7 @@
 package com.ingroupe.efti.edeliveryapconnector.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,14 +11,15 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@XmlRootElement(name = "body")
 public class MessageBodyDto {
     private String requestUuid;
-    @JsonProperty("eFTIDataUuid")
+    @XmlElement(name = "eFTIDataUuid")
     private String eFTIDataUuid;
     private String status;
     private String errorDescription;
-    @JsonProperty("eFTIData")
+    @XmlElement(name = "eFTIData")
     private Object eFTIData;
-    @JsonProperty("eFTIPlatformUrl")
+    @XmlElement(name = "eFTIPlatformUrl")
     private String eFTIPlatformUrl;
 }

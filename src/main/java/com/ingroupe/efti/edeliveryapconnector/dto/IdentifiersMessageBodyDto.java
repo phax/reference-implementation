@@ -1,6 +1,7 @@
 package com.ingroupe.efti.edeliveryapconnector.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,13 +13,14 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@XmlRootElement(name = "body")
 public class IdentifiersMessageBodyDto {
     private String requestUuid;
     private String transportMode;
-    @JsonProperty("vehicleId")
+    @XmlElement(name = "vehicleId")
     private String vehicleID;
     private String vehicleCountry;
     private Boolean isDangerousGoods;
-    @JsonProperty("eFTIGateIndicator")
+    @XmlElement(name = "eFTIGateIndicator")
     private List<String> eFTIGateIndicator;
 }
