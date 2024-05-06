@@ -53,11 +53,21 @@ class UilRequestServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void receiveGateRequestFromOtherGateSucessTest() throws IOException {
+    void receiveGateRequestFromOtherGateSucessTest() {
         final ObjectMapper mapper = new ObjectMapper();
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         final String messageId = "e94806cd-e52b-11ee-b7d3-0242ac120012@domibus.eu";
-        final String content = "{\"requestUuid\":\"24414689-1abf-4a9f-b4df-de3a491a44c9\",\"subsetEU\":[],\"subsetMS\":[],\"authority\":null,\"eFTIPlatformUrl\":\"http://efti.platform.acme.com\",\"eFTIDataUuid\":\"12345678-ab12-4ab6-8999-123456789abc\", \"eFTIData\":\"oki\"}";
+        final String content = """
+        <body>
+            <requestUuid>24414689-1abf-4a9f-b4df-de3a491a44c9</requestUuid>
+            <subsetEU></subsetEU>
+            <subsetMS></subsetMS>
+            <authority>null</authority>
+            <eFTIPlatformUrl>http://efti.platform.acme.com</eFTIPlatformUrl>
+            <eFTIDataUuid>12345678-ab12-4ab6-8999-123456789abc</eFTIDataUuid>
+            <eFTIData>oki</eFTIData>
+        </body>
+        """;
         final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
@@ -79,11 +89,20 @@ class UilRequestServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void receiveGateRequestFromOtherGateErrorTest() throws IOException {
+    void receiveGateRequestFromOtherGateErrorTest() {
         final ObjectMapper mapper = new ObjectMapper();
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         final String messageId = "e94806cd-e52b-11ee-b7d3-0242ac120012@domibus.eu";
-        final String content = "{\"requestUuid\":\"24414689-1abf-4a9f-b4df-de3a491a44c9\",\"subsetEU\":[],\"subsetMS\":[],\"authority\":null,\"eFTIPlatformUrl\":\"http://efti.platform.acme.com\",\"eFTIDataUuid\":\"12345678-ab12-4ab6-8999-123456789abc\"}";
+        final String content = """
+            <body>
+                <requestUuid>24414689-1abf-4a9f-b4df-de3a491a44c9</requestUuid>
+                <subsetEU></subsetEU>
+                <subsetMS></subsetMS>
+                <authority>null</authority>
+                <eFTIPlatformUrl>http://efti.platform.acme.com</eFTIPlatformUrl>
+                <eFTIDataUuid>12345678-ab12-4ab6-8999-123456789abc</eFTIDataUuid>
+            </body>
+        """;
         final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
@@ -107,10 +126,17 @@ class UilRequestServiceTest extends BaseServiceTest {
 
     @Test
     void receiveGateRequestSucessTest() throws IOException {
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         final String messageId = "e94806cd-e52b-11ee-b7d3-0242ac120012@domibus.eu";
-        final String content = "{\"requestUuid\":\"24414689-1abf-4a9f-b4df-de3a491a44c9\",\"subsetEU\":[],\"subsetMS\":[],\"authority\":null,\"eFTIPlatformUrl\":\"http://efti.platform.acme.com\",\"eFTIDataUuid\":\"12345678-ab12-4ab6-8999-123456789abc\"}";
+        final String content = """
+            <body>
+                <requestUuid>24414689-1abf-4a9f-b4df-de3a491a44c9</requestUuid>
+                <subsetEU></subsetEU>
+                <subsetMS></subsetMS>
+                <authority>null</authority>
+                <eFTIPlatformUrl>http://efti.platform.acme.com</eFTIPlatformUrl>
+                <eFTIDataUuid>12345678-ab12-4ab6-8999-123456789abc</eFTIDataUuid>
+            </body>
+        """;
         final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
@@ -121,7 +147,7 @@ class UilRequestServiceTest extends BaseServiceTest {
                         .messageId(messageId)
                         .build())
                 .build();
-        final ControlDto controlDto = ControlDto.fromGateToGateMessageBodyDto(mapper.readValue(content, MessageBodyDto.class), RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH, notificationDto, "http://france.fr");
+        final ControlDto controlDto = ControlDto.fromGateToGateMessageBodyDto(xmlMapper().readValue(content, MessageBodyDto.class), RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH, notificationDto, "http://france.fr");
         final ArgumentCaptor<ControlDto> argumentCaptorControlDto = ArgumentCaptor.forClass(ControlDto.class);
 
         Mockito.when(controlService.save(any(ControlDto.class))).thenReturn(controlDto);
@@ -151,14 +177,15 @@ class UilRequestServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void shouldUpdateResponseSucessFromPlatformAndShoulSendToGate() throws IOException {
+    void shouldUpdateResponseSucessFromPlatformAndShoulSendToGate() {
         final String messageId = "e94806cd-e52b-11ee-b7d3-0242ac120012@domibus.eu";
         final String eftiData = """
-                  {
-                    "requestUuid": "test",
-                    "status": "COMPLETE",
-                    "eFTIData": "<data>vive les datas<data>"
-                  }""";
+                  <body>
+                    <requestUuid>test</requestUuid>
+                    <status>COMPLETE</status>
+                    <eFTIData><data>vive les datas</data></eFTIData>"
+                  </body>
+                  """;
         this.requestEntity.getControl().setRequestType(RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH);
         final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.RECEIVED)
@@ -179,14 +206,15 @@ class UilRequestServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void shouldUpdateResponse() throws IOException {
+    void shouldUpdateResponse() {
         final String messageId = "e94806cd-e52b-11ee-b7d3-0242ac120012@domibus.eu";
         final String eftiData = """
-                  {
-                    "requestUuid": "test",
-                    "status": "COMPLETE",
-                    "eFTIData": "<data>vive les datas<data>"
-                  }""";
+                  <body>
+                    <requestUuid>test</requestUuid>
+                    <status>COMPLETE</status>
+                    <eFTIData><data>vive les datas</data></eFTIData>"
+                  </body>
+                  """;
         final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
@@ -205,14 +233,15 @@ class UilRequestServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void shouldUpdateErrorResponse() throws IOException {
+    void shouldUpdateErrorResponse() {
         final String messageId = "messageId";
         final String eftiData = """
-                  {
-                    "requestUuid": "test",
-                    "status": "ERROR",
-                    "eFTIData": "<data>vive les datas<data>"
-                  }""";
+                  <body>
+                    <requestUuid>test</requestUuid>
+                    <status>ERROR</status>
+                    <eFTIData><data>vive les datas</data></eFTIData>"
+                  </body>
+                  """;
         final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
@@ -241,13 +270,14 @@ class UilRequestServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void shouldReThrowException() throws IOException {
+    void shouldReThrowException() {
         final String messageId = "messageId";
         final String eftiData = """
-                {
-                  "requestUuid": "test",
-                  "status": "toto"
-                }""";
+                  <body>
+                    <requestUuid>test</requestUuid>
+                    <status>toto</status>
+                  </body>
+                  """;
 
         final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.RECEIVED)

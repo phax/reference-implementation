@@ -73,10 +73,10 @@ public class RabbitListenerService {
     private String getBodyForIdentifiersRequest(final RequestDto requestDto) {
         if (EXTERNAL_ASK_METADATA_SEARCH == requestDto.getControl().getRequestType()) { //remote sending response
             final MetadataResponseDto metadataResponseDto = controlService.buildMetadataResponse(requestDto.getControl());
-            return serializeUtils.mapObjectToJsonString(metadataResponseDto);
+            return serializeUtils.mapObjectToXmlString(metadataResponseDto);
         } else { //local sending request
             final MetadataRequestBodyDto metadataRequestBodyDto = MetadataRequestBodyDto.fromControl(requestDto.getControl());
-            return serializeUtils.mapObjectToJsonString(metadataRequestBodyDto);
+            return serializeUtils.mapObjectToXmlString(metadataRequestBodyDto);
         }
     }
 
@@ -90,7 +90,7 @@ public class RabbitListenerService {
                 .subsetEU(new LinkedList<>())
                 .subsetMS(new LinkedList<>())
                 .build();
-        return serializeUtils.mapObjectToJsonString((requestBodyDto));
+        return serializeUtils.mapObjectToXmlString((requestBodyDto));
     }
 
     private ApRequestDto buildApRequestDto(final RequestDto requestDto) {

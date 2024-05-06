@@ -21,8 +21,6 @@ import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
-import com.nimbusds.jose.shaded.gson.JsonObject;
-import com.nimbusds.jose.shaded.gson.JsonParser;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +29,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+import org.xml.sax.InputSource;
 
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Objects;
@@ -102,9 +105,15 @@ public abstract class RequestService {
         }
     }
 
-    protected String getRequestUuid(final String bodyJsonString) {
-        final JsonObject parsed = JsonParser.parseString(bodyJsonString).getAsJsonObject();
-        return parsed.get("requestUuid").getAsString();
+    protected String getRequestUuid(final String bodyXmlString) {
+        final XPathFactory xpathFactory = XPathFactory.newInstance();
+        final XPath xpath = xpathFactory.newXPath();
+        final InputSource xml = new InputSource(new StringReader(bodyXmlString));
+        try {
+            return xpath.evaluate("/body/requestUuid", xml);
+        } catch (XPathExpressionException e) {
+            return null;
+        }
     }
 
     public void updateStatus(final RequestDto requestDto, final RequestStatusEnum status, final NotificationDto notificationDto) {

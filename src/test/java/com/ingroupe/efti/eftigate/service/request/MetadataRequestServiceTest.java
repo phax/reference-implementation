@@ -148,7 +148,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId("messageId")
-                        .body(testFile("/json/FTI019.json"))
+                        .body(testFile("/json/FTI019.xml"))
                         .build())
                 .build();
         when(controlService.getControlByRequestUuid(anyString())).thenReturn(controlDto);
@@ -171,7 +171,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId("messageId")
-                        .body(testFile("/json/FTI020.json"))
+                        .body(testFile("/json/FTI020.xml"))
                         .fromPartyId("gate")
                         .build())
                 .build();
@@ -202,7 +202,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId("messageId")
-                        .body(testFile("/json/FTI020.json"))
+                        .body(testFile("/json/FTI020.xml"))
                         .fromPartyId("gate")
                         .build())
                 .build();
@@ -233,7 +233,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId("messageId")
-                        .body(testFile("/json/FTI020.json"))
+                        .body(testFile("/json/FTI020.xml"))
                         .fromPartyId("gate")
                         .build())
                 .build();
@@ -264,7 +264,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId("messageId")
-                        .body(testFile("/json/FTI020.json"))
+                        .body(testFile("/json/FTI020.xml"))
                         .fromPartyId("gate")
                         .build())
                 .build();
@@ -289,12 +289,12 @@ class MetadataRequestServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void shouldManageMessageReceiveAndUpdateExistingControlMetadatas() throws IOException {
+    void shouldManageMessageReceiveAndUpdateExistingControlMetadatas() {
         final NotificationDto notificationDto = NotificationDto.builder()
                 .notificationType(NotificationType.RECEIVED)
                 .content(NotificationContentDto.builder()
                         .messageId("messageId")
-                        .body(testFile("/json/FTI020.json"))
+                        .body(testFile("/json/FTI020.xml"))
                         .build())
                 .build();
         controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);
