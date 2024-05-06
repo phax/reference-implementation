@@ -3,6 +3,8 @@ package com.ingroupe.efti.commons.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,10 +18,12 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@XmlRootElement(name = "body")
 public class MetadataDto extends AbstractUilDto {
 
     private long id;
     @JsonProperty("isDangerousGoods")
+    @XmlElement(name = "isDangerousGoods")
     private boolean isDangerousGoods;
     private String journeyStart;
     private String countryStart;
@@ -30,5 +34,6 @@ public class MetadataDto extends AbstractUilDto {
     @Valid
     private List<TransportVehicleDto> transportVehicles;
     @JsonProperty("isDisabled")
+    @XmlElement(name = "isDisabled")
     private boolean isDisabled;
 }
