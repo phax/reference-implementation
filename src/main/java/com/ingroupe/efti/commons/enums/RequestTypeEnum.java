@@ -8,5 +8,10 @@ public enum RequestTypeEnum {
     EXTERNAL_METADATA_SEARCH,
     EXTERNAL_ASK_METADATA_SEARCH,
     NOTE_SEND,
-    EXTERNAL_NOTE_SEND
+    EXTERNAL_NOTE_SEND;
+
+    public boolean isExternalAsk() {
+        return this == EXTERNAL_ASK_UIL_SEARCH || this == EXTERNAL_ASK_METADATA_SEARCH;
+    }
 }
+
