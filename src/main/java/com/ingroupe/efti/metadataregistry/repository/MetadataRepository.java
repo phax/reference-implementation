@@ -9,6 +9,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -47,10 +48,10 @@ public interface MetadataRepository extends JpaRepository<MetadataEntity, Long>,
         final List<Predicate> subQueryPredicate = new ArrayList<>();
 
         subQueryPredicate.add(cb.equal(cb.upper(vehicles.get(VEHICLE_ID)), request.getVehicleID().toUpperCase()));
-        if(request.getTransportMode() != null) {
+        if(StringUtils.isNotEmpty(request.getTransportMode())) {
             subQueryPredicate.add(cb.equal(vehicles.get(TRANSPORT_MODE), TransportMode.valueOf(request.getTransportMode())));
         }
-        if(request.getVehicleCountry() != null) {
+        if(StringUtils.isNotEmpty(request.getVehicleCountry())) {
             subQueryPredicate.add(cb.equal(vehicles.get(VEHICLE_COUNTRY), CountryIndicator.valueOf(request.getVehicleCountry())));
         }
         return cb.and(subQueryPredicate.toArray(new Predicate[] {}));
