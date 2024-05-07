@@ -86,13 +86,13 @@ public class RabbitListenerService {
         final ControlDto controlDto = requestDto.getControl();
         if (requestDto.getStatus() == RequestStatusEnum.RESPONSE_IN_PROGRESS) {
             boolean hasData = requestDto.getReponseData() != null;
-            boolean hasError = requestDto.getError() != null;
+            boolean hasError = controlDto.getError() != null;
 
             return serializeUtils.mapObjectToXmlString(MessageBodyDto.builder()
                     .requestUuid(controlDto.getRequestUuid())
                     .eFTIData(hasData ? new String(requestDto.getReponseData()) : null)
                     .status(hasError ? StatusEnum.ERROR.name() : StatusEnum.COMPLETE.name())
-                    .errorDescription(hasError ? requestDto.getError().getErrorDescription() : null)
+                    .errorDescription(hasError ? controlDto.getError().getErrorDescription() : null)
                     .eFTIDataUuid(controlDto.getEftiDataUuid())
                     .build());
         }
@@ -105,7 +105,7 @@ public class RabbitListenerService {
                 .subsetEU(new LinkedList<>())
                 .subsetMS(new LinkedList<>())
                 .build();
-        return serializeUtils.mapObjectToXmlString((requestBodyDto));
+        return serializeUtils.mapObjectToXmlString(requestBodyDto);
     }
 
     private ApRequestDto buildApRequestDto(final RequestDto requestDto) {

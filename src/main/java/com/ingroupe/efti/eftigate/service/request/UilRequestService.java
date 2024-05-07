@@ -22,6 +22,7 @@ import com.ingroupe.efti.eftigate.service.ControlService;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
@@ -109,7 +110,7 @@ public class UilRequestService extends RequestService {
     }
 
     private void receptionOfResponse(final RequestEntity requestEntity, final MessageBodyDto messageBody) {
-        if (messageBody.getEFTIData() != null) {
+        if (!ObjectUtils.isEmpty(messageBody.getEFTIData())) {
             requestEntity.setReponseData(messageBody.getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
             requestEntity.setStatus(RequestStatusEnum.SUCCESS);
         } else {
