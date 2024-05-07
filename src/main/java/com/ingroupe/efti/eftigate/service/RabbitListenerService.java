@@ -4,8 +4,10 @@ import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
+import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
@@ -82,6 +84,19 @@ public class RabbitListenerService {
 
     private String getBodyForUilRequest(final RequestDto requestDto) {
         final ControlDto controlDto = requestDto.getControl();
+        if (requestDto.getStatus() == RequestStatusEnum.RESPONSE_IN_PROGRESS) {
+            boolean hasData = requestDto.getReponseData() != null;
+            boolean hasError = requestDto.getError() != null;
+
+            return serializeUtils.mapObjectToXmlString(MessageBodyDto.builder()
+                    .requestUuid(controlDto.getRequestUuid())
+                    .eFTIData(hasData ? new String(requestDto.getReponseData()) : null)
+                    .status(hasError ? StatusEnum.ERROR.name() : StatusEnum.COMPLETE.name())
+                    .errorDescription(hasError ? requestDto.getError().getErrorDescription() : null)
+                    .eFTIDataUuid(controlDto.getEftiDataUuid())
+                    .build());
+        }
+
         final RequestBodyDto requestBodyDto = RequestBodyDto.builder()
                 .eFTIData(requestDto.getReponseData() != null ? new String(requestDto.getReponseData(), StandardCharsets.UTF_8) : null)
                 .eFTIPlatformUrl(requestDto.getControl().getEftiPlatformUrl())

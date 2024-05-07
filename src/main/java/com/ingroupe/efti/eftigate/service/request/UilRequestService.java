@@ -100,11 +100,8 @@ public class UilRequestService extends RequestService {
 
         final RequestEntity requestEntity = getRequestRepository()
                 .findByControlRequestUuidAndStatus(messageBody.getRequestUuid(), RequestStatusEnum.IN_PROGRESS);
-        manageRequestAndSend(notificationDto, requestEntity, messageBody);
-    }
 
-    private void manageRequestAndSend(final NotificationDto notificationDto, final RequestEntity requestEntity, final MessageBodyDto messageBody) {
-        if (requestEntity == null) {
+        if(requestEntity == null) {
             askReception(notificationDto, messageBody);
         } else {
             receptionOfResponse(requestEntity, messageBody);
