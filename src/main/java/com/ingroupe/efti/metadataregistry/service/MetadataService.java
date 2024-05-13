@@ -32,7 +32,7 @@ public class MetadataService {
     @Value("${gate.owner}")
     private String gateFrom;
 
-    public MetadataDto createOrUpdate(final MetadataDto metadataDto) {
+    public void createOrUpdate(final MetadataDto metadataDto) {
 
         this.enrichAndValidate(metadataDto);
 
@@ -43,16 +43,17 @@ public class MetadataService {
             metadataDto.setId(entityOptional.get().getId());
             metadataDto.setMetadataUUID(entityOptional.get().getMetadataUUID());
             log.info("updating metadata for uuid {}", metadataDto.getMetadataUUID());
-            return this.save(metadataDto);
+            this.save(metadataDto);
+            return;
         }
         metadataDto.setMetadataUUID(UUID.randomUUID().toString());
         log.info("creating new entry for uuid {}", metadataDto.getMetadataUUID());
-        return this.save(metadataDto);
+        this.save(metadataDto);
     }
 
-    public MetadataDto disable(final MetadataDto metadataDto) {
+    public void disable(final MetadataDto metadataDto) {
         metadataDto.setDisabled(true);
-        return this.save(metadataDto);
+        this.save(metadataDto);
     }
 
     @Transactional("metadataTransactionManager")
@@ -64,7 +65,7 @@ public class MetadataService {
         metadataDto.setEFTIGateUrl(gateFrom);
 
         final Validator validator;
-        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+        try (final ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
 
