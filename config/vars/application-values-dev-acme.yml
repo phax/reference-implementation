@@ -1,11 +1,11 @@
 spring:
   application:
-    name: efti-platform-ttf
+    name: efti-platform-bo
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer_uri: https://keycloak.efti.dev.k8s.groupein.local/realms/eFTI_FR
+          issuer_uri: https://keycloak.efti.dev.k8s.groupein.local/realms/eFTI_BO
 
 server:
   port: 8072
@@ -13,11 +13,10 @@ server:
 gate:
   minSleep: 1000
   maxSleep: 2000
-  owner: http://efti.platform.ttf.com
+  owner: http://efti.platform.acme.com
   cda_path: file:/opt/javapp/config/cda
-  gate: https://gate-fr.efti.dev.k8s.groupein.local
+  gate: https://mock.efti.dev.k8s.groupein.local/bo
   ap:
     url: http://172.16.201.115:8080/domibus/services/wsplugin
-    username: ttf_service_account
+    username: acme_service_account
     password: Azerty59*1234567
-

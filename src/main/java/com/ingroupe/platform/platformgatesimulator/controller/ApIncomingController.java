@@ -1,7 +1,6 @@
 package com.ingroupe.platform.platformgatesimulator.controller;
 
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
-import com.ingroupe.platform.platformgatesimulator.exception.UuidFileNotFoundException;
 import com.ingroupe.platform.platformgatesimulator.service.ApIncomingService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,12 +18,19 @@ import java.io.IOException;
 @Slf4j
 public class ApIncomingController {
 
+    private final String SOAP_RESULT = """
+            <Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+               <Body> domibus ws plugin require a response when it call our endpoint </Body>
+            </Envelope>
+           """;
+
     private final ApIncomingService apIncomingService;
 
     @PostMapping("/notification")
-    public ResponseEntity<Void> getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) throws IOException, InterruptedException, UuidFileNotFoundException {
+    public ResponseEntity<String> getById(final @RequestBody ReceivedNotificationDto receivedNotificationDto) throws IOException, InterruptedException {
         log.info("Notification reçus");
+
         apIncomingService.manageIncomingNotification(receivedNotificationDto);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(SOAP_RESULT);
     }
 }
