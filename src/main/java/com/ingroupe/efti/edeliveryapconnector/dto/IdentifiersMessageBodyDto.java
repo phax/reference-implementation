@@ -7,19 +7,20 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @XmlRootElement(name = "body")
-public class MessageBodyDto {
+public class IdentifiersMessageBodyDto {
     private String requestUuid;
-    @XmlElement(name = "eFTIDataUuid")
-    private String eFTIDataUuid;
-    private String status;
-    private String errorDescription;
-    @XmlElement(name = "eFTIData")
-    private Object eFTIData;
-    @XmlElement(name = "eFTIPlatformUrl")
-    private String eFTIPlatformUrl;
+    private String transportMode;
+    @XmlElement(name = "vehicleId")
+    private String vehicleID;
+    private String vehicleCountry;
+    private Boolean isDangerousGoods;
+    @XmlElement(name = "eFTIGateIndicator")
+    private List<String> eFTIGateIndicator;
 }

@@ -1,16 +1,19 @@
 package com.ingroupe.efti.edeliveryapconnector.service;
 
-import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingroupe.efti.edeliveryapconnector.dto.MessagingDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
+import com.ingroupe.efti.edeliveryapconnector.dto.PayloadDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.RetrieveMessageException;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
-import eu.domibus.plugin.ws.generated.RetrieveMessageFault;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Base64;
 import java.util.Optional;
 
 @Slf4j
@@ -18,26 +21,21 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class NotificationService {
 
-    private final RequestRetrievingService requestRetrievingService;
-
-    public Optional<NotificationDto> consume(final ApConfigDto apConfigDto, final ReceivedNotificationDto receivedNotificationDto) {
-        if(receivedNotificationDto.getMessageId().isEmpty()) {
-            log.error("no message id found for notification {}", receivedNotificationDto);
-            return Optional.empty();
-        }
-        if (receivedNotificationDto.isReceiveSuccess()) {
-            return onMessageReceived(apConfigDto, receivedNotificationDto);
-        } else if (receivedNotificationDto.isSendFailure()) {
+    private final ObjectMapper objectMapper;
+    public Optional<NotificationDto> consume(final ReceivedNotificationDto receivedNotificationDto) {
+        if (receivedNotificationDto.isSendFailure()) {
             return onSendFailure(receivedNotificationDto);
         } else if (receivedNotificationDto.isSentSuccess()) {
-            log.info(" sent message {} successfull", receivedNotificationDto.getMessageId().orElse(null));
-            return Optional.empty();
+            return onSendSuccess(receivedNotificationDto);
+        } else if (receivedNotificationDto.isSubmitMessage()) {
+            return onMessageReceived(receivedNotificationDto);
         }
+
         log.info("received a notification of type {}", receivedNotificationDto.getBody().keySet());
         return Optional.empty();
     }
 
-    private Optional<NotificationDto> onSendFailure(ReceivedNotificationDto receivedNotificationDto) {
+    private Optional<NotificationDto> onSendFailure(final ReceivedNotificationDto receivedNotificationDto) {
         log.info(" sent message {} failed", receivedNotificationDto.getMessageId().orElse(null));
 
         return Optional.of(NotificationDto.builder()
@@ -45,15 +43,33 @@ public class NotificationService {
                 .messageId(receivedNotificationDto.getMessageId().orElse(null)).build());
     }
 
-    private Optional<NotificationDto> onMessageReceived(final ApConfigDto apConfigDto, final ReceivedNotificationDto receivedNotificationDto) {
+    private Optional<NotificationDto> onSendSuccess(final ReceivedNotificationDto receivedNotificationDto) {
+        log.info(" sent message {} successfull", receivedNotificationDto.getMessageId().orElse(null));
+
+        return Optional.of(NotificationDto.builder()
+                .notificationType(NotificationType.SEND_SUCCESS)
+                .messageId(receivedNotificationDto.getMessageId().orElse(null)).build());
+    }
+
+    private Optional<NotificationDto> onMessageReceived(final ReceivedNotificationDto receivedNotificationDto) {
+        final MessagingDto messagingDto = objectMapper.convertValue(receivedNotificationDto.getMessaging(), MessagingDto.class);
+        final PayloadDto payloadDto = objectMapper.convertValue(receivedNotificationDto.getPayload(), PayloadDto.class);
+
+        final NotificationContentDto notificationContentDto = NotificationContentDto.builder()
+                .body(new String(Base64.getDecoder().decode(payloadDto.getValue())))
+                .contentType(payloadDto.getMimeType())
+                .fromPartyId(messagingDto.getUserMessage().getPartyInfo().getFrom().getPartyId().get(""))
+                .messageId(messagingDto.getUserMessage().getMessageInfo().getMessageId())
+                .action(messagingDto.getUserMessage().getCollaborationInfo().getAction()).build();
         try {
             return Optional.of(NotificationDto.builder()
-                    .messageId(receivedNotificationDto.getMessageId().orElse(null))
+                    .messageId(messagingDto.getUserMessage().getMessageInfo().getMessageId())
                     .notificationType(NotificationType.RECEIVED)
-                    .content(this.requestRetrievingService.retrieveMessage(apConfigDto, receivedNotificationDto.getMessageId().orElse(null))).build());
-        } catch (SendRequestException | RetrieveMessageFault e) {
+                    .content(notificationContentDto).build());
+        } catch (final SendRequestException e) {
             log.error("error while retrieving message " + receivedNotificationDto.getMessageId());
-            throw new RetrieveMessageException("error while retrieving message " + receivedNotificationDto.getMessageId().orElse(null), e);
+            throw new RetrieveMessageException("error while retrieving message " + receivedNotificationDto.getMessageId().orElse(null)
+                    + " " + e.getMessage());
         }
     }
 }

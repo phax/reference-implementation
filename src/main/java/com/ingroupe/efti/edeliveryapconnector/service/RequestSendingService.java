@@ -45,7 +45,7 @@ import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.PAYLOAD
 import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.SERVICE_TYPE;
 import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.SERVICE_VALUE;
 import static com.ingroupe.efti.edeliveryapconnector.constant.ApConstant.TEXT_PLAIN;
-import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
+import static org.springframework.util.MimeTypeUtils.TEXT_XML_VALUE;
 
 @Slf4j
 @Component
@@ -68,7 +68,7 @@ public class RequestSendingService extends AbstractApService {
     private SubmitResponse sendRequestToAPOrThrow(final ApRequestDto requestDto, final SubmitRequest submitRequest, final Messaging messaging) throws SendRequestException {
         try {
             return initApWebService(requestDto.getApConfig()).submitMessage(submitRequest, messaging);
-        } catch (SubmitMessageFault | MalformedURLException | InaccessibleWSDLException | ClientTransportException e ) {
+        } catch (final SubmitMessageFault | MalformedURLException | InaccessibleWSDLException | ClientTransportException e ) {
             throw new SendRequestException("error while sending request", e);
         }
     }
@@ -77,12 +77,12 @@ public class RequestSendingService extends AbstractApService {
         final SubmitRequest submitRequest = new SubmitRequest();
         final LargePayloadType largePayloadType = new LargePayloadType();
 
-        largePayloadType.setContentType(APPLICATION_JSON_VALUE);
+        largePayloadType.setContentType(TEXT_XML_VALUE);
         largePayloadType.setPayloadId(PAYLOAD_HREF);
-        DataSource ds;
+        final DataSource ds;
         try {
             ds = new ByteArrayDataSource(requestDto.getBody(), TEXT_PLAIN);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new SendRequestException("error while building request body for request " + requestDto.getRequestId(), e);
         }
         largePayloadType.setValue(new DataHandler(ds));
@@ -124,7 +124,7 @@ public class RequestSendingService extends AbstractApService {
         partInfo.setHref(PAYLOAD_HREF);
         final PartProperties partProperties = new PartProperties();
         final Property property1 = new Property();
-        property1.setValue(APPLICATION_JSON_VALUE);
+        property1.setValue(TEXT_XML_VALUE);
         property1.setName(MIME_TYPE);
         partProperties.getProperty().add(property1);
         partInfo.setPartProperties(partProperties);
