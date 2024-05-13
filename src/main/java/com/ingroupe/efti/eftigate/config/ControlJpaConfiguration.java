@@ -57,8 +57,8 @@ public class ControlJpaConfiguration {
     @Bean
     @Primary
     public LocalContainerEntityManagerFactoryBean controlEntityManagerFactory(
-            @Qualifier("controlDataSource") DataSource dataSource,
-            EntityManagerFactoryBuilder builder) {
+            @Qualifier("controlDataSource") final DataSource dataSource,
+            final EntityManagerFactoryBuilder builder) {
         return builder
                 .dataSource(dataSource)
                 .packages(ControlEntity.class)
@@ -68,26 +68,26 @@ public class ControlJpaConfiguration {
 
     @Bean
     public PlatformTransactionManager controlTransactionManager(
-            @Qualifier("controlEntityManagerFactory") LocalContainerEntityManagerFactoryBean controlEntityManagerFactory) {
+            @Qualifier("controlEntityManagerFactory") final LocalContainerEntityManagerFactoryBean controlEntityManagerFactory) {
         return new JpaTransactionManager(Objects.requireNonNull(controlEntityManagerFactory.getObject()));
     }
 
     private Map<String, Object> jpaProperties() {
-        Map<String, Object> props = new HashMap<>();
+        final Map<String, Object> props = new HashMap<>();
         props.put("spring.datasource.schema", schema);
         props.put("hibernate.default_schema", schema);
         return props;
     }
 
-    private static SpringLiquibase springLiquibase(DataSource dataSource, LiquibaseProperties properties) {
-        SpringLiquibase liquibase = new SpringLiquibase();
+    private static SpringLiquibase springLiquibase(final DataSource dataSource, final LiquibaseProperties properties) {
+        final SpringLiquibase liquibase = new SpringLiquibase();
         liquibase.setDataSource(dataSource);
         liquibase.setChangeLog(properties.getChangeLog());
         liquibase.setContexts(properties.getContexts());
         liquibase.setDefaultSchema(properties.getDefaultSchema());
         liquibase.setDropFirst(properties.isDropFirst());
         liquibase.setShouldRun(properties.isEnabled());
-        liquibase.setLabels(properties.getLabels());
+        liquibase.setLabelFilter(properties.getLabelFilter());
         liquibase.setChangeLogParameters(properties.getParameters());
         liquibase.setRollbackFile(properties.getRollbackFile());
         return liquibase;

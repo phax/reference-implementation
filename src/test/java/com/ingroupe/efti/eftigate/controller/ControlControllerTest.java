@@ -1,6 +1,7 @@
 package com.ingroupe.efti.eftigate.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
@@ -43,7 +44,7 @@ class ControlControllerTest {
 
     @BeforeEach
     void before() {
-        requestUuidDto.setStatus("PENDING");
+        requestUuidDto.setStatus(StatusEnum.PENDING);
         requestUuidDto.setRequestUuid(REQUEST_UUID);
     }
 
@@ -70,7 +71,7 @@ class ControlControllerTest {
     @Test
     @WithMockUser
     void requestUilTest() throws Exception {
-        UilDto uilDto = new UilDto();
+        final UilDto uilDto = new UilDto();
         uilDto.setEFTIPlatformUrl("platform");
         uilDto.setEFTIDataUuid("uuid");
         uilDto.setEFTIGateUrl("gate");
@@ -90,13 +91,13 @@ class ControlControllerTest {
     void getRequestUilTest() throws Exception {
         Mockito.when(controlService.getControlEntity(REQUEST_UUID)).thenReturn(requestUuidDto);
 
-        MvcResult result = mockMvc.perform(get("/v1/requestUil").param("requestUuid", REQUEST_UUID))
+        final MvcResult result = mockMvc.perform(get("/v1/requestUil").param("requestUuid", REQUEST_UUID))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
-        String contentAsString = result.getResponse().getContentAsString();
+        final String contentAsString = result.getResponse().getContentAsString();
 
-        RequestUuidDto response = new ObjectMapper().readValue(contentAsString, RequestUuidDto.class);
+        final RequestUuidDto response = new ObjectMapper().readValue(contentAsString, RequestUuidDto.class);
         Assertions.assertNotNull(response);
         Assertions.assertEquals(REQUEST_UUID, response.getRequestUuid());
     }

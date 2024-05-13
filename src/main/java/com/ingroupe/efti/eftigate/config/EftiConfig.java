@@ -1,6 +1,13 @@
 package com.ingroupe.efti.eftigate.config;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.cfg.CoercionAction;
+import com.fasterxml.jackson.databind.cfg.CoercionInputShape;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.jakarta.xmlbind.JakartaXmlBindAnnotationModule;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.AbstractConverter;
@@ -34,35 +41,34 @@ public class EftiConfig {
     @Bean(name = "modelMapper")
     public ModelMapper modelMapper() {
         final ModelMapper modelMapper = new ModelMapper();
-
-        Provider<LocalDateTime> localDateProvider = new AbstractProvider<>() {
+        final Provider<LocalDateTime> localDateProvider = new AbstractProvider<>() {
             @Override
             public LocalDateTime get() {
                 return LocalDateTime.now();
             }
         };
 
-        Converter<String, LocalDateTime> toLocalDateTime = new AbstractConverter<>() {
+        final Converter<String, LocalDateTime> toLocalDateTime = new AbstractConverter<>() {
             @Override
             protected LocalDateTime convert(final String source) {
                 try {
                     return getLocalDateTime(source);
-                } catch (DateTimeParseException e) {
+                } catch (final DateTimeParseException e) {
                     log.error(INVALID_DATE_FORMAT, source);
                     return null;
                 }
             }
         };
 
-        Converter<LocalDateTime, String> toStringLocalDateTime = new AbstractConverter<>() {
+        final Converter<LocalDateTime, String> toStringLocalDateTime = new AbstractConverter<>() {
             @Override
             protected String convert(final LocalDateTime source) {
                 try {
                     if (source != null) {
-                        DateTimeFormatter dateTimeFormatter = getDateTimeFormatter();
+                        final DateTimeFormatter dateTimeFormatter = getDateTimeFormatter();
                         return source.atZone(ZoneId.of(UTC)).format(dateTimeFormatter);
                     }
-                } catch (DateTimeParseException e) {
+                } catch (final DateTimeParseException e) {
                     log.error(INVALID_DATE_FORMAT, source);
                     return null;
                 }
@@ -70,27 +76,27 @@ public class EftiConfig {
             }
         };
 
-        Converter<String, OffsetDateTime> toOffsetDateTime = new AbstractConverter<>() {
+        final Converter<String, OffsetDateTime> toOffsetDateTime = new AbstractConverter<>() {
             @Override
             protected OffsetDateTime convert(final String source) {
                 try {
                     return StringUtils.isNotBlank(source) ? OffsetDateTime.parse(source) : null;
-                } catch (DateTimeParseException e) {
+                } catch (final DateTimeParseException e) {
                     log.error(INVALID_DATE_FORMAT, source);
                     return null;
                 }
             }
         };
 
-        Converter<OffsetDateTime, String> toStringOffsetDateTime = new AbstractConverter<>() {
+        final Converter<OffsetDateTime, String> toStringOffsetDateTime = new AbstractConverter<>() {
             @Override
             protected String convert(final OffsetDateTime source) {
                 try {
                     if (source != null) {
-                        DateTimeFormatter dateTimeFormatter = getDateTimeFormatter();
+                        final DateTimeFormatter dateTimeFormatter = getDateTimeFormatter();
                         return source.toZonedDateTime().format(dateTimeFormatter);
                     }
-                } catch (DateTimeParseException e) {
+                } catch (final DateTimeParseException e) {
                     log.error(INVALID_DATE_FORMAT, source);
                     return null;
                 }
@@ -114,7 +120,7 @@ public class EftiConfig {
                 .toFormatter();
     }
 
-    private static LocalDateTime getLocalDateTime(String source) {
+    private static LocalDateTime getLocalDateTime(final String source) {
         if (StringUtils.isNotBlank(source)) {
             return OffsetDateTime.parse(source).toLocalDateTime();
         }
@@ -130,5 +136,26 @@ public class EftiConfig {
     @ConfigurationProperties(prefix = "gate")
     public GateProperties gateProperties() {
         return new GateProperties();
+    }
+
+    @Bean(name = "objectMapper")
+    public ObjectMapper objectMapper() {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.coercionConfigDefaults().setCoercion(CoercionInputShape.String, CoercionAction.AsEmpty)
+                .setCoercion(CoercionInputShape.EmptyString, CoercionAction.AsEmpty);
+        return objectMapper;
+    }
+
+    @Bean(name = "xmlMapper")
+    public XmlMapper xmlMapper() {
+        final XmlMapper xmlMapper = new XmlMapper();
+        xmlMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        xmlMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        xmlMapper.registerModule(new JavaTimeModule());
+        xmlMapper.registerModule(new JakartaXmlBindAnnotationModule());
+        return xmlMapper;
     }
 }

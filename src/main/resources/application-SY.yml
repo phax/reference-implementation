@@ -1,4 +1,8 @@
 spring:
+  rabbitmq:
+    password: sy
+    username: sy
+    virtual-host: sy
   datasource:
     control:
       liquibase:

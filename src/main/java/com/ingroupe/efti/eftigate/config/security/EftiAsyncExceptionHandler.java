@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 @Component
 public class EftiAsyncExceptionHandler implements AsyncUncaughtExceptionHandler {
     @Override
-    public void handleUncaughtException(Throwable ex, Method method, Object... params) {
+    public void handleUncaughtException(final Throwable ex, final Method method, final Object... params) {
         log.error("[ASYNC-ERROR] method: "+method.getName()+" ,exception: " + ex);
     }
 }

@@ -1,6 +1,7 @@
 package com.ingroupe.efti.eftigate.dto.requestbody;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,9 +13,14 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@XmlRootElement(name = "body")
 public class RequestBodyDto {
+    @XmlElement(name = "eFTIData")
+    private String eFTIData;
+    @XmlElement(name = "eFTIPlatformUrl")
+    private String eFTIPlatformUrl;
     private String requestUuid;
-    @JsonProperty("eFTIDataUuid")
+    @XmlElement(name = "eFTIDataUuid")
     private String eFTIDataUuid;
     private List<String> subsetEU;
     private List<String> subsetMS;

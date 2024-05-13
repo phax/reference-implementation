@@ -20,4 +20,8 @@ public class GateProperties {
         private String username;
         private String password;
     }
+
+    public boolean isCurrentGate(final String gateUrl) {
+        return this.owner.equals(gateUrl);
+    }
 }

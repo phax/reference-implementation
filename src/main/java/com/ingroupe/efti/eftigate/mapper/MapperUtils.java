@@ -3,6 +3,7 @@ package com.ingroupe.efti.eftigate.mapper;
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataResultDto;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
+import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
@@ -14,7 +15,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -33,12 +33,14 @@ public class MapperUtils {
             errorEntity.setId(controlDto.getError().getId());
             controlEntity.setError(errorEntity);
         }
-
         return controlEntity;
     }
 
-    public ControlDto controlEntityToControlDto(final ControlEntity controlEntity) {
+    public ErrorEntity errorDtoToErrorEntity(final ErrorDto errorDto) {
+        return modelMapper.map(errorDto, ErrorEntity.class);
+    }
 
+    public ControlDto controlEntityToControlDto(final ControlEntity controlEntity) {
         return modelMapper.map(controlEntity, ControlDto.class);
     }
 
@@ -50,16 +52,21 @@ public class MapperUtils {
         return modelMapper.map(requestEntity, RequestDto.class);
     }
 
-
     public List<MetadataResult> metadataDtosToMetadataEntities(final List<MetadataDto> metadataDtoList) {
-        return metadataDtoList.stream()
+        return CollectionUtils.emptyIfNull(metadataDtoList).stream()
                 .map(metadataDto -> modelMapper.map(metadataDto, MetadataResult.class))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<MetadataResultDto> metadataResultEntitiesToMetadataResultDtos(final List<MetadataResult> metadataResultList) {
         return CollectionUtils.emptyIfNull(metadataResultList).stream()
                 .map(metadataResult -> modelMapper.map(metadataResult, MetadataResultDto.class))
-                .collect(Collectors.toList());
+                .toList();
+    }
+
+    public List<MetadataResult> metadataResultDtosToMetadataEntities(final List<MetadataResultDto> metadataResultDtos) {
+        return CollectionUtils.emptyIfNull(metadataResultDtos).stream()
+                .map(metadataResultDto -> modelMapper.map(metadataResultDto, MetadataResult.class))
+                .toList();
     }
 }
