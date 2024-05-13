@@ -242,25 +242,12 @@ public class ControlService {
     }
 
     private ControlDto buildNotFoundControlEntity() {
-        if (optionalControlEntity.isPresent()) {
-            ControlEntity controlEntity = optionalControlEntity.get();
-            if (requestService.allRequestsAreInErrorStatus(controlEntity.getRequests())) {
-                controlEntity.setStatus(StatusEnum.ERROR.name());
-                controlEntity.setError(buildErrorEntity(DATA_NOT_FOUND.name(), "Error data not found."));
-            }
-        }
         return mapperUtils.controlEntityToControlDto(ControlEntity.builder()
                 .status(StatusEnum.ERROR)
                 .error(buildErrorEntity(ErrorCodesEnum.UUID_NOT_FOUND.name(), "Error requestUuid not found.")).build());
     }
 
     private static ErrorEntity buildErrorEntity(final String errorCode, final String errorDescription) {
-        return ErrorEntity.builder()
-                .errorCode(errorCode)
-                .errorDescription(errorDescription).build();
-    }
-
-    private static ErrorEntity buildErrorEntity(String errorCode, String errorDescription) {
         return ErrorEntity.builder()
                 .errorCode(errorCode)
                 .errorDescription(errorDescription).build();
