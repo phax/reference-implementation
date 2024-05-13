@@ -7,7 +7,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum EDeliveryAction {
     UPLOAD_METADATA("uploadMetadata"),
-    GET_UIL("getUIL");
+    FORWARD_UIL("forwardUil"),
+    GET_UIL("getUIL"),
+    GET_IDENTIFIERS("getIdentifiers");
 
     private final String value;
 

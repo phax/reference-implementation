@@ -18,7 +18,7 @@ class ValueOfEnumValidatorTest {
         final TestObject testObject = TestObject.builder().country("DE").build();
 
         final Validator validator;
-        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+        try (final ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
 
@@ -32,7 +32,7 @@ class ValueOfEnumValidatorTest {
         final TestObject testObject = TestObject.builder().build();
 
         final Validator validator;
-        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+        try (final ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
 
@@ -45,7 +45,7 @@ class ValueOfEnumValidatorTest {
         final TestObject testObject = TestObject.builder().country("toto").build();
 
         final Validator validator;
-        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+        try (final ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
 

@@ -1,6 +1,7 @@
 package com.ingroupe.efti.commons.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
@@ -11,11 +12,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class TransportVehicleDto {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class TransportVehicleDto implements Serializable {
     @JsonIgnore
     private long id;
     private String transportMode;
