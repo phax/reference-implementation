@@ -19,6 +19,7 @@ spring:
           max-attempts: 6
           max-interval: 10s
           multiplier: 2
+        concurrency: 10
     queues:
       eftiKeySendMessage: EFTI
       eftiSendMessageExchange: efti.send-message.exchange
