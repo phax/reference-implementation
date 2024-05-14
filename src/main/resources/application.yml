@@ -11,6 +11,7 @@ spring:
           max-attempts: 6
           max-interval: 10s
           multiplier: 2
+        concurrency: 10
     port: 5672
     queues:
       eftiKeySendMessage: EFTI
