@@ -13,7 +13,7 @@ server:
 gate:
   minSleep: 1000
   maxSleep: 2000
-  owner: http://efti.platform.massive.com
+  owner: http://efti.platform.massivedynamic.com
   cda_path: file:/opt/javapp/config/cda
   gate: https://mock.efti.dev.k8s.groupein.local/sy
   ap:
