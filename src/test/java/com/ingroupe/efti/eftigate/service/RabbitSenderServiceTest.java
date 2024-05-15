@@ -1,9 +1,9 @@
-package com.ingroupe.efti.eftigate.service;
+package eu.efti.eftigate.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.ingroupe.efti.commons.enums.RequestStatusEnum;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.RequestDto;
+import eu.efti.commons.enums.RequestStatusEnum;
+import eu.efti.eftigate.dto.ControlDto;
+import eu.efti.eftigate.dto.RequestDto;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
-import static com.ingroupe.efti.eftigate.EftiTestUtils.testFile;
+import static eu.efti.eftigate.EftiTestUtils.testFile;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)

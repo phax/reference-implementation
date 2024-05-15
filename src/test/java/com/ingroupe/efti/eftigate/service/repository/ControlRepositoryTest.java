@@ -1,10 +1,10 @@
-package com.ingroupe.efti.eftigate.service.repository;
+package eu.efti.eftigate.service.repository;
 
-import com.ingroupe.efti.commons.enums.RequestStatusEnum;
-import com.ingroupe.efti.commons.enums.StatusEnum;
-import com.ingroupe.efti.eftigate.entity.ControlEntity;
-import com.ingroupe.efti.eftigate.entity.RequestEntity;
-import com.ingroupe.efti.eftigate.repository.ControlRepository;
+import eu.efti.commons.enums.RequestStatusEnum;
+import eu.efti.commons.enums.StatusEnum;
+import eu.efti.eftigate.entity.ControlEntity;
+import eu.efti.eftigate.entity.RequestEntity;
+import eu.efti.eftigate.repository.ControlRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ContextConfiguration(classes= {ControlRepository.class})
 @DataJpaTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-@EnableJpaRepositories(basePackages = {"com.ingroupe.efti.eftigate.repository"})
-@EntityScan("com.ingroupe.efti.eftigate.entity")
+@EnableJpaRepositories(basePackages = {"eu.efti.eftigate.repository"})
+@EntityScan("eu.efti.eftigate.entity")
 class ControlRepositoryTest {
 
     @Autowired

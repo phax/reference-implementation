@@ -1,7 +1,7 @@
-package com.ingroupe.efti.eftigate.batch;
+package eu.efti.eftigate.batch;
 
-import com.ingroupe.efti.eftigate.service.AbstractServiceTest;
-import com.ingroupe.efti.eftigate.service.ControlService;
+import eu.efti.eftigate.service.AbstractServiceTest;
+import eu.efti.eftigate.service.ControlService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;

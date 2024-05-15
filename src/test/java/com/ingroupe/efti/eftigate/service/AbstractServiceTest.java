@@ -1,4 +1,4 @@
-package com.ingroupe.efti.eftigate.service;
+package eu.efti.eftigate.service;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,8 +8,8 @@ import com.fasterxml.jackson.databind.cfg.CoercionInputShape;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.jakarta.xmlbind.JakartaXmlBindAnnotationModule;
-import com.ingroupe.efti.eftigate.mapper.MapperUtils;
-import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
+import eu.efti.eftigate.mapper.MapperUtils;
+import eu.efti.eftigate.mapper.SerializeUtils;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.modelmapper.ModelMapper;

@@ -1,13 +1,13 @@
-package com.ingroupe.efti.edeliveryapconnector;
+package eu.efti.edeliveryapconnector;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.ingroupe.efti.commons.enums.EDeliveryAction;
-import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
-import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
-import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
-import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
+import eu.efti.commons.enums.EDeliveryAction;
+import eu.efti.edeliveryapconnector.dto.ApConfigDto;
+import eu.efti.edeliveryapconnector.dto.ApRequestDto;
+import eu.efti.edeliveryapconnector.exception.SendRequestException;
+import eu.efti.edeliveryapconnector.service.RequestSendingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

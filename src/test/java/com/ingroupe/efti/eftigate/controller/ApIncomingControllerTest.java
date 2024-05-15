@@ -1,7 +1,7 @@
-package com.ingroupe.efti.eftigate.controller;
+package eu.efti.eftigate.controller;
 
-import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
-import com.ingroupe.efti.eftigate.service.RabbitSenderService;
+import eu.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
+import eu.efti.eftigate.service.RabbitSenderService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,8 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
 
-import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.MESSAGE_ID;
-import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.SENT_SUCCESS;
+import static eu.efti.edeliveryapconnector.dto.ReceivedNotificationDto.MESSAGE_ID;
+import static eu.efti.edeliveryapconnector.dto.ReceivedNotificationDto.SENT_SUCCESS;
 
 @WebMvcTest(ApIncomingController.class)
 @ContextConfiguration(classes= {ApIncomingController.class})

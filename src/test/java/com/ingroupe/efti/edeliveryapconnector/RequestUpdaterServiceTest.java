@@ -1,11 +1,11 @@
-package com.ingroupe.efti.edeliveryapconnector;
+package eu.efti.edeliveryapconnector;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
-import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
+import eu.efti.edeliveryapconnector.dto.ApConfigDto;
+import eu.efti.edeliveryapconnector.service.RequestUpdaterService;
 import eu.domibus.plugin.ws.generated.MarkMessageAsDownloadedFault;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

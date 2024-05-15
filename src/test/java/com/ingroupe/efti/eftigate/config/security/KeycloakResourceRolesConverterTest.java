@@ -1,4 +1,4 @@
-package com.ingroupe.efti.eftigate.config.security;
+package eu.efti.eftigate.config.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;

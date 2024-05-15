@@ -1,7 +1,7 @@
-package com.ingroupe.efti.eftigate.service.gate;
+package eu.efti.eftigate.service.gate;
 
-import com.ingroupe.efti.commons.enums.RequestTypeEnum;
-import com.ingroupe.efti.eftigate.config.GateProperties;
+import eu.efti.commons.enums.RequestTypeEnum;
+import eu.efti.eftigate.config.GateProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

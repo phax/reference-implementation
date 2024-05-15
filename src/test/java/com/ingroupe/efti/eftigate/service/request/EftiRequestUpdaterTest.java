@@ -1,12 +1,12 @@
-package com.ingroupe.efti.eftigate.service.request;
+package eu.efti.eftigate.service.request;
 
-import com.ingroupe.efti.commons.enums.RequestStatusEnum;
-import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
-import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
-import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
-import com.ingroupe.efti.eftigate.entity.ControlEntity;
-import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
-import com.ingroupe.efti.eftigate.service.BaseServiceTest;
+import eu.efti.commons.enums.RequestStatusEnum;
+import eu.efti.edeliveryapconnector.dto.NotificationContentDto;
+import eu.efti.edeliveryapconnector.dto.NotificationDto;
+import eu.efti.edeliveryapconnector.dto.NotificationType;
+import eu.efti.eftigate.entity.ControlEntity;
+import eu.efti.eftigate.exception.RequestNotFoundException;
+import eu.efti.eftigate.service.BaseServiceTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

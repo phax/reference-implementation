@@ -1,12 +1,12 @@
-package com.ingroupe.efti.eftigate.service;
+package eu.efti.eftigate.service;
 
-import com.ingroupe.efti.commons.dto.AuthorityDto;
-import com.ingroupe.efti.commons.dto.MetadataDto;
-import com.ingroupe.efti.commons.dto.MetadataRequestDto;
-import com.ingroupe.efti.commons.dto.TransportVehicleDto;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
-import com.ingroupe.efti.metadataregistry.service.MetadataService;
+import eu.efti.commons.dto.AuthorityDto;
+import eu.efti.commons.dto.MetadataDto;
+import eu.efti.commons.dto.MetadataRequestDto;
+import eu.efti.commons.dto.TransportVehicleDto;
+import eu.efti.eftigate.dto.ControlDto;
+import eu.efti.eftigate.service.request.MetadataRequestService;
+import eu.efti.metadataregistry.service.MetadataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

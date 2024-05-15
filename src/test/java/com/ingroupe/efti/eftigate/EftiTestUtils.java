@@ -1,4 +1,4 @@
-package com.ingroupe.efti.eftigate;
+package eu.efti.eftigate;
 
 import java.io.IOException;
 import java.io.InputStream;

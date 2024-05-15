@@ -1,11 +1,11 @@
-package com.ingroupe.efti.eftigate.controller;
+package eu.efti.eftigate.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingroupe.efti.commons.enums.StatusEnum;
-import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
-import com.ingroupe.efti.eftigate.dto.UilDto;
-import com.ingroupe.efti.eftigate.entity.ControlEntity;
-import com.ingroupe.efti.eftigate.service.ControlService;
+import eu.efti.commons.enums.StatusEnum;
+import eu.efti.eftigate.dto.RequestUuidDto;
+import eu.efti.eftigate.dto.UilDto;
+import eu.efti.eftigate.entity.ControlEntity;
+import eu.efti.eftigate.service.ControlService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,10 +1,10 @@
-package com.ingroupe.efti.eftigate.service.gate;
+package eu.efti.eftigate.service.gate;
 
-import com.ingroupe.efti.commons.dto.AuthorityDto;
-import com.ingroupe.efti.commons.dto.MetadataRequestDto;
-import com.ingroupe.efti.commons.enums.CountryIndicator;
-import com.ingroupe.efti.eftigate.entity.GateEntity;
-import com.ingroupe.efti.eftigate.repository.GateRepository;
+import eu.efti.commons.dto.AuthorityDto;
+import eu.efti.commons.dto.MetadataRequestDto;
+import eu.efti.commons.enums.CountryIndicator;
+import eu.efti.eftigate.entity.GateEntity;
+import eu.efti.eftigate.repository.GateRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
