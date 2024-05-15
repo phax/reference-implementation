@@ -18,7 +18,7 @@ gate:
   gate: https://mock.efti.dev.k8s.groupein.local/sy
   ap:
     url: http://172.16.201.115:8080/domibus/services/wsplugin
-    username: massive_service_account
+    username: massivedynamic_service_account
     password: Azerty59*1234567
 
 
