@@ -1,6 +1,10 @@
 # Created by https://www.gitignore.io/api/java,maven,angular,android,eclipse,intellij,androidstudio,visualstudiocode
 # Edit at https://www.gitignore.io/?templates=java,maven,angular,android,eclipse,intellij,androidstudio,visualstudiocode
 
+#IDE
+.vscode/*
+.idea/*
+
 ### Android ###
 # Built application files
 *.apk
@@ -36,19 +40,6 @@ proguard/
 
 # Android Studio captures folder
 captures/
-
-# IntelliJ
-*.iml
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/gradle.xml
-.idea/assetWizardSettings.xml
-.idea/dictionaries
-.idea/libraries
-.idea/caches
-# Android Studio 3 in .gitignore file.
-.idea/caches/build_file_checksums.ser
-.idea/modules.xml
 
 # Keystore files
 # Uncomment the following lines if you do not want to check your keystore files in.

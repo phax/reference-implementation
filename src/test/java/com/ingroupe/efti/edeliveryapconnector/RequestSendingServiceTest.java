@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class RequestSendingServiceTest {
 
     private RequestSendingService service;
-    private final static String FOLDER = "src/test/java/resources/wiremock";
+    private final static String FOLDER = "src/test/resources/wiremock";
     private WireMockServer wireMockServer;
 
     @BeforeEach
@@ -36,7 +36,7 @@ class RequestSendingServiceTest {
         wireMockServer.start();
     }
 
-    //@Test
+    @Test
     void shouldBuildRequest() throws SendRequestException {
         final EDeliveryAction eDeliveryAction = EDeliveryAction.GET_UIL;
         wireMockServer.stubFor(get(urlEqualTo("/domibus/services/wsplugin?wsdl"))
@@ -60,7 +60,7 @@ class RequestSendingServiceTest {
         assertEquals("fc0e70cf-8d57-11ee-a62e-0242ac13000d@domibus.eu", result);
     }
 
-    //@Test
+    @Test
     void shouldThrowExceptionIfResponseEmpty() throws SendRequestException {
         final EDeliveryAction eDeliveryAction = EDeliveryAction.GET_UIL;
         wireMockServer.stubFor(get(urlEqualTo("/domibus/services/wsplugin?wsdl"))
