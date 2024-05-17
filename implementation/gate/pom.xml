@@ -10,7 +10,6 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>eu.efti</groupId>
     <artifactId>gate</artifactId>
     <version>${revision}</version>
     <name>efti-gate</name>
@@ -280,20 +279,6 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>8.2.1</version>
-                <configuration>
-                    <formats>
-                        <format>HTML</format>
-                        <format>JSON</format>
-                    </formats>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
