@@ -189,9 +189,9 @@
             </plugins>
         </pluginManagement>
     </build>
-
     <modules>
         <module>commons</module>
         <module>gate</module>
+        <module>edelivery-ap-connector</module>
     </modules>
 </project>
