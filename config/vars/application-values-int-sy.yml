@@ -9,7 +9,7 @@ spring:
   datasource:
     url: jdbc:postgresql://ileftidbpg01in.service.groupein.local:5432/efti
     username: efti
-    password: 64BEt8d1Us4REq43A0z
+    password: j6h6BEjpHIwYly7HA0z
   security:
     oauth2:
       resourceserver:
