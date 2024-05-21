@@ -9,7 +9,7 @@ spring:
   datasource:
     url: jdbc:postgresql://ileftidbpg01in.service.groupein.local:5432/efti
     username: efti
-    password: 64BEt8d1Us4REq43A0z
+    password: j6h6BEjpHIwYly7HA0z
   security:
     oauth2:
       resourceserver:
@@ -24,7 +24,7 @@ spring:
 gate:
   owner: https://mock.efti.int.k8s.groupein.local/bo
   ap:
-    url: http://172.17.229.3:8080/domibus/services/wsplugin
+    url: http://ileftimicr03in.service.groupein.local:8080/domibus/services/wsplugin
     username: borduria_service_account
     password: Azerty59*1234567
 
