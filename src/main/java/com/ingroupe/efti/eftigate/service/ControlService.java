@@ -170,10 +170,6 @@ public class ControlService {
         }
     }
 
-    private boolean isLocalRequest(final RequestTypeEnum requestType) {
-        return EftiGateConstants.LOCAL_REQUESTS_TYPES.contains(requestType);
-    }
-
     public ControlDto updatePendingControl(final ControlEntity controlEntity) {
         final RequestService requestService = this.getRequestService(controlEntity.getRequestType());
         final List<RequestEntity> controlEntityRequests = controlEntity.getRequests();
