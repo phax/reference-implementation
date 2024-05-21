@@ -24,7 +24,7 @@ spring:
 gate:
   owner: https://mock.efti.int.k8s.groupein.local/sy
   ap:
-    url: http://172.17.229.3:8080/domibus/services/wsplugin
+    url: http://ileftimicr03in.service.groupein.local:8080/domibus/services/wsplugin
     username: syldavia_service_account
     password: Azerty59*1234567
 
