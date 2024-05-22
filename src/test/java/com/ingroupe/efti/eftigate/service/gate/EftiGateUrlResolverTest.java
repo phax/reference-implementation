@@ -47,29 +47,29 @@ class EftiGateUrlResolverTest {
     }
 
     @Test
-    void shouldResolveUrls_WhenCountryIndicatorsAreGiven(){
+    void shouldResolveGates_WhenCountryIndicatorsAreGiven(){
         //Arrange
         this.metadataRequestDto.setEFTIGateIndicator(List.of("BE", "FR"));
         when(gateRepository.findByCountryIn(anyList())).thenReturn(List.of(frGateEntity, beGateEntity));
 
         //Act
-        final List<String> destinationGatesUrls = eftiGateUrlResolver.resolve(metadataRequestDto);
+        final List<GateEntity> destinationGates = eftiGateUrlResolver.resolve(metadataRequestDto);
 
         //Assert
-        assertFalse(destinationGatesUrls.isEmpty());
-        assertEquals(List.of("https://efti.gate.fr.eu", "https://efti.gate.be.eu"), destinationGatesUrls);
+        assertFalse(destinationGates.isEmpty());
+        assertEquals(List.of(frGateEntity, beGateEntity), destinationGates);
     }
 
     @Test
-    void shouldGetAllUrls_WhenCountryIndicatorsAreNotGiven(){
+    void shouldGetAllGates_WhenCountryIndicatorsAreNotGiven(){
         //Arrange
         when(gateRepository.findAll()).thenReturn(List.of(frGateEntity, beGateEntity, deGateEntity));
 
         //Act
-        final List<String> destinationGatesUrls = eftiGateUrlResolver.resolve(metadataRequestDto);
+        final List<GateEntity> destinationGates = eftiGateUrlResolver.resolve(metadataRequestDto);
 
         //Assert
-        assertFalse(destinationGatesUrls.isEmpty());
-        assertEquals(List.of("https://efti.gate.fr.eu", "https://efti.gate.be.eu", "https://efti.gate.de.eu"), destinationGatesUrls);
+        assertFalse(destinationGates.isEmpty());
+        assertEquals(List.of(frGateEntity, beGateEntity, deGateEntity), destinationGates);
     }
 }

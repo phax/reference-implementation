@@ -92,7 +92,7 @@ public class MetadataRequestService extends RequestService {
     private void handleNewControlRequest(final NotificationDto notificationDto, final String bodyFromNotification) {
         final IdentifiersMessageBodyDto requestMessage = getSerializeUtils().mapXmlStringToClass(bodyFromNotification, IdentifiersMessageBodyDto.class);
         final List<MetadataDto> metadataDtoList = metadataService.search(buildMetadataRequestDtoFrom(requestMessage));
-        MetadataResults metadataResults = buildMetadataResult(metadataDtoList);
+        final MetadataResults metadataResults = buildMetadataResult(metadataDtoList);
         final ControlDto controlDto = getControlService().createControlFrom(requestMessage, notificationDto.getContent().getFromPartyId(), metadataResults);
         final RequestDto request = createReceivedRequest(controlDto, metadataDtoList);
         sendRequest(request);
@@ -104,13 +104,15 @@ public class MetadataRequestService extends RequestService {
         final MetadataResults metadataResults = buildMetadataResultFrom(metadataResultDtos);
         updateControlMetadata(existingControl, metadataResults, metadataResultDtos);
         updateControlRequests(existingControl.getRequests(), metadataResults, notificationDto);
-        existingControl.setStatus(getControlStatus(existingControl));
+        if (!StatusEnum.ERROR.equals(existingControl.getStatus())) {
+            existingControl.setStatus(getControlStatus(existingControl));
+        }
         getControlService().save(existingControl);
     }
 
     private StatusEnum getControlStatus(final ControlEntity existingControl) {
         final StatusEnum currentControlStatus = existingControl.getStatus();
-        List<RequestEntity> remoteGatesRequests = existingControl.getRequests().stream()
+        final List<RequestEntity> remoteGatesRequests = existingControl.getRequests().stream()
                 .filter(requestEntity -> StringUtils.isNotBlank(requestEntity.getGateUrlDest())).toList();
         if (remoteGatesRequests.stream().allMatch(requestEntity -> RequestStatusEnum.SUCCESS == requestEntity.getStatus())) {
             return StatusEnum.COMPLETE;
@@ -122,7 +124,7 @@ public class MetadataRequestService extends RequestService {
         return currentControlStatus;
     }
 
-    private static boolean shouldSetTimeout(List<RequestEntity> remoteGatesRequests) {
+    private static boolean shouldSetTimeout(final List<RequestEntity> remoteGatesRequests) {
         return remoteGatesRequests.stream().anyMatch(requestEntity -> RequestStatusEnum.TIMEOUT == requestEntity.getStatus())
                 && remoteGatesRequests.stream().noneMatch(requestEntity -> RequestStatusEnum.ERROR == requestEntity.getStatus());
     }
@@ -217,16 +219,16 @@ public class MetadataRequestService extends RequestService {
     }
 
     @Override
-    public boolean supports(EDeliveryAction eDeliveryAction) {
+    public boolean supports(final EDeliveryAction eDeliveryAction) {
         return IDENTIFIERS_ACTIONS.contains(eDeliveryAction);
     }
 
     @Override
-    public void receiveGateRequest(NotificationDto notificationDto) {
+    public void receiveGateRequest(final NotificationDto notificationDto) {
         throw new UnsupportedOperationException("Forward Operations not supported for Identifiers");
     }
 
-    public void updateControlMetadata(ControlDto control, List<MetadataDto> metadataDtoList) {
+    public void updateControlMetadata(final ControlDto control, final List<MetadataDto> metadataDtoList) {
         getControlService().getByRequestUuid(control.getRequestUuid()).ifPresent(controlEntity -> {
             if (controlEntity.getMetadataResults() == null || controlEntity.getMetadataResults().getMetadataResult().isEmpty())
             {
