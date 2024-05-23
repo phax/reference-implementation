@@ -646,7 +646,6 @@ class ControlServiceTest extends AbstractServiceTest {
 
         final MetadataResponseDto expectedMetadataResponse = MetadataResponseDto.builder()
                 .status(StatusEnum.COMPLETE)
-                .eFTIGate(CountryIndicator.FR)
                 .metadata(List.of(metadataResultDto))
                 .build();
         //Act

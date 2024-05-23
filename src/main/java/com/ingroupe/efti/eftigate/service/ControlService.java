@@ -215,7 +215,6 @@ public class ControlService {
         final MetadataResponseDto result = MetadataResponseDto.builder()
                 .requestUuid(controlDto.getRequestUuid())
                 .status(controlDto.getStatus())
-                .eFTIGate(getEftiGate(controlDto))
                 .metadata(getMetadataResultDtos(controlDto)).build();
         if(controlDto.isError()) {
             result.setRequestUuid(null);
@@ -223,18 +222,6 @@ public class ControlService {
             result.setErrorCode(controlDto.getError().getErrorCode());
         }
         return result;
-    }
-
-    private CountryIndicator getEftiGate(final ControlDto controlDto) {
-        //temporaire en attendant de discuter sur sa place
-        final MetadataResults metadataResults = controlDto.getMetadataResults();
-        if (metadataResults != null && CollectionUtils.isNotEmpty(metadataResults.getMetadataResult())){
-            final String countryStart = metadataResults.getMetadataResult().iterator().next().getCountryStart();
-            if (StringUtils.isNotBlank(countryStart)){
-                return CountryIndicator.valueOf(countryStart);
-            }
-        }
-        return null;
     }
 
     private List<MetadataResultDto> getMetadataResultDtos(final ControlDto controlDto) {
