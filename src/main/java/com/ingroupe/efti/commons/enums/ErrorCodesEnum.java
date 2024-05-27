@@ -57,7 +57,9 @@ public enum ErrorCodesEnum {
 
     PLATFORM_ERROR("Platform error"),
 
-    DATA_NOT_FOUND(" Data not found.");
+    DATA_NOT_FOUND("Data not found."),
+
+    DEFAULT_ERROR("Error");
 
 
     private final String message;
