@@ -13,7 +13,6 @@ import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
 import com.ingroupe.efti.eftigate.service.request.UilRequestService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -109,7 +108,7 @@ class RabbitListenerServiceTest extends AbstractServiceTest{
             rabbitListenerService.listenReceiveMessage(message);
         });
 
-        Assertions.assertEquals("Error when try to map class com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto with message : ça va pétteeeeer", exception.getMessage());
+        assertEquals("Error when try to map class com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto with message : ça va pétteeeeer", exception.getMessage());
     }
 
     @Test
@@ -140,7 +139,7 @@ class RabbitListenerServiceTest extends AbstractServiceTest{
             rabbitListenerService.listenSendMessage(message);
         });
 
-        Assertions.assertEquals("Error when try to map class com.ingroupe.efti.eftigate.dto.RequestDto with message : oki", exception.getMessage());
+        assertEquals("Error when try to map class com.ingroupe.efti.eftigate.dto.RequestDto with message : oki", exception.getMessage());
     }
 
     @Test
@@ -152,7 +151,7 @@ class RabbitListenerServiceTest extends AbstractServiceTest{
             rabbitListenerService.listenSendMessage(message);
         });
 
-        Assertions.assertEquals("Error when try to send message to domibus", exception.getMessage());
+        assertEquals("Error when try to send message to domibus", exception.getMessage());
     }
 
     @Test

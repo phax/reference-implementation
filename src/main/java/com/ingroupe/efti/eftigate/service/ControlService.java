@@ -11,13 +11,13 @@ import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.IdentifiersMessageBodyDto;
 import com.ingroupe.efti.eftigate.config.GateProperties;
-import com.ingroupe.efti.eftigate.constant.EftiGateConstants;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
+import com.ingroupe.efti.eftigate.entity.GateEntity;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.exception.AmbiguousIdentifierException;
@@ -94,7 +94,7 @@ public class ControlService {
         return createControl(metadataRequestDto, ControlDto.fromLocalMetadataControl(metadataRequestDto, RequestTypeEnum.LOCAL_METADATA_SEARCH));
     }
 
-    public ControlDto createControlFrom(final IdentifiersMessageBodyDto messageBody, final String fromGateUrl, MetadataResults metadataResults) {
+    public ControlDto createControlFrom(final IdentifiersMessageBodyDto messageBody, final String fromGateUrl, final MetadataResults metadataResults) {
         final ControlDto controlDto = ControlDto.fromExternalMetadataControl(messageBody, EXTERNAL_ASK_METADATA_SEARCH, fromGateUrl, gateProperties.getOwner(), metadataResults);
         return this.save(controlDto);
     }
@@ -124,7 +124,27 @@ public class ControlService {
     }
 
     private void createMetadataControl(final ControlDto controlDto, final MetadataRequestDto metadataRequestDto) {
-        final List<String> destinationGatesUrls = eftiGateUrlResolver.resolve(metadataRequestDto);
+        final List<GateEntity> destinationGates = eftiGateUrlResolver.resolve(metadataRequestDto);
+
+        if (CollectionUtils.isNotEmpty(metadataRequestDto.getEFTIGateIndicator())) {
+            if (destinationGates.isEmpty()){
+                controlDto.setStatus(StatusEnum.ERROR);
+                controlDto.setError(ErrorDto.builder()
+                        .errorCode("Gates Not found")
+                        .errorDescription("None of the provided gates were found : "+StringUtils.join(metadataRequestDto.getEFTIGateIndicator(), ","))
+                        .build());
+            } else if (destinationGates.size() < metadataRequestDto.getEFTIGateIndicator().size()){
+                controlDto.setStatus(StatusEnum.ERROR);
+                controlDto.setError(ErrorDto.builder()
+                        .errorCode("Gates Not found")
+                        .errorDescription("Some of the provided gates were not found : " + getNotFoundGates(destinationGates, metadataRequestDto.getEFTIGateIndicator()))
+                        .build());
+            }
+        }
+
+        final List<String> destinationGatesUrls = CollectionUtils.emptyIfNull(destinationGates).stream()
+                .map(GateEntity::getUrl)
+                .toList();
         controlDto.setRequestType(gateToRequestTypeFunction.apply(destinationGatesUrls));
         final ControlDto saveControl = this.save(controlDto);
         CollectionUtils.emptyIfNull(destinationGatesUrls).forEach(destinationUrl -> {
@@ -135,6 +155,13 @@ public class ControlService {
             }
         });
         log.info("Metadata control with request uuid '{}' has been register", saveControl.getRequestUuid());
+    }
+
+    private String getNotFoundGates(final List<GateEntity> retrievedGates, final List<String> providedGateIndicators) {
+        final List<String> notFoundGates = providedGateIndicators.stream()
+                .filter(providedGateIndicator -> !retrievedGates.stream().map(GateEntity::getCountry).toList().contains(CountryIndicator.valueOf(providedGateIndicator)))
+                .toList();
+        return String.join(", ", notFoundGates);
     }
 
     public RequestUuidDto getControlEntity(final String requestUuid) {
@@ -158,7 +185,7 @@ public class ControlService {
         }
     }
 
-    public Optional<ControlEntity> getByRequestUuid(String requestUuid) {
+    public Optional<ControlEntity> getByRequestUuid(final String requestUuid) {
         return controlRepository.findByRequestUuid(requestUuid);
     }
 
@@ -191,7 +218,6 @@ public class ControlService {
         final MetadataResponseDto result = MetadataResponseDto.builder()
                 .requestUuid(controlDto.getRequestUuid())
                 .status(controlDto.getStatus())
-                .eFTIGate(getEftiGate(controlDto))
                 .metadata(getMetadataResultDtos(controlDto)).build();
         if(controlDto.isError()) {
             result.setRequestUuid(null);
@@ -199,18 +225,6 @@ public class ControlService {
             result.setErrorCode(controlDto.getError().getErrorCode());
         }
         return result;
-    }
-
-    private CountryIndicator getEftiGate(final ControlDto controlDto) {
-        //temporaire en attendant de discuter sur sa place
-        final MetadataResults metadataResults = controlDto.getMetadataResults();
-        if (metadataResults != null && CollectionUtils.isNotEmpty(metadataResults.getMetadataResult())){
-            final String countryStart = metadataResults.getMetadataResult().iterator().next().getCountryStart();
-            if (StringUtils.isNotBlank(countryStart)){
-                return CountryIndicator.valueOf(countryStart);
-            }
-        }
-        return null;
     }
 
     private List<MetadataResultDto> getMetadataResultDtos(final ControlDto controlDto) {

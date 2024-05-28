@@ -13,6 +13,7 @@ import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
+import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
@@ -23,6 +24,7 @@ import com.ingroupe.efti.eftigate.service.RabbitSenderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
@@ -66,7 +68,7 @@ public class UilRequestService extends RequestService {
     @Override
     public void manageMessageReceive(final NotificationDto notificationDto) {
         final MessageBodyDto messageBody =
-                getSerializeUtils().mapXmlStringToClass(notificationDto.getContent().getBody(),MessageBodyDto.class);
+                getSerializeUtils().mapXmlStringToClass(notificationDto.getContent().getBody(), MessageBodyDto.class);
 
         final RequestDto requestDto = this.findByRequestUuidOrThrow(messageBody.getRequestUuid());
         if (messageBody.getStatus().equals(StatusEnum.COMPLETE.name())) {
@@ -81,7 +83,7 @@ public class UilRequestService extends RequestService {
     }
 
     private void responseToOtherGateIfNecessary(final RequestDto requestDto) {
-        if(!requestDto.getControl().isExternalAsk()) return;
+        if (!requestDto.getControl().isExternalAsk()) return;
         this.updateStatus(requestDto, RequestStatusEnum.RESPONSE_IN_PROGRESS);
         requestDto.setGateUrlDest(requestDto.getControl().getFromGateUrl());
         requestDto.getControl().setEftiData(requestDto.getReponseData());
@@ -91,7 +93,7 @@ public class UilRequestService extends RequestService {
 
     private RequestDto findByRequestUuidOrThrow(final String requestId) {
         return getMapperUtils().requestToRequestDto(Optional.ofNullable(
-                this.getRequestRepository().findByControlRequestUuidAndStatus(requestId, RequestStatusEnum.IN_PROGRESS))
+                        this.getRequestRepository().findByControlRequestUuidAndStatus(requestId, RequestStatusEnum.IN_PROGRESS))
                 .orElseThrow(() -> new RequestNotFoundException("couldn't find request for requestUuid: " + requestId)));
     }
 
@@ -102,11 +104,18 @@ public class UilRequestService extends RequestService {
         final RequestEntity requestEntity = getRequestRepository()
                 .findByControlRequestUuidAndStatus(messageBody.getRequestUuid(), RequestStatusEnum.IN_PROGRESS);
 
-        if(requestEntity == null) {
+        if (requestEntity == null) {
             askReception(notificationDto, messageBody);
         } else {
             receptionOfResponse(requestEntity, messageBody);
         }
+    }
+
+    private ErrorEntity setErrorFromMessageBodyDto(final MessageBodyDto messageBody) {
+        return StringUtils.isBlank(messageBody.getErrorDescription()) ?
+                getMapperUtils().errorDtoToErrorEntity(ErrorDto.fromErrorCode(ErrorCodesEnum.DATA_NOT_FOUND))
+                :
+                getMapperUtils().errorDtoToErrorEntity(ErrorDto.fromAnyError(messageBody.getErrorDescription()));
     }
 
     private void receptionOfResponse(final RequestEntity requestEntity, final MessageBodyDto messageBody) {
@@ -114,10 +123,15 @@ public class UilRequestService extends RequestService {
             requestEntity.setReponseData(messageBody.getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
             requestEntity.setStatus(RequestStatusEnum.SUCCESS);
         } else {
-            requestEntity.setError(getMapperUtils().errorDtoToErrorEntity(ErrorDto.fromErrorCode(ErrorCodesEnum.DATA_NOT_FOUND)));
             requestEntity.setStatus(RequestStatusEnum.ERROR);
+            requestEntity.setError(setErrorFromMessageBodyDto(messageBody));
+            ControlEntity controlEntity = requestEntity.getControl();
+            controlEntity.setError(setErrorFromMessageBodyDto(messageBody));
+            controlEntity.setStatus(StatusEnum.ERROR);
+            requestEntity.setControl(controlEntity);
         }
         getRequestRepository().save(requestEntity);
+        getControlService().save(requestEntity.getControl());
     }
 
     private void askReception(final NotificationDto notificationDto, final MessageBodyDto messageBody) {

@@ -84,7 +84,7 @@ public class RabbitListenerService {
 
     private String getBodyForUilRequest(final RequestDto requestDto) {
         final ControlDto controlDto = requestDto.getControl();
-        if (requestDto.getStatus() == RequestStatusEnum.RESPONSE_IN_PROGRESS) {
+        if (requestDto.getStatus() == RequestStatusEnum.RESPONSE_IN_PROGRESS ||requestDto.getStatus() == RequestStatusEnum.ERROR) {
             boolean hasData = requestDto.getReponseData() != null;
             boolean hasError = controlDto.getError() != null;
 
