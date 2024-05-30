@@ -117,6 +117,7 @@ public class ControlService {
     private static void createErrorControl(final ControlDto controlDto, final ErrorDto error) {
         controlDto.setStatus(StatusEnum.ERROR);
         controlDto.setError(error);
+        controlDto.setRequestUuid(null);
         log.error(error.getErrorDescription() + ", " + error.getErrorCode());
     }
 
@@ -299,7 +300,6 @@ public class ControlService {
                 .status(controlDto.getStatus())
                 .eFTIData(controlDto.getEftiData()).build();
         if(controlDto.isError()) {
-            result.setRequestUuid(null);
             result.setErrorDescription(controlDto.getError().getErrorDescription());
             result.setErrorCode(controlDto.getError().getErrorCode());
         }
