@@ -37,5 +37,6 @@ public class MetadataResultDto implements Serializable {
     @NotEmpty(message = "TRANSPORT_VEHICLES_MISSING")
     @Valid
     private List<TransportVehicleDto> transportVehicles;
+    @JsonIgnore
     private boolean isDisabled;
 }
