@@ -111,7 +111,7 @@ public abstract class RequestService {
         final InputSource xml = new InputSource(new StringReader(bodyXmlString));
         try {
             return xpath.evaluate("/body/requestUuid", xml);
-        } catch (XPathExpressionException e) {
+        } catch (final XPathExpressionException e) {
             return null;
         }
     }
@@ -134,7 +134,7 @@ public abstract class RequestService {
         final ErrorDto errorDto = ErrorDto.fromErrorCode(ErrorCodesEnum.AP_SUBMISSION_ERROR);
         requestDto.setError(errorDto);
         controlService.setError(requestDto.getControl(), errorDto);
-        RequestDto requestDtoUpdated = this.updateStatus(requestDto, RequestStatusEnum.ERROR);
+        final RequestDto requestDtoUpdated = this.updateStatus(requestDto, RequestStatusEnum.ERROR);
         if (requestDtoUpdated.getControl().getFromGateUrl() != null &&
                 !gateProperties.isCurrentGate(requestDtoUpdated.getControl().getFromGateUrl()) &&
                 ErrorCodesEnum.AP_SUBMISSION_ERROR.name().equals(requestDto.getControl().getError().getErrorCode())) {
@@ -142,6 +142,20 @@ public abstract class RequestService {
             requestDtoUpdated.getControl().setEftiGateUrl(requestDtoUpdated.getControl().getFromGateUrl());
             this.sendRequest(requestDtoUpdated);
         }
+    }
+
+    public void createRequest(final ControlDto controlDto, final RequestStatusEnum status) {
+        final RequestDto requestDto = save(buildRequestDto(controlDto, status));
+        log.info("Request has been registered with controlId : {}", requestDto.getControl().getId());
+    }
+
+    private RequestDto buildRequestDto(final ControlDto controlDto, final RequestStatusEnum status) {
+        return RequestDto.builder()
+                .retry(0)
+                .control(controlDto)
+                .status(status)
+                .gateUrlDest(controlDto.getFromGateUrl())
+                .build();
     }
 
     protected void errorReceived(final RequestDto requestDto, final String errorDescription) {

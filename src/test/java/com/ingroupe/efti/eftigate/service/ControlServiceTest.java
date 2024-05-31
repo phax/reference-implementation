@@ -7,7 +7,6 @@ import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.commons.dto.MetadataResultDto;
 import com.ingroupe.efti.commons.dto.TransportVehicleDto;
-import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
@@ -19,7 +18,6 @@ import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
-import com.ingroupe.efti.eftigate.entity.GateEntity;
 import com.ingroupe.efti.eftigate.entity.MetadataResult;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
@@ -340,6 +338,7 @@ class ControlServiceTest extends AbstractServiceTest {
         setField(controlService,"timeoutValue", 60);
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
         when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
+        when(controlRepository.save(any())).thenReturn(controlEntity);
 
         final RequestUuidDto requestUuidDtoResult = controlService.getControlEntity(requestUuid);
 
@@ -446,7 +445,7 @@ class ControlServiceTest extends AbstractServiceTest {
         when(controlRepository.save(any())).thenReturn(controlEntity);
         when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(metadataRequestService);
         when(gateToRequestTypeFunction.apply(any())).thenReturn(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);
-        when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of(GateEntity.builder().country(CountryIndicator.BO).url("http://efti.gate.borduria.eu").build()));
+        when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of("http://efti.gate.borduria.eu"));
 
 
         final RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
@@ -463,7 +462,7 @@ class ControlServiceTest extends AbstractServiceTest {
     void createMetadataControlForLocalRequestTest() {
         when(controlRepository.save(any())).thenReturn(controlEntity);
         when(gateToRequestTypeFunction.apply(any())).thenReturn(RequestTypeEnum.LOCAL_METADATA_SEARCH);
-        when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of(GateEntity.builder().country(CountryIndicator.BO).url("http://france.lol").build()));
+        when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of("http://france.lol"));
 
 
         final RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
@@ -477,13 +476,13 @@ class ControlServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    void createMetadataControlWithError_whenSomeOfGivenDestinationGatesDoesNotExist() {
+    void shouldCreateMetadataControlWithPendingStatus_whenSomeOfGivenDestinationGatesDoesNotExist() {
         controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_METADATA_SEARCH);
         metadataRequestDto.setEFTIGateIndicator(List.of("IT", "RO"));
         when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(metadataRequestService);
         when(controlRepository.save(any())).thenReturn(controlEntity);
         when(gateToRequestTypeFunction.apply(any())).thenReturn(RequestTypeEnum.EXTERNAL_METADATA_SEARCH);
-        when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of(GateEntity.builder().country(CountryIndicator.IT).url("http://italie.it").build()));
+        when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of("http://italie.it"));
 
 
 
@@ -493,13 +492,11 @@ class ControlServiceTest extends AbstractServiceTest {
         verify(eftiAsyncCallsProcessor, never()).checkLocalRepoAsync(any(), any());
         verify(controlRepository, times(1)).save(any());
         assertNotNull(requestUuidDtoResult);
-        assertEquals(StatusEnum.ERROR, requestUuidDtoResult.getStatus());
-        assertNotNull(requestUuidDtoResult.getErrorCode());
-        assertNotNull(requestUuidDtoResult.getErrorDescription());
+        assertEquals(StatusEnum.PENDING, requestUuidDtoResult.getStatus());
     }
 
     @Test
-    void  createMetadataControlWithError_whenAllGivenDestinationGatesDoesNotExist() {
+    void  souldCreateMetadataControlWithPendingStatus_whenAllGivenDestinationGatesDoesNotExist() {
         metadataRequestDto.setEFTIGateIndicator(List.of("IT", "RO"));
         when(controlRepository.save(any())).thenReturn(controlEntity);
         when(gateToRequestTypeFunction.apply(any())).thenReturn(RequestTypeEnum.EXTERNAL_METADATA_SEARCH);
@@ -511,9 +508,7 @@ class ControlServiceTest extends AbstractServiceTest {
         verify(eftiAsyncCallsProcessor, never()).checkLocalRepoAsync(any(), any());
         verify(controlRepository, times(1)).save(any());
         assertNotNull(requestUuidDtoResult);
-        assertEquals(StatusEnum.ERROR, requestUuidDtoResult.getStatus());
-        assertNotNull(requestUuidDtoResult.getErrorCode());
-        assertNotNull(requestUuidDtoResult.getErrorDescription());
+        assertEquals(StatusEnum.PENDING, requestUuidDtoResult.getStatus());
     }
 
     @Test
@@ -525,7 +520,7 @@ class ControlServiceTest extends AbstractServiceTest {
 
         when(controlRepository.save(any())).thenReturn(controlEntity);
         when(gateToRequestTypeFunction.apply(any())).thenReturn(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);
-        when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of(GateEntity.builder().country(CountryIndicator.BO).url("http://efti.gate.borduria.eu").build()));
+        when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of("http://efti.gate.borduria.eu"));
         when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(metadataRequestService);
 
 
