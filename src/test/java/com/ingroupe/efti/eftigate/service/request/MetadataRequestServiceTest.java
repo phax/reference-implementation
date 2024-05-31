@@ -33,17 +33,9 @@ import java.util.List;
 
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SUCCESS;
 import static com.ingroupe.efti.eftigate.EftiTestUtils.testFile;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MetadataRequestServiceTest extends BaseServiceTest {
@@ -110,32 +102,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         assertEquals(metadataResult.getTransportVehicles().size(), requestDtoArgumentCaptor.getValue().getMetadataResults().getMetadataResult().get(0).getTransportVehicles().size());
         assertEquals(SUCCESS, requestDtoArgumentCaptor.getValue().getStatus());
     }
-
-    @Test
-    void shouldCreateRequestWithErrorStatus_WhenNoMetadata() {
-        //Arrange
-        when(requestRepository.save(any())).thenReturn(requestEntity);
-
-        //Act
-        metadataRequestService.createRequest(controlDto, Collections.emptyList());
-
-        //Assert
-        verify(mapperUtils).requestDtoToRequestEntity(requestDtoArgumentCaptor.capture());
-        assertEquals(RequestStatusEnum.ERROR, requestDtoArgumentCaptor.getValue().getStatus());
-    }
-
-    @Test
-    void shouldCreateRequestWithSuccessStatus_WhenMetadataNotEmpty() {
-        //Arrange
-        when(requestRepository.save(any())).thenReturn(requestEntity);
-
-        //Act
-        metadataRequestService.createRequest(controlDto, Collections.singletonList(metadataDto));
-
-        //Assert
-        verify(mapperUtils).requestDtoToRequestEntity(requestDtoArgumentCaptor.capture());
-        assertEquals(SUCCESS, requestDtoArgumentCaptor.getValue().getStatus());
-    }
+    
     @Test
     void trySendDomibusSuccessTest() throws SendRequestException, JsonProcessingException {
         metadataRequestService.sendRequest(requestDto);
@@ -323,7 +290,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
     @Test
     void allRequestsContainsDataTest_whenTrue() {
         //Arrange
-        MetadataResult metadataResult = new MetadataResult();
+        final MetadataResult metadataResult = new MetadataResult();
         metadataResult.setCountryStart("FR");
         metadataResult.setCountryEnd("FR");
         metadataResult.setDisabled(false);

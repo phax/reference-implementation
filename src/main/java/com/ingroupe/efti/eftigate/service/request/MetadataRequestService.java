@@ -112,21 +112,20 @@ public class MetadataRequestService extends RequestService {
 
     private StatusEnum getControlStatus(final ControlEntity existingControl) {
         final StatusEnum currentControlStatus = existingControl.getStatus();
-        final List<RequestEntity> remoteGatesRequests = existingControl.getRequests().stream()
-                .filter(requestEntity -> StringUtils.isNotBlank(requestEntity.getGateUrlDest())).toList();
-        if (remoteGatesRequests.stream().allMatch(requestEntity -> RequestStatusEnum.SUCCESS == requestEntity.getStatus())) {
+        final List<RequestEntity> requests = existingControl.getRequests();
+        if (requests.stream().allMatch(requestEntity -> RequestStatusEnum.SUCCESS == requestEntity.getStatus())) {
             return StatusEnum.COMPLETE;
-        } else if (shouldSetTimeout(remoteGatesRequests)) {
+        } else if (shouldSetTimeout(requests)) {
             return StatusEnum.TIMEOUT;
-        } else if (remoteGatesRequests.stream().anyMatch(requestEntity -> RequestStatusEnum.ERROR == requestEntity.getStatus())) {
+        } else if (requests.stream().anyMatch(requestEntity -> RequestStatusEnum.ERROR == requestEntity.getStatus())) {
             return StatusEnum.ERROR;
         }
         return currentControlStatus;
     }
 
-    private static boolean shouldSetTimeout(final List<RequestEntity> remoteGatesRequests) {
-        return remoteGatesRequests.stream().anyMatch(requestEntity -> RequestStatusEnum.TIMEOUT == requestEntity.getStatus())
-                && remoteGatesRequests.stream().noneMatch(requestEntity -> RequestStatusEnum.ERROR == requestEntity.getStatus());
+    private static boolean shouldSetTimeout(final List<RequestEntity> requests) {
+        return requests.stream().anyMatch(requestEntity -> RequestStatusEnum.TIMEOUT == requestEntity.getStatus())
+                && requests.stream().noneMatch(requestEntity -> RequestStatusEnum.ERROR == requestEntity.getStatus());
     }
 
     private void updateControlMetadata(final ControlEntity existingControl, final MetadataResults metadataResults, final List<MetadataResultDto> metadataResultDtos) {
@@ -153,14 +152,6 @@ public class MetadataRequestService extends RequestService {
         return RequestStatusEnum.IN_PROGRESS == requestEntity.getStatus()
                 && requestEntity.getGateUrlDest() != null
                 && requestEntity.getGateUrlDest().equalsIgnoreCase(notificationDto.getContent().getFromPartyId());
-    }
-
-    public RequestDto createRequest(final ControlDto savedControl, final List<MetadataDto> metadataDtoList) {
-        if (isNotEmpty(metadataDtoList)) {
-            return this.createRequest(savedControl, RequestStatusEnum.SUCCESS, metadataDtoList);
-        } else {
-            return this.createRequest(savedControl, RequestStatusEnum.ERROR, null);
-        }
     }
 
     public RequestDto createRequest(final ControlDto controlDto, final RequestStatusEnum status, final List<MetadataDto> metadataDtoList) {

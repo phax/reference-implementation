@@ -13,7 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
@@ -53,11 +53,11 @@ class EftiGateUrlResolverTest {
         when(gateRepository.findByCountryIn(anyList())).thenReturn(List.of(frGateEntity, beGateEntity));
 
         //Act
-        final List<GateEntity> destinationGates = eftiGateUrlResolver.resolve(metadataRequestDto);
+        final List<String> destinationGates = eftiGateUrlResolver.resolve(metadataRequestDto);
 
         //Assert
         assertFalse(destinationGates.isEmpty());
-        assertEquals(List.of(frGateEntity, beGateEntity), destinationGates);
+        assertThat(List.of(frGateEntity.getUrl(), beGateEntity.getUrl())).hasSameElementsAs(destinationGates);
     }
 
     @Test
@@ -66,10 +66,10 @@ class EftiGateUrlResolverTest {
         when(gateRepository.findAll()).thenReturn(List.of(frGateEntity, beGateEntity, deGateEntity));
 
         //Act
-        final List<GateEntity> destinationGates = eftiGateUrlResolver.resolve(metadataRequestDto);
+        final List<String> destinationGates = eftiGateUrlResolver.resolve(metadataRequestDto);
 
         //Assert
         assertFalse(destinationGates.isEmpty());
-        assertEquals(List.of(frGateEntity, beGateEntity, deGateEntity), destinationGates);
+        assertThat(List.of(frGateEntity.getUrl(), beGateEntity.getUrl(), deGateEntity.getUrl())).hasSameElementsAs(destinationGates);
     }
 }
