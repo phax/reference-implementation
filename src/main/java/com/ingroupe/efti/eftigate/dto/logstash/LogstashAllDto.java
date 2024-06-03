@@ -45,8 +45,8 @@ public class LogstashAllDto {
 
 
     public String[] getLinkedListFields() {
-        List<Field> fields = getAllFields(new LinkedList<>(), this.getClass());
-        List<String> fieldValueList = new ArrayList<>();
+        final List<Field> fields = getAllFields(new LinkedList<>(), this.getClass());
+        final List<String> fieldValueList = new ArrayList<>();
         fields.forEach(field -> {
             try {
                 fieldValueList.add((String) field.get(this));
