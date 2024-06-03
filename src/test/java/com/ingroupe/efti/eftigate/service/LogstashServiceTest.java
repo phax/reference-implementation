@@ -39,8 +39,8 @@ class LogstashServiceTest {
 
     @Test
     void logSucessTest() {
-        String message = "oki";
-        String[] array = {message};
+        final String message = "oki";
+        final String[] array = {message};
 
         logstashService.log(array);
 
@@ -50,7 +50,7 @@ class LogstashServiceTest {
 
     @Test
     void logSucessWithMutipleTest() {
-        String[] array = {"oki", "doki"};
+        final String[] array = {"oki", "doki"};
 
         logstashService.log(array);
 
@@ -60,7 +60,7 @@ class LogstashServiceTest {
 
     @Test
     void logNullTest() {
-        String[] array = {"oki", null, "psg>all"};
+        final String[] array = {"oki", null, "psg>all"};
 
         logstashService.log(array);
 

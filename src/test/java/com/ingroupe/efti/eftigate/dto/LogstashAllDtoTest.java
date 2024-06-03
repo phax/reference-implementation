@@ -8,15 +8,15 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-public class LogstashAllDtoTest {
+class LogstashAllDtoTest {
 
     @Test
     void getLinkedListFieldsMultipleTest() {
-        LogstashRequestDto logstashRequestDto = new LogstashRequestDto();
+        final LogstashRequestDto logstashRequestDto = new LogstashRequestDto();
         logstashRequestDto.setComponentCountry("componentCountry");
         logstashRequestDto.setErrorCodeMessage("errorCodeMessage");
 
-        String[] result = logstashRequestDto.getLinkedListFields();
+        final String[] result = logstashRequestDto.getLinkedListFields();
 
         Assertions.assertEquals(24, result.length);
         Assertions.assertTrue(Arrays.stream(result).toList().contains("componentCountry"));
@@ -25,10 +25,10 @@ public class LogstashAllDtoTest {
 
     @Test
     void getLinkedListFieldsOnlyOneTest() {
-        LogstashRequestDto logstashRequestDto = new LogstashRequestDto();
+        final LogstashRequestDto logstashRequestDto = new LogstashRequestDto();
         logstashRequestDto.setOfficerId("setOfficerId");
 
-        String[] result = logstashRequestDto.getLinkedListFields();
+        final String[] result = logstashRequestDto.getLinkedListFields();
 
         Assertions.assertEquals(24, result.length);
         Assertions.assertTrue(Arrays.stream(result).toList().contains("setOfficerId"));
@@ -36,9 +36,9 @@ public class LogstashAllDtoTest {
 
     @Test
     void getLinkedListFieldsOnlyNullTest() {
-        LogstashRequestDto logstashRequestDto = new LogstashRequestDto();
+        final LogstashRequestDto logstashRequestDto = new LogstashRequestDto();
 
-        String[] result = logstashRequestDto.getLinkedListFields();
+        final String[] result = logstashRequestDto.getLinkedListFields();
 
         Assertions.assertEquals(24, result.length);
         Arrays.stream(result).forEach(value -> Assertions.assertEquals(null, value));
