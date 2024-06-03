@@ -33,7 +33,7 @@ public class LogstashAllDto {
     public String errorDescriptionMessage;
     public String timeoutComponentType;
 
-    private static List<Field> getAllFields(List<Field> fields, Class<?> type) {
+    private static List<Field> getAllFields(final List<Field> fields, final Class<?> type) {
         if (type.getSuperclass() != null) {
             getAllFields(fields, type.getSuperclass());
         }
