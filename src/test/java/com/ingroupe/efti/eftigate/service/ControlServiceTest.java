@@ -7,7 +7,6 @@ import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.commons.dto.MetadataResultDto;
 import com.ingroupe.efti.commons.dto.TransportVehicleDto;
-import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
@@ -45,16 +44,10 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 
@@ -211,6 +204,7 @@ class ControlServiceTest extends AbstractServiceTest {
         metadataResultDto.setDisabled(false);
         metadataResultDto.setDangerousGoods(true);
 
+        setField(controlService,"timeoutValue", 60);
     }
 
     @Test
@@ -342,9 +336,11 @@ class ControlServiceTest extends AbstractServiceTest {
 
     @Test
     void getControlEntitySuccessTest() {
-        setField(controlService,"timeoutValue", 60);
+        requestEntity.setStatus(RequestStatusEnum.SUCCESS);
+        controlEntity.setRequests(Collections.singletonList(requestEntity));
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
         when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
+        when(controlRepository.save(any())).thenReturn(controlEntity);
 
         final RequestUuidDto requestUuidDtoResult = controlService.getControlEntity(requestUuid);
 
@@ -375,6 +371,8 @@ class ControlServiceTest extends AbstractServiceTest {
         controlEntity.setRequests(Collections.singletonList(requestEntity));
 
         requestEntity.setMetadataResults(metadataResults);
+        requestEntity.setStatus(RequestStatusEnum.SUCCESS);
+
 
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
         when(metadataRequestService.allRequestsContainsData(any())).thenReturn(true);
@@ -400,6 +398,7 @@ class ControlServiceTest extends AbstractServiceTest {
 
         final byte[] data = {10, 20, 30, 40};
         requestEntity.setReponseData(data);
+        requestEntity.setStatus(RequestStatusEnum.SUCCESS);
 
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
         when(uilRequestService.allRequestsContainsData(any())).thenReturn(true);
@@ -462,6 +461,59 @@ class ControlServiceTest extends AbstractServiceTest {
         assertNotNull(requestUuidDtoResult);
         assertNull(requestUuidDtoResult.getErrorCode());
         assertNull(requestUuidDtoResult.getErrorDescription());
+    }
+
+    @Test
+    void createMetadataControlForLocalRequestTest() {
+        when(controlRepository.save(any())).thenReturn(controlEntity);
+        when(gateToRequestTypeFunction.apply(any())).thenReturn(RequestTypeEnum.LOCAL_METADATA_SEARCH);
+        when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of("http://france.lol"));
+
+
+        final RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
+        verify(uilRequestService, never()).createAndSendRequest(any(), any());
+        verify(metadataRequestService, never()).createAndSendRequest(any(), any());
+        verify(eftiAsyncCallsProcessor, times(1)).checkLocalRepoAsync(any(), any());
+        verify(controlRepository, times(1)).save(any());
+        assertNotNull(requestUuidDtoResult);
+        assertNull(requestUuidDtoResult.getErrorCode());
+        assertNull(requestUuidDtoResult.getErrorDescription());
+    }
+
+    @Test
+    void shouldCreateMetadataControlWithPendingStatus_whenSomeOfGivenDestinationGatesDoesNotExist() {
+        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_METADATA_SEARCH);
+        metadataRequestDto.setEFTIGateIndicator(List.of("IT", "RO"));
+        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(metadataRequestService);
+        when(controlRepository.save(any())).thenReturn(controlEntity);
+        when(gateToRequestTypeFunction.apply(any())).thenReturn(RequestTypeEnum.EXTERNAL_METADATA_SEARCH);
+        when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of("http://italie.it"));
+
+
+
+        final RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
+        verify(uilRequestService, never()).createAndSendRequest(any(), any());
+        verify(metadataRequestService, times(1)).createAndSendRequest(any(), any());
+        verify(eftiAsyncCallsProcessor, never()).checkLocalRepoAsync(any(), any());
+        verify(controlRepository, times(1)).save(any());
+        assertNotNull(requestUuidDtoResult);
+        assertEquals(StatusEnum.PENDING, requestUuidDtoResult.getStatus());
+    }
+
+    @Test
+    void  souldCreateMetadataControlWithPendingStatus_whenAllGivenDestinationGatesDoesNotExist() {
+        metadataRequestDto.setEFTIGateIndicator(List.of("IT", "RO"));
+        when(controlRepository.save(any())).thenReturn(controlEntity);
+        when(gateToRequestTypeFunction.apply(any())).thenReturn(RequestTypeEnum.EXTERNAL_METADATA_SEARCH);
+
+
+        final RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
+        verify(uilRequestService, never()).createAndSendRequest(any(), any());
+        verify(metadataRequestService, never()).createAndSendRequest(any(), any());
+        verify(eftiAsyncCallsProcessor, never()).checkLocalRepoAsync(any(), any());
+        verify(controlRepository, times(1)).save(any());
+        assertNotNull(requestUuidDtoResult);
+        assertEquals(StatusEnum.PENDING, requestUuidDtoResult.getStatus());
     }
 
     @Test
@@ -594,7 +646,6 @@ class ControlServiceTest extends AbstractServiceTest {
 
         final MetadataResponseDto expectedMetadataResponse = MetadataResponseDto.builder()
                 .status(StatusEnum.COMPLETE)
-                .eFTIGate(CountryIndicator.FR)
                 .metadata(List.of(metadataResultDto))
                 .build();
         //Act

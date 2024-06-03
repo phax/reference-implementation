@@ -72,7 +72,7 @@ public abstract class RequestService {
 
     public abstract void receiveGateRequest(final NotificationDto notificationDto);
 
-    public void createAndSendRequest(final ControlDto controlDto, final String destinationUrl){
+    public void createAndSendRequest(final ControlDto controlDto, final String destinationUrl) {
         final RequestDto requestDto = new RequestDto(controlDto);
         requestDto.setGateUrlDest(StringUtils.isNotBlank(destinationUrl) ? destinationUrl : controlDto.getEftiPlatformUrl());
         log.info("Request has been register with controlId : {}", requestDto.getControl().getId());
@@ -92,7 +92,7 @@ public abstract class RequestService {
         }
     }
 
-    public boolean allRequestsAreInErrorStatus(final List<RequestEntity> controlEntityRequests){
+    public boolean allRequestsAreInErrorStatus(final List<RequestEntity> controlEntityRequests) {
         return CollectionUtils.emptyIfNull(controlEntityRequests).stream()
                 .allMatch(requestEntity -> ERROR == requestEntity.getStatus());
     }
@@ -111,7 +111,7 @@ public abstract class RequestService {
         final InputSource xml = new InputSource(new StringReader(bodyXmlString));
         try {
             return xpath.evaluate("/body/requestUuid", xml);
-        } catch (XPathExpressionException e) {
+        } catch (final XPathExpressionException e) {
             return null;
         }
     }
@@ -125,16 +125,37 @@ public abstract class RequestService {
         }
     }
 
-    public void updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {
+    public RequestDto updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {
         requestDto.setStatus(status);
-        this.save(requestDto);
+        return this.save(requestDto);
     }
 
     public void manageSendError(final RequestDto requestDto) {
         final ErrorDto errorDto = ErrorDto.fromErrorCode(ErrorCodesEnum.AP_SUBMISSION_ERROR);
         requestDto.setError(errorDto);
         controlService.setError(requestDto.getControl(), errorDto);
-        this.updateStatus(requestDto, RequestStatusEnum.ERROR);
+        final RequestDto requestDtoUpdated = this.updateStatus(requestDto, RequestStatusEnum.ERROR);
+        if (requestDtoUpdated.getControl().getFromGateUrl() != null &&
+                !gateProperties.isCurrentGate(requestDtoUpdated.getControl().getFromGateUrl()) &&
+                ErrorCodesEnum.AP_SUBMISSION_ERROR.name().equals(requestDto.getControl().getError().getErrorCode())) {
+            requestDtoUpdated.setGateUrlDest(requestDtoUpdated.getControl().getFromGateUrl());
+            requestDtoUpdated.getControl().setEftiGateUrl(requestDtoUpdated.getControl().getFromGateUrl());
+            this.sendRequest(requestDtoUpdated);
+        }
+    }
+
+    public void createRequest(final ControlDto controlDto, final RequestStatusEnum status) {
+        final RequestDto requestDto = save(buildRequestDto(controlDto, status));
+        log.info("Request has been registered with controlId : {}", requestDto.getControl().getId());
+    }
+
+    private RequestDto buildRequestDto(final ControlDto controlDto, final RequestStatusEnum status) {
+        return RequestDto.builder()
+                .retry(0)
+                .control(controlDto)
+                .status(status)
+                .gateUrlDest(controlDto.getFromGateUrl())
+                .build();
     }
 
     protected void errorReceived(final RequestDto requestDto, final String errorDescription) {

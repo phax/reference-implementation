@@ -26,13 +26,13 @@ public class EftiAsyncCallsProcessor {
     @Async
     public void checkLocalRepoAsync(final MetadataRequestDto metadataRequestDto, final ControlDto savedControl) {
         final List<MetadataDto> metadataDtoList = metadataService.search(metadataRequestDto);
-        RequestDto request = metadataRequestService.createRequest(savedControl, metadataDtoList);
+        final RequestDto request = metadataRequestService.createRequest(savedControl, RequestStatusEnum.SUCCESS, metadataDtoList);
         if (shouldUpdateControl(savedControl, request, metadataDtoList)) {
             metadataRequestService.updateControlMetadata(request.getControl(), metadataDtoList);
         }
     }
 
-    private static boolean shouldUpdateControl(ControlDto savedControl, RequestDto request, List<MetadataDto> metadataDtoList) {
+    private static boolean shouldUpdateControl(final ControlDto savedControl, final RequestDto request, final List<MetadataDto> metadataDtoList) {
         return request != null && RequestStatusEnum.SUCCESS.equals(request.getStatus())
                 && CollectionUtils.isNotEmpty(metadataDtoList)
                 && RequestTypeEnum.EXTERNAL_METADATA_SEARCH.equals(savedControl.getRequestType());

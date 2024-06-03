@@ -66,6 +66,6 @@ class EftiAsyncCallsProcessorTest {
 
         //Assert
         verify(metadataService, times(1)).search(metadataRequestDto);
-        verify(metadataRequestService, times(1)).createRequest(any(ControlDto.class), anyList());
+        verify(metadataRequestService, times(1)).createRequest(any(ControlDto.class), any(), anyList());
     }
 }

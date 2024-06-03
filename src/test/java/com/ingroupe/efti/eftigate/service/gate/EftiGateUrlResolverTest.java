@@ -13,7 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
@@ -47,29 +47,29 @@ class EftiGateUrlResolverTest {
     }
 
     @Test
-    void shouldResolveUrls_WhenCountryIndicatorsAreGiven(){
+    void shouldResolveGates_WhenCountryIndicatorsAreGiven(){
         //Arrange
         this.metadataRequestDto.setEFTIGateIndicator(List.of("BE", "FR"));
         when(gateRepository.findByCountryIn(anyList())).thenReturn(List.of(frGateEntity, beGateEntity));
 
         //Act
-        final List<String> destinationGatesUrls = eftiGateUrlResolver.resolve(metadataRequestDto);
+        final List<String> destinationGates = eftiGateUrlResolver.resolve(metadataRequestDto);
 
         //Assert
-        assertFalse(destinationGatesUrls.isEmpty());
-        assertEquals(List.of("https://efti.gate.fr.eu", "https://efti.gate.be.eu"), destinationGatesUrls);
+        assertFalse(destinationGates.isEmpty());
+        assertThat(List.of(frGateEntity.getUrl(), beGateEntity.getUrl())).hasSameElementsAs(destinationGates);
     }
 
     @Test
-    void shouldGetAllUrls_WhenCountryIndicatorsAreNotGiven(){
+    void shouldGetAllGates_WhenCountryIndicatorsAreNotGiven(){
         //Arrange
         when(gateRepository.findAll()).thenReturn(List.of(frGateEntity, beGateEntity, deGateEntity));
 
         //Act
-        final List<String> destinationGatesUrls = eftiGateUrlResolver.resolve(metadataRequestDto);
+        final List<String> destinationGates = eftiGateUrlResolver.resolve(metadataRequestDto);
 
         //Assert
-        assertFalse(destinationGatesUrls.isEmpty());
-        assertEquals(List.of("https://efti.gate.fr.eu", "https://efti.gate.be.eu", "https://efti.gate.de.eu"), destinationGatesUrls);
+        assertFalse(destinationGates.isEmpty());
+        assertThat(List.of(frGateEntity.getUrl(), beGateEntity.getUrl(), deGateEntity.getUrl())).hasSameElementsAs(destinationGates);
     }
 }
