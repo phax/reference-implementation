@@ -204,6 +204,7 @@ class ControlServiceTest extends AbstractServiceTest {
         metadataResultDto.setDisabled(false);
         metadataResultDto.setDangerousGoods(true);
 
+        setField(controlService,"timeoutValue", 60);
     }
 
     @Test
@@ -335,7 +336,8 @@ class ControlServiceTest extends AbstractServiceTest {
 
     @Test
     void getControlEntitySuccessTest() {
-        setField(controlService,"timeoutValue", 60);
+        requestEntity.setStatus(RequestStatusEnum.SUCCESS);
+        controlEntity.setRequests(Collections.singletonList(requestEntity));
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
         when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
         when(controlRepository.save(any())).thenReturn(controlEntity);
@@ -369,6 +371,8 @@ class ControlServiceTest extends AbstractServiceTest {
         controlEntity.setRequests(Collections.singletonList(requestEntity));
 
         requestEntity.setMetadataResults(metadataResults);
+        requestEntity.setStatus(RequestStatusEnum.SUCCESS);
+
 
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
         when(metadataRequestService.allRequestsContainsData(any())).thenReturn(true);
@@ -394,6 +398,7 @@ class ControlServiceTest extends AbstractServiceTest {
 
         final byte[] data = {10, 20, 30, 40};
         requestEntity.setReponseData(data);
+        requestEntity.setStatus(RequestStatusEnum.SUCCESS);
 
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
         when(uilRequestService.allRequestsContainsData(any())).thenReturn(true);
