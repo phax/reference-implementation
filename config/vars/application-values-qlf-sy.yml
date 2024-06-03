@@ -1,11 +1,11 @@
 spring:
   rabbitmq:
-    password: france
-    username: france
-    virtual_host: france
-    host: svc-efti-rabbitmq
+    password: syldavia
+    username: syldavia
+    virtual_host: syldavia
+    host: svc-efti-rabbitmq.app-int-efti
   application:
-    name: efti-gate
+    name: efti-gate-sy
   datasource:
     url: jdbc:postgresql://qleftidbpg01in.service.groupein.local:5432/efti_qua
     username: efti
@@ -14,18 +14,18 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer_uri: https://auth.qualif.efti-ingroupe.com/realms/eFTI_FR
+          issuer_uri: https://auth.qualif.efti-ingroupe.com/realms/eFTI_SY
   jpa:
     properties:
       hibernate:
-        control_schema: "eftifr"
-        metadata_schema: "metadatafr"
+        control_schema: "eftisy"
+        metadata_schema: "metadatasy"
 
 gate:
-  owner: https://gate-fr.efti.qlf.k8s.groupein.local
+  owner: https://mock.efti.qlf.k8s.groupein.local/sy
   ap:
-    url: https://edelivery-fr.qlf.efti.service.groupein.local/ap-gate/domibus/services/wsplugin
-    username: france_service_account
+    url: https://edelivery-sy.qlf.efti.service.groupein.local/ap-gate/domibus/services/wsplugin
+    username: syldavia_service_account
     password: tq9tQ6ykymK60zjBsDSO+
 
 batch:
