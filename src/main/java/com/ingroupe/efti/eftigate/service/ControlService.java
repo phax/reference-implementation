@@ -10,6 +10,7 @@ import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.IdentifiersMessageBodyDto;
 import com.ingroupe.efti.eftigate.config.GateProperties;
+import com.ingroupe.efti.eftigate.constant.EftiGateConstants;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
@@ -169,8 +170,11 @@ public class ControlService {
     }
 
     public ControlDto updatePendingControl(final ControlEntity controlEntity) {
-        final RequestService requestService = this.getRequestService(controlEntity.getRequestType());
         final List<RequestEntity> controlEntityRequests = controlEntity.getRequests();
+        if (isRequestInProgress(controlEntity, controlEntityRequests)){
+            return mapperUtils.controlEntityToControlDto(controlEntity);
+        }
+        final RequestService requestService = this.getRequestService(controlEntity.getRequestType());
         if (requestService.allRequestsContainsData(controlEntityRequests)){
             requestService.setDataFromRequests(controlEntity);
             controlEntity.setStatus(StatusEnum.COMPLETE);
@@ -178,6 +182,11 @@ public class ControlService {
         } else {
             return handleExistingControlWithoutData(controlEntity);
         }
+    }
+
+    private boolean isRequestInProgress(final ControlEntity controlEntity, final List<RequestEntity> controlEntityRequests) {
+        return getSecondsSinceCreation(controlEntity) < timeoutValue &&
+                controlEntityRequests.stream().anyMatch(request -> EftiGateConstants.IN_PROGRESS_STATUS.contains(request.getStatus()));
     }
 
     public MetadataResponseDto getMetadataResponse(final String requestUuid) {
@@ -211,17 +220,18 @@ public class ControlService {
                 .stream()
                 .anyMatch(requestEntity -> RequestStatusEnum.ERROR == requestEntity.getStatus())){
             controlEntity.setStatus(StatusEnum.ERROR);
+        } else if (getSecondsSinceCreation(controlEntity) > timeoutValue) {
+            controlEntity.setStatus(StatusEnum.TIMEOUT);
         } else if (PENDING.equals(controlEntity.getStatus())) {
             controlEntity.setStatus(StatusEnum.COMPLETE);
-        } else {
-            final Instant createdDate = controlEntity.getCreatedDate().toInstant(ZoneOffset.UTC);
-            final Duration duration = Duration.between(createdDate, Instant.now());
-            final long seconds = duration.getSeconds();
-            if (seconds > timeoutValue){
-                controlEntity.setStatus(StatusEnum.TIMEOUT);
-            }
         }
         return mapperUtils.controlEntityToControlDto(controlRepository.save(controlEntity));
+    }
+
+    private long getSecondsSinceCreation(final ControlEntity controlEntity) {
+        final Instant createdDate = controlEntity.getCreatedDate().toInstant(ZoneOffset.UTC);
+        final Duration duration = Duration.between(createdDate, Instant.now());
+        return duration.getSeconds();
     }
 
     private ControlDto buildNotFoundControlEntity() {
