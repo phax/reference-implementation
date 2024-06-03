@@ -1,19 +1,16 @@
 package com.ingroupe.efti.eftigate.dto.logstash;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
+@SuperBuilder
 public class LogstashRequestDto extends LogstashAllDto {
-    public String requestId;
-    public String eFTIDataId;
-    public String responseId;
-    public String authorityNationalUniqueIdentifier;
-    public String authorityName;
-    public String officerId;
-    public String subsetEURequested;
-    public String subsetMSRequested;
+    public final String requestId;
+    public final String eFTIDataId;
+    public final String responseId;
+    public final String authorityNationalUniqueIdentifier;
+    public final String authorityName;
+    public final String officerId;
+    public final String subsetEURequested;
+    public final String subsetMSRequested;
 }

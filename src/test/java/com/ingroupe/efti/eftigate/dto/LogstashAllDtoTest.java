@@ -12,9 +12,10 @@ class LogstashAllDtoTest {
 
     @Test
     void getLinkedListFieldsMultipleTest() {
-        final LogstashRequestDto logstashRequestDto = new LogstashRequestDto();
-        logstashRequestDto.setComponentCountry("componentCountry");
-        logstashRequestDto.setErrorCodeMessage("errorCodeMessage");
+        final LogstashRequestDto logstashRequestDto = LogstashRequestDto.builder()
+                .componentCountry("componentCountry")
+                .errorCodeMessage("errorCodeMessage")
+                .build();
 
         final String[] result = logstashRequestDto.getLinkedListFields();
 
@@ -25,8 +26,9 @@ class LogstashAllDtoTest {
 
     @Test
     void getLinkedListFieldsOnlyOneTest() {
-        final LogstashRequestDto logstashRequestDto = new LogstashRequestDto();
-        logstashRequestDto.setOfficerId("setOfficerId");
+        final LogstashRequestDto logstashRequestDto = LogstashRequestDto.builder()
+                .officerId("setOfficerId")
+                .build();
 
         final String[] result = logstashRequestDto.getLinkedListFields();
 
@@ -36,11 +38,12 @@ class LogstashAllDtoTest {
 
     @Test
     void getLinkedListFieldsOnlyNullTest() {
-        final LogstashRequestDto logstashRequestDto = new LogstashRequestDto();
+        final LogstashRequestDto logstashRequestDto = LogstashRequestDto.builder()
+                .build();
 
         final String[] result = logstashRequestDto.getLinkedListFields();
 
         Assertions.assertEquals(24, result.length);
-        Arrays.stream(result).forEach(value -> Assertions.assertEquals(null, value));
+        Arrays.stream(result).forEach(value -> Assertions.assertNull(value));
     }
 }

@@ -1,9 +1,8 @@
 package com.ingroupe.efti.eftigate.dto.logstash;
 
 import com.ingroupe.efti.eftigate.exception.TechnicalTypeException;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -11,27 +10,25 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@SuperBuilder
 public class LogstashAllDto {
 
-    public String messageStartDate;
-    public String messageEndDate;
-    public String componentType;
-    public String componentId;
-    public String componentCountry;
-    public String requestingComponentType;
-    public String requestingComponentId;
-    public String requestingComponentCountry;
-    public String respondingComponentType;
-    public String respondingComponentId;
-    public String respondingComponentCountry;
-    public String messageContent;
-    public String statusMessage;
-    public String errorCodeMessage;
-    public String errorDescriptionMessage;
-    public String timeoutComponentType;
+    public final String messageStartDate;
+    public final String messageEndDate;
+    public final String componentType;
+    public final String componentId;
+    public final String componentCountry;
+    public final String requestingComponentType;
+    public final String requestingComponentId;
+    public final String requestingComponentCountry;
+    public final String respondingComponentType;
+    public final String respondingComponentId;
+    public final String respondingComponentCountry;
+    public final String messageContent;
+    public final String statusMessage;
+    public final String errorCodeMessage;
+    public final String errorDescriptionMessage;
+    public final String timeoutComponentType;
 
     private static List<Field> getAllFields(final List<Field> fields, final Class<?> type) {
         if (type.getSuperclass() != null) {

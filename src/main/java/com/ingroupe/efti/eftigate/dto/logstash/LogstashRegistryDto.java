@@ -1,14 +1,11 @@
 package com.ingroupe.efti.eftigate.dto.logstash;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
+@SuperBuilder
 public class LogstashRegistryDto extends LogstashAllDto {
-    public String metadataId;
-    public String eFTIDataId;
-    public String interfaceType;
+    public final String metadataId;
+    public final String eFTIDataId;
+    public final String interfaceType;
 }
