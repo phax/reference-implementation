@@ -82,7 +82,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         metadataRequestService.createAndSendRequest(controlDto, "https://efti.platform.borduria.eu");
 
         //Assert
-        verify(mapperUtils).requestDtoToRequestEntity(requestDtoArgumentCaptor.capture());
+        verify(mapperUtils, times(2)).requestDtoToRequestEntity(requestDtoArgumentCaptor.capture());
         assertEquals("https://efti.platform.borduria.eu", requestDtoArgumentCaptor.getValue().getGateUrlDest());
     }
 
@@ -105,6 +105,8 @@ class MetadataRequestServiceTest extends BaseServiceTest {
     
     @Test
     void trySendDomibusSuccessTest() throws SendRequestException, JsonProcessingException {
+        when(requestRepository.save(any())).thenReturn(requestEntity);
+
         metadataRequestService.sendRequest(requestDto);
         verify(rabbitSenderService).sendMessageToRabbit(any(), any(), any());
     }
@@ -127,7 +129,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
         //assert
         verify(controlService).getControlForCriteria("67fe38bd-6bf7-4b06-b20e-206264bd639c", RequestStatusEnum.IN_PROGRESS);
         verify(controlService).createControlFrom(any(), any(), any());
-        verify(requestRepository, times(1)).save(any());
+        verify(requestRepository, times(2)).save(any());
         verify(metadataService).search(any());
         verify(rabbitSenderService).sendMessageToRabbit(any(), any(), any());
     }
