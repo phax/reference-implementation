@@ -1,7 +1,6 @@
 package com.ingroupe.efti.eftigate.dto.logstash;
 
 import com.ingroupe.efti.eftigate.exception.TechnicalTypeException;
-import lombok.Data;
 import lombok.experimental.SuperBuilder;
 
 import java.lang.reflect.Field;
@@ -13,8 +12,7 @@ import java.util.List;
 @SuperBuilder
 public class LogstashAllDto {
 
-    public final String messageStartDate;
-    public final String messageEndDate;
+    public final String message;
     public final String componentType;
     public final String componentId;
     public final String componentCountry;

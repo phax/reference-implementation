@@ -1,6 +1,5 @@
 package com.ingroupe.efti.eftigate.dto.logstash;
 
-import lombok.Data;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder

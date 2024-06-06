@@ -1,6 +1,5 @@
 package com.ingroupe.efti.eftigate.dto.logstash;
 
-import lombok.Data;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
@@ -13,4 +12,5 @@ public class LogstashRequestDto extends LogstashAllDto {
     public final String officerId;
     public final String subsetEURequested;
     public final String subsetMSRequested;
+    public final String requestType;
 }
