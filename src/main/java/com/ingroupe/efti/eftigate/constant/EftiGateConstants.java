@@ -15,6 +15,7 @@ public final class EftiGateConstants {
     public static final List<RequestTypeEnum> UIL_TYPES = List.of(LOCAL_UIL_SEARCH, EXTERNAL_UIL_SEARCH, EXTERNAL_ASK_UIL_SEARCH);
     public static final List<RequestTypeEnum> IDENTIFIERS_TYPES = List.of(LOCAL_METADATA_SEARCH, EXTERNAL_METADATA_SEARCH, EXTERNAL_ASK_METADATA_SEARCH);
     public static final List<RequestTypeEnum> LOCAL_REQUESTS_TYPES = List.of(LOCAL_METADATA_SEARCH, LOCAL_UIL_SEARCH);
+    public static final List<RequestTypeEnum> EXTERNAL_REQUESTS_TYPES = List.of(EXTERNAL_ASK_UIL_SEARCH, EXTERNAL_ASK_METADATA_SEARCH);
     public static final List<EDeliveryAction> UIL_ACTIONS = List.of(FORWARD_UIL, GET_UIL);
     public static final List<EDeliveryAction> IDENTIFIERS_ACTIONS = List.of(GET_IDENTIFIERS);
     public static final List<RequestStatusEnum> IN_PROGRESS_STATUS = List.of(RequestStatusEnum.IN_PROGRESS, RequestStatusEnum.RESPONSE_IN_PROGRESS, RequestStatusEnum.RECEIVED);

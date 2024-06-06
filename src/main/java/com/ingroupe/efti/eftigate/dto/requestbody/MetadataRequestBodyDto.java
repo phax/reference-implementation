@@ -6,6 +6,7 @@ import com.ingroupe.efti.commons.validator.ValueOfEnum;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.entity.SearchParameter;
 import jakarta.validation.Valid;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@XmlRootElement(name = "body")
 public class MetadataRequestBodyDto {
     private String requestUuid;
     private String transportMode;
