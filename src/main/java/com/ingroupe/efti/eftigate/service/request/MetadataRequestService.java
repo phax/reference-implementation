@@ -95,6 +95,16 @@ public class MetadataRequestService extends RequestService {
         super.sendRequest(updatedRequest);
     }
 
+    @Override
+    public void updateSentRequestStatus(final RequestDto requestDto, final String edeliveryMessageId) {
+        requestDto.setEdeliveryMessageId(edeliveryMessageId);
+        if (isExternalRequest(requestDto)){
+            this.updateStatus(requestDto, RequestStatusEnum.RESPONSE_IN_PROGRESS);
+        } else {
+            this.updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
+        }
+    }
+
     private void handleNewControlRequest(final NotificationDto notificationDto, final String bodyFromNotification) {
         final IdentifiersMessageBodyDto requestMessage = getSerializeUtils().mapXmlStringToClass(bodyFromNotification, IdentifiersMessageBodyDto.class);
         final List<MetadataDto> metadataDtoList = metadataService.search(buildMetadataRequestDtoFrom(requestMessage));
