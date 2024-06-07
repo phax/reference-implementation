@@ -152,14 +152,13 @@ public abstract class RequestService {
 
     public void updateSentRequestStatus(final RequestDto requestDto, final String edeliveryMessageId) {
         requestDto.setEdeliveryMessageId(edeliveryMessageId);
-        if (isExternalRequest(requestDto)){
-            this.updateStatus(requestDto, RequestStatusEnum.RESPONSE_IN_PROGRESS);
-        } else {
-            this.updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
+        if (!RequestStatusEnum.RESPONSE_IN_PROGRESS.equals(requestDto.getStatus())){
+            requestDto.setStatus(RequestStatusEnum.IN_PROGRESS);
         }
+        this.save(requestDto);
     }
 
-    private boolean isExternalRequest(final RequestDto requestDto) {
+    protected boolean isExternalRequest(final RequestDto requestDto) {
         return EXTERNAL_REQUESTS_TYPES.contains(requestDto.getControl().getRequestType());
     }
 
