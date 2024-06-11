@@ -30,16 +30,9 @@ import java.io.IOException;
 import java.util.List;
 
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.ERROR;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UilRequestServiceTest extends BaseServiceTest {
@@ -58,7 +51,7 @@ class UilRequestServiceTest extends BaseServiceTest {
     @Test
     void manageSendErrorTest() {
         final ErrorDto errorDto = ErrorDto.fromErrorCode(ErrorCodesEnum.AP_SUBMISSION_ERROR);
-        RequestDto requestDto = RequestDto.builder()
+        final RequestDto requestDto = RequestDto.builder()
                 .error(errorDto)
                 .control(
                         ControlDto
@@ -70,7 +63,7 @@ class UilRequestServiceTest extends BaseServiceTest {
                 )
                 .gateUrlDest("gateUrlDest")
                 .build();
-        RequestEntity requestEntity = mapperUtils.requestDtoToRequestEntity(requestDto);
+        final RequestEntity requestEntity = mapperUtils.requestDtoToRequestEntity(requestDto);
 
         Mockito.when(requestRepository.save(any())).thenReturn(requestEntity);
 
@@ -367,7 +360,6 @@ class UilRequestServiceTest extends BaseServiceTest {
     void allRequestsContainsDataTest_whenTrue() {
         //Arrange
         final byte[] data = {10, 20, 30, 40};
-        requestEntity.setReponseData(data);
         requestEntity.setReponseData(data);
         //Act and Assert
         assertTrue(uilRequestService.allRequestsContainsData(List.of(requestEntity)));

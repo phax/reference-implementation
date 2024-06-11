@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.ERROR;
+import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.EXTERNAL_REQUESTS_TYPES;
 
 @Slf4j
 @Component
@@ -147,6 +148,18 @@ public abstract class RequestService {
     public void createRequest(final ControlDto controlDto, final RequestStatusEnum status) {
         final RequestDto requestDto = save(buildRequestDto(controlDto, status));
         log.info("Request has been registered with controlId : {}", requestDto.getControl().getId());
+    }
+
+    public void updateSentRequestStatus(final RequestDto requestDto, final String edeliveryMessageId) {
+        requestDto.setEdeliveryMessageId(edeliveryMessageId);
+        if (!RequestStatusEnum.RESPONSE_IN_PROGRESS.equals(requestDto.getStatus())){
+            requestDto.setStatus(RequestStatusEnum.IN_PROGRESS);
+        }
+        this.save(requestDto);
+    }
+
+    protected boolean isExternalRequest(final RequestDto requestDto) {
+        return EXTERNAL_REQUESTS_TYPES.contains(requestDto.getControl().getRequestType());
     }
 
     private RequestDto buildRequestDto(final ControlDto controlDto, final RequestStatusEnum status) {

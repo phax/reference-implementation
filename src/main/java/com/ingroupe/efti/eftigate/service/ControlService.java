@@ -60,6 +60,7 @@ import static com.ingroupe.efti.commons.enums.ErrorCodesEnum.DATA_NOT_FOUND;
 @Slf4j
 public class ControlService {
 
+    public static final String ERROR_REQUEST_UUID_NOT_FOUND = "Error requestUuid not found.";
     private final ControlRepository controlRepository;
     private final EftiGateUrlResolver eftiGateUrlResolver;
     private final MapperUtils mapperUtils;
@@ -174,7 +175,7 @@ public class ControlService {
 
     public ControlDto updatePendingControl(final ControlEntity controlEntity) {
         final List<RequestEntity> controlEntityRequests = controlEntity.getRequests();
-        if (isRequestInProgress(controlEntity, controlEntityRequests)){
+        if (hasRequestInProgress(controlEntity)){
             return mapperUtils.controlEntityToControlDto(controlEntity);
         }
         final RequestService requestService = this.getRequestService(controlEntity.getRequestType());
@@ -187,9 +188,9 @@ public class ControlService {
         }
     }
 
-    private boolean isRequestInProgress(final ControlEntity controlEntity, final List<RequestEntity> controlEntityRequests) {
+    private boolean hasRequestInProgress(final ControlEntity controlEntity) {
         return getSecondsSinceCreation(controlEntity) < timeoutValue &&
-                controlEntityRequests.stream().anyMatch(request -> EftiGateConstants.IN_PROGRESS_STATUS.contains(request.getStatus()));
+                CollectionUtils.emptyIfNull(controlEntity.getRequests()).stream().anyMatch(request -> EftiGateConstants.IN_PROGRESS_STATUS.contains(request.getStatus()));
     }
 
     public MetadataResponseDto getMetadataResponse(final String requestUuid) {
@@ -219,9 +220,7 @@ public class ControlService {
     }
 
     private ControlDto handleExistingControlWithoutData(final ControlEntity controlEntity) {
-        if (CollectionUtils.emptyIfNull(controlEntity.getRequests())
-                .stream()
-                .anyMatch(requestEntity -> RequestStatusEnum.ERROR == requestEntity.getStatus())){
+        if (hasRequestInError(controlEntity)){
             controlEntity.setStatus(StatusEnum.ERROR);
         } else if (getSecondsSinceCreation(controlEntity) > timeoutValue) {
             controlEntity.setStatus(StatusEnum.TIMEOUT);
@@ -229,6 +228,12 @@ public class ControlService {
             controlEntity.setStatus(StatusEnum.COMPLETE);
         }
         return mapperUtils.controlEntityToControlDto(controlRepository.save(controlEntity));
+    }
+
+    private boolean hasRequestInError(final ControlEntity controlEntity) {
+        return CollectionUtils.emptyIfNull(controlEntity.getRequests())
+                .stream()
+                .anyMatch(requestEntity -> RequestStatusEnum.ERROR == requestEntity.getStatus());
     }
 
     private long getSecondsSinceCreation(final ControlEntity controlEntity) {
@@ -240,13 +245,13 @@ public class ControlService {
     private ControlDto buildNotFoundControlEntity() {
         return mapperUtils.controlEntityToControlDto(ControlEntity.builder()
                 .status(StatusEnum.ERROR)
-                .error(buildErrorEntity(ErrorCodesEnum.UUID_NOT_FOUND.name(), "Error requestUuid not found.")).build());
+                .error(buildErrorEntity(ErrorCodesEnum.UUID_NOT_FOUND.name())).build());
     }
 
-    private static ErrorEntity buildErrorEntity(final String errorCode, final String errorDescription) {
+    private static ErrorEntity buildErrorEntity(final String errorCode) {
         return ErrorEntity.builder()
                 .errorCode(errorCode)
-                .errorDescription(errorDescription).build();
+                .errorDescription(ERROR_REQUEST_UUID_NOT_FOUND).build();
     }
 
     public void setError(final ControlDto controlDto, final ErrorDto errorDto) {

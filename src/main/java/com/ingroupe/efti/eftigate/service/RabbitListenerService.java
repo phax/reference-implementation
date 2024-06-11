@@ -85,8 +85,8 @@ public class RabbitListenerService {
     private String getBodyForUilRequest(final RequestDto requestDto) {
         final ControlDto controlDto = requestDto.getControl();
         if (requestDto.getStatus() == RequestStatusEnum.RESPONSE_IN_PROGRESS ||requestDto.getStatus() == RequestStatusEnum.ERROR) {
-            boolean hasData = requestDto.getReponseData() != null;
-            boolean hasError = controlDto.getError() != null;
+            final boolean hasData = requestDto.getReponseData() != null;
+            final boolean hasError = controlDto.getError() != null;
 
             return serializeUtils.mapObjectToXmlString(MessageBodyDto.builder()
                     .requestUuid(controlDto.getRequestUuid())
@@ -126,9 +126,8 @@ public class RabbitListenerService {
     private void trySendDomibus(final RequestDto requestDto) {
         try {
             final EDeliveryAction eDeliveryAction = requestToEDeliveryActionFunction.apply(requestDto);
-            final String result = this.requestSendingService.sendRequest(buildApRequestDto(requestDto), eDeliveryAction);
-            requestDto.setEdeliveryMessageId(result);
-            this.getRequestService(requestDto.getControl().getRequestType()).updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
+            final String edeliveryMessageId = this.requestSendingService.sendRequest(buildApRequestDto(requestDto), eDeliveryAction);
+            getRequestService(requestDto.getControl().getRequestType()).updateSentRequestStatus(requestDto, edeliveryMessageId);
         } catch (final SendRequestException e) {
             log.error("error while sending request" + e);
             throw new TechnicalException("Error when try to send message to domibus", e);

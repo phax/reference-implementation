@@ -81,6 +81,7 @@ class ControlServiceTest extends AbstractServiceTest {
     TransportVehicleDto transportVehicleDto = new TransportVehicleDto();
     private final ControlEntity controlEntity = ControlEntity.builder().requestType(RequestTypeEnum.LOCAL_UIL_SEARCH).build();
     private final RequestEntity requestEntity = new RequestEntity();
+    private final RequestEntity secondRequestEntity = new RequestEntity();
 
     MetadataResult metadataResult = new MetadataResult();
     MetadataResults metadataResults = new MetadataResults();
@@ -721,4 +722,77 @@ class ControlServiceTest extends AbstractServiceTest {
         verify(controlRepository, times(1)).findByCriteria(requestUuid, RequestStatusEnum.IN_PROGRESS);
         assertNull(control);
     }
+
+    @Test
+    void shouldNotUpdatePendingControl_whenControlRequestIsInProgessAndIsNotTimeout(){
+        //Arrange
+        requestEntity.setStatus(RequestStatusEnum.IN_PROGRESS);
+        controlEntity.setRequests(List.of(requestEntity));
+        controlEntity.setStatus(StatusEnum.PENDING);
+
+        //Act
+        controlService.updatePendingControl(controlEntity);
+
+        //Assert
+        assertThat(controlEntity.getStatus()).isEqualTo(StatusEnum.PENDING);
+    }
+
+    @Test
+    void shouldUpdatePendingControlToComplete_whenControlhasRequestsInSuccessAndRequestsHaveNoData(){
+        //Arrange
+        requestEntity.setStatus(RequestStatusEnum.SUCCESS);
+        secondRequestEntity.setStatus(RequestStatusEnum.SUCCESS);
+        controlEntity.setRequests(List.of(requestEntity, secondRequestEntity));
+        controlEntity.setStatus(StatusEnum.PENDING);
+        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
+        when(controlRepository.save(controlEntity)).thenReturn(controlEntity);
+
+
+        //Act
+        controlService.updatePendingControl(controlEntity);
+
+        //Assert
+        assertThat(controlEntity.getStatus()).isEqualTo(StatusEnum.COMPLETE);
+        assertNull(controlEntity.getEftiData());
+    }
+
+    @Test
+    void shouldUpdatePendingControlToError_whenControlhasRequestInError(){
+        //Arrange
+        requestEntity.setStatus(RequestStatusEnum.ERROR);
+        controlEntity.setRequests(List.of(requestEntity));
+        controlEntity.setStatus(StatusEnum.PENDING);
+        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
+        when(controlRepository.save(controlEntity)).thenReturn(controlEntity);
+
+        //Act
+        controlService.updatePendingControl(controlEntity);
+
+        //Assert
+        assertThat(controlEntity.getStatus()).isEqualTo(StatusEnum.ERROR);
+    }
+
+    @Test
+    void shouldUpdatePendingControls(){
+        //Arrange
+        requestEntity.setStatus(RequestStatusEnum.IN_PROGRESS);
+        controlEntity.setRequests(List.of(requestEntity));
+        controlEntity.setStatus(StatusEnum.PENDING);
+        when(controlRepository.findByCriteria(anyString(), anyInt())).thenReturn(List.of(controlEntity));
+
+
+        //Act
+        final int updatedControls = controlService.updatePendingControls();
+
+        //Assert
+        assertEquals(1, updatedControls);
+    }
+
+    @Test
+    void shouldSaveControl(){
+        //Act
+        controlService.save(controlEntity);
+
+        //Assert
+        verify(controlRepository, times(1)).save(controlEntity);    }
 }
