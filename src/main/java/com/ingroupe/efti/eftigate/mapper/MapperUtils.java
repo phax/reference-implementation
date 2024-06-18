@@ -4,11 +4,9 @@ import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataResultDto;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
-import com.ingroupe.efti.eftigate.dto.GateDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
-import com.ingroupe.efti.eftigate.entity.GateEntity;
 import com.ingroupe.efti.eftigate.entity.MetadataResult;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import lombok.RequiredArgsConstructor;
@@ -70,9 +68,5 @@ public class MapperUtils {
         return CollectionUtils.emptyIfNull(metadataResultDtos).stream()
                 .map(metadataResultDto -> modelMapper.map(metadataResultDto, MetadataResult.class))
                 .toList();
-    }
-
-    public GateDto gateEntityToGateDto(final GateEntity gateEntity) {
-        return modelMapper.map(gateEntity, GateDto.class);
     }
 }
