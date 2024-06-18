@@ -150,19 +150,6 @@
             <version>3.1.1</version>
         </dependency>
 
-        <!-- Logback -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.4.8</version>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <version>1.4.11</version>
-        </dependency>
-
         <!-- SWAGGER -->
         <dependency>
             <groupId>org.springdoc</groupId>
