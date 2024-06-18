@@ -16,6 +16,7 @@ import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.MetadataResult;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.service.BaseServiceTest;
+import com.ingroupe.efti.eftigate.service.gate.GateService;
 import com.ingroupe.efti.metadataregistry.entity.TransportVehicle;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +43,8 @@ class MetadataRequestServiceTest extends BaseServiceTest {
     @Mock
     private MetadataService metadataService;
     private MetadataRequestService metadataRequestService;
+    @Mock
+    private GateService gateService;
     @Captor
     ArgumentCaptor<RequestDto> requestDtoArgumentCaptor;
 
@@ -70,13 +73,28 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .transportVehicles(List.of(TransportVehicle.builder()
                         .vehicleId("abc123").vehicleCountry(CountryIndicator.FR).build(), TransportVehicle.builder()
                         .vehicleId("abc124").vehicleCountry(CountryIndicator.BE).build())).build();
-        metadataRequestService = new MetadataRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, metadataService, requestUpdaterService, serializeUtils);
+        metadataRequestService = new MetadataRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, metadataService, requestUpdaterService, serializeUtils, gateService);
+    }
+
+    @Test
+    void shouldNotCreateAndSendRequest() {
+        //Arrange
+        when(requestRepository.save(any())).then(AdditionalAnswers.returnsFirstArg());
+        when(gateService.checkGateUrl(anyString())).thenReturn(false);
+
+        //Act
+        metadataRequestService.createAndSendRequest(controlDto, "https://efti.platform.borduria.eu");
+
+        //Assert
+        verify(mapperUtils, times(1)).requestDtoToRequestEntity(requestDtoArgumentCaptor.capture());
+        assertEquals("https://efti.platform.borduria.eu", requestDtoArgumentCaptor.getValue().getGateUrlDest());
     }
 
     @Test
     void shouldCreateAndSendRequest() {
         //Arrange
         when(requestRepository.save(any())).then(AdditionalAnswers.returnsFirstArg());
+        when(gateService.checkGateUrl(anyString())).thenReturn(true);
 
         //Act
         metadataRequestService.createAndSendRequest(controlDto, "https://efti.platform.borduria.eu");
