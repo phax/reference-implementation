@@ -3,7 +3,7 @@
 
     <property name="APPLICATION_NAME" value="efti-gate" />
 
-    <property name="LOG_FILE_NAME" value="${APPLICATION_NAME}" />
+    <property name="LOG_FILE_NAME" value="${APPLICATION_NAME}-stats" />
 
     <property name="LOG_PATH" value="/var/log/javapp" />
 
