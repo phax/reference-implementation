@@ -23,7 +23,6 @@ import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
-import com.ingroupe.efti.eftigate.service.gate.GateService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -55,9 +54,8 @@ public class MetadataRequestService extends RequestService {
                                   final GateProperties gateProperties,
                                   final MetadataService metadataService,
                                   final RequestUpdaterService requestUpdaterService,
-                                  final SerializeUtils serializeUtils,
-                                  final GateService gateService) {
-        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils, gateService);
+                                  final SerializeUtils serializeUtils) {
+        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils);
         this.metadataService = metadataService;
     }
 

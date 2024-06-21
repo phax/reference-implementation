@@ -18,13 +18,11 @@ import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.service.BaseServiceTest;
-import com.ingroupe.efti.eftigate.service.gate.GateService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -40,9 +38,6 @@ import static org.mockito.Mockito.*;
 class UilRequestServiceTest extends BaseServiceTest {
     private UilRequestService uilRequestService;
 
-    @Mock
-    private GateService gateService;
-
     @Captor
     ArgumentCaptor<RequestEntity> requestEntityArgumentCaptor;
 
@@ -50,7 +45,7 @@ class UilRequestServiceTest extends BaseServiceTest {
     @BeforeEach
     public void before() {
         super.before();
-        uilRequestService = new UilRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils, gateService);
+        uilRequestService = new UilRequestService(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils);
     }
 
     @Test
@@ -233,7 +228,7 @@ class UilRequestServiceTest extends BaseServiceTest {
         uilRequestService.createAndSendRequest(controlDto, null);
 
         verify(requestRepository, Mockito.times(1)).save(any());
-        verify(rabbitSenderService, Mockito.times(0)).sendMessageToRabbit(any(), any(), any());
+        verify(rabbitSenderService, Mockito.times(1)).sendMessageToRabbit(any(), any(), any());
 
     }
 

@@ -21,7 +21,6 @@ import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
-import com.ingroupe.efti.eftigate.service.gate.GateService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -47,9 +46,8 @@ public class UilRequestService extends RequestService {
                              final ControlService controlService,
                              final GateProperties gateProperties,
                              final RequestUpdaterService requestUpdaterService,
-                             final SerializeUtils serializeUtils,
-                             final GateService gateService) {
-        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils, gateService);
+                             final SerializeUtils serializeUtils) {
+        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils);
     }
 
     @Override

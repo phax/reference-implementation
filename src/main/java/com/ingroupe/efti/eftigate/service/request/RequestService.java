@@ -21,7 +21,6 @@ import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
-import com.ingroupe.efti.eftigate.service.gate.GateService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,7 +55,6 @@ public abstract class RequestService {
     private final GateProperties gateProperties;
     private final RequestUpdaterService requestUpdaterService;
     private final SerializeUtils serializeUtils;
-    private final GateService gateService;
 
     @Value("${spring.rabbitmq.queues.eftiSendMessageExchange:efti.send-message.exchange}")
     private String eftiSendMessageExchange;
@@ -80,11 +78,7 @@ public abstract class RequestService {
         requestDto.setGateUrlDest(StringUtils.isNotBlank(destinationUrl) ? destinationUrl : controlDto.getEftiPlatformUrl());
         log.info("Request has been register with controlId : {}", requestDto.getControl().getId());
         final RequestDto result = this.save(requestDto);
-        if (gateService.checkGateUrl(controlDto.getEftiGateUrl())) {
-            this.sendRequest(result);
-        } else {
-            log.error("Error, gate doesn't exist");
-        }
+        this.sendRequest(result);
     }
 
     public RequestDto save(final RequestDto requestDto) {
