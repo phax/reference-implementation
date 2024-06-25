@@ -22,6 +22,7 @@ spring:
         metadata_schema: "eftibo"
 
 gate:
+  country: BO
   owner: http://efti.gate.borduria.eu
   ap:
     url: http://efti.gate.borduria.eu:81/domibus/services/wsplugin

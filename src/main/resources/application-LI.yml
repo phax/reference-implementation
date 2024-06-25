@@ -22,6 +22,7 @@ spring:
         metadata_schema: "eftili"
 
 gate:
+  country: LI
   owner: http://efti.gate.listenbourg.eu
   ap:
     url: http://efti.gate.listenbourg.eu:81/domibus/services/wsplugin
