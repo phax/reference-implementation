@@ -23,20 +23,18 @@ import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.entity.SearchParameter;
 import com.ingroupe.efti.eftigate.exception.AmbiguousIdentifierException;
-import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
 import com.ingroupe.efti.eftigate.service.gate.EftiGateUrlResolver;
 import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
 import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
 import com.ingroupe.efti.eftigate.service.request.UilRequestService;
+import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.modelmapper.ModelMapper;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -47,10 +45,17 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 
@@ -63,6 +68,9 @@ class ControlServiceTest extends AbstractServiceTest {
     private UilRequestService uilRequestService;
     @Mock
     private MetadataRequestService metadataRequestService;
+    @Mock
+    private MetadataService metadataService;
+
     private ControlService controlService;
     @Mock
     private EftiGateUrlResolver eftiGateUrlResolver;
@@ -110,7 +118,7 @@ class ControlServiceTest extends AbstractServiceTest {
                         .url(url)
                         .password(password)
                         .username(username).build()).build();
-        controlService = new ControlService(controlRepository, eftiGateUrlResolver, mapperUtils,
+        controlService = new ControlService(controlRepository, eftiGateUrlResolver, metadataService, mapperUtils,
                 requestServiceFactory, gateToRequestTypeFunction, eftiAsyncCallsProcessor,
                 gateProperties2, loggerService);
         final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
@@ -227,11 +235,12 @@ class ControlServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    void createControlEntitySameGate() throws InstantiationException, IllegalAccessException {
+    void createControlEntitySameGate() {
         uilDto.setEFTIGateUrl("http://france.lol");
 
         when(controlRepository.save(any())).thenReturn(controlEntity);
         when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
+        when(metadataService.existByUIL(any(), any(), any())).thenReturn(true);
 
         final RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
@@ -802,5 +811,23 @@ class ControlServiceTest extends AbstractServiceTest {
         controlService.save(controlEntity);
 
         //Assert
-        verify(controlRepository, times(1)).save(controlEntity);    }
+        verify(controlRepository, times(1)).save(controlEntity);
+    }
+
+    @Test
+    void shouldNotSendRequestIfNotFoundOnLocalRegistry() {
+        uilDto.setEFTIGateUrl("http://france.lol");
+
+        when(controlRepository.save(any())).thenReturn(controlEntity);
+        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
+        when(metadataService.existByUIL(any(), any(), any())).thenReturn(false);
+
+        final RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
+
+        verify(uilRequestService, never()).createAndSendRequest(any(), any());
+        verify(controlRepository, never()).save(any());
+        assertNotNull(requestUuidDtoResult);
+        assertEquals(ErrorCodesEnum.DATA_NOT_FOUND.name(), requestUuidDtoResult.getErrorCode());
+        assertEquals(ErrorCodesEnum.DATA_NOT_FOUND.getMessage(), requestUuidDtoResult.getErrorDescription());
+    }
 }

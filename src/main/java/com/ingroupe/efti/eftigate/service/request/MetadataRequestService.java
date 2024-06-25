@@ -98,11 +98,8 @@ public class MetadataRequestService extends RequestService {
     @Override
     public void updateSentRequestStatus(final RequestDto requestDto, final String edeliveryMessageId) {
         requestDto.setEdeliveryMessageId(edeliveryMessageId);
-        if (isExternalRequest(requestDto)){
-            this.updateStatus(requestDto, RequestStatusEnum.RESPONSE_IN_PROGRESS);
-        } else {
-            this.updateStatus(requestDto, RequestStatusEnum.IN_PROGRESS);
-        }
+        this.updateStatus(requestDto, isExternalRequest(requestDto) ? RequestStatusEnum.RESPONSE_IN_PROGRESS : RequestStatusEnum.IN_PROGRESS);
+
     }
 
     private void handleNewControlRequest(final NotificationDto notificationDto, final String bodyFromNotification) {
