@@ -15,6 +15,7 @@ import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
+import com.ingroupe.efti.eftigate.dto.log.LogRequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
@@ -42,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -72,6 +74,8 @@ public class ControlService {
     private final EftiAsyncCallsProcessor eftiAsyncCallsProcessor;
 
     private final GateProperties gateProperties;
+
+    private final LoggerService loggerService;
 
     public ControlEntity getById(final long id) {
         final Optional<ControlEntity> controlEntity = controlRepository.findById(id);
@@ -293,6 +297,32 @@ public class ControlService {
                 result.setErrorDescription(controlDto.getError().getErrorDescription());
                 result.setErrorCode(controlDto.getError().getErrorCode());
             }
+        LogRequestDto logRequestDto = LogRequestDto.builder()
+                .authorityName(controlDto.getAuthority() != null ? controlDto.getAuthority().getName() : null)
+                .authorityNationalUniqueIdentifier(controlDto.getAuthority() != null ? controlDto.getAuthority().getNationalUniqueIdentifier() : null)
+                .requestId(controlDto.getRequestUuid())
+                .officerId("officerId")
+                .responseId("responseId")
+                .subsetEURequested(controlDto.getSubsetEuRequested())
+                .subsetMSRequested(controlDto.getSubsetMsRequested())
+                .eFTIDataId("eFTIDataId")
+                .messageEndDate("messageEndDate")
+                .componentType("CA_AAP")
+                .componentId("compenentId")
+                .componentCountry(gateProperties.getCountry())
+                .requestingComponentType("CA_AAP")
+                .requestingComponentId("requestingComponentId")
+                .requestingComponentCountry(gateProperties.getCountry())
+                .respondingComponentType("CA_AAP")
+                .respondingComponentId("respondingComponentId")
+                .respondingComponentCountry(gateProperties.getCountry())
+                .messageContent(controlDto.getEftiData() != null ? Base64.getEncoder().encodeToString(controlDto.getEftiData()) : null)
+                .statusMessage(controlDto.getStatus().name())
+                .errorCodeMessage(controlDto.getError() != null ? controlDto.getError().getErrorCode() : null)
+                .errorDescriptionMessage(controlDto.getError() != null ? controlDto.getError().getErrorDescription() : null)
+                .timeoutComponentType("timeoutComponentType")
+                .build();
+        loggerService.log(logRequestDto.getLinkedListFields());
         return result;
     }
 

@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GateProperties {
+    private String country;
     private String owner;
     private ApConfig ap;
 

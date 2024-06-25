@@ -1,4 +1,4 @@
-package com.ingroupe.efti.eftigate.dto.logstash;
+package com.ingroupe.efti.eftigate.dto.log;
 
 import com.ingroupe.efti.eftigate.exception.TechnicalTypeException;
 import lombok.experimental.SuperBuilder;
@@ -10,9 +10,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 @SuperBuilder
-public class LogstashAllDto {
+public class LogAllDto {
 
-    public final String message;
+    public final String messageEndDate;
     public final String componentType;
     public final String componentId;
     public final String componentCountry;

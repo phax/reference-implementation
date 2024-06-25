@@ -1,18 +1,16 @@
 package com.ingroupe.efti.eftigate.dto;
 
-import com.ingroupe.efti.eftigate.dto.logstash.LogstashAllDto;
-import com.ingroupe.efti.eftigate.dto.logstash.LogstashRequestDto;
+import com.ingroupe.efti.eftigate.dto.log.LogRequestDto;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-class LogstashAllDtoTest {
+class LogAllDtoTest {
 
     @Test
     void getLinkedListFieldsMultipleTest() {
-        final LogstashRequestDto logstashRequestDto = LogstashRequestDto.builder()
+        final LogRequestDto logstashRequestDto = LogRequestDto.builder()
                 .componentCountry("componentCountry")
                 .errorCodeMessage("errorCodeMessage")
                 .build();
@@ -26,7 +24,7 @@ class LogstashAllDtoTest {
 
     @Test
     void getLinkedListFieldsOnlyOneTest() {
-        final LogstashRequestDto logstashRequestDto = LogstashRequestDto.builder()
+        final LogRequestDto logstashRequestDto = LogRequestDto.builder()
                 .officerId("setOfficerId")
                 .build();
 
@@ -38,7 +36,7 @@ class LogstashAllDtoTest {
 
     @Test
     void getLinkedListFieldsOnlyNullTest() {
-        final LogstashRequestDto logstashRequestDto = LogstashRequestDto.builder()
+        final LogRequestDto logstashRequestDto = LogRequestDto.builder()
                 .build();
 
         final String[] result = logstashRequestDto.getLinkedListFields();

@@ -1,9 +1,9 @@
-package com.ingroupe.efti.eftigate.dto.logstash;
+package com.ingroupe.efti.eftigate.dto.log;
 
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
-public class LogstashRequestDto extends LogstashAllDto {
+public class LogRequestDto extends LogAllDto {
     public final String requestId;
     public final String eFTIDataId;
     public final String responseId;

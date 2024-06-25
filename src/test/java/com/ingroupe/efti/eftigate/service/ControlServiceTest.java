@@ -23,6 +23,7 @@ import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.entity.SearchParameter;
 import com.ingroupe.efti.eftigate.exception.AmbiguousIdentifierException;
+import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
 import com.ingroupe.efti.eftigate.service.gate.EftiGateUrlResolver;
 import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
@@ -33,7 +34,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -53,16 +56,19 @@ import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 @ExtendWith(MockitoExtension.class)
 class ControlServiceTest extends AbstractServiceTest {
+
     @Mock
     private ControlRepository controlRepository;
     @Mock
     private UilRequestService uilRequestService;
-
     @Mock
     private MetadataRequestService metadataRequestService;
     private ControlService controlService;
     @Mock
     private EftiGateUrlResolver eftiGateUrlResolver;
+
+    @Mock
+    private LoggerService loggerService;
 
     @Mock
     private RequestServiceFactory requestServiceFactory;
@@ -91,20 +97,22 @@ class ControlServiceTest extends AbstractServiceTest {
     private final String requestUuid = UUID.randomUUID().toString();
     private final String metadataUuid = UUID.randomUUID().toString();
 
-    private final static String url = "url";
+    private final static String url = "http://france.lol";
     private final static String password = "password";
     private final static String username = "username";
 
     @BeforeEach
     public void before() {
-        final GateProperties gateProperties = GateProperties.builder()
+        final GateProperties gateProperties2 = GateProperties.builder()
                 .owner("http://france.lol")
+                .country("FR")
                 .ap(GateProperties.ApConfig.builder()
                         .url(url)
                         .password(password)
                         .username(username).build()).build();
-        controlService = new ControlService(controlRepository, eftiGateUrlResolver, mapperUtils, requestServiceFactory, gateToRequestTypeFunction, eftiAsyncCallsProcessor, gateProperties);
-
+        controlService = new ControlService(controlRepository, eftiGateUrlResolver, mapperUtils,
+                requestServiceFactory, gateToRequestTypeFunction, eftiAsyncCallsProcessor,
+                gateProperties2, loggerService);
         final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         final StatusEnum status = StatusEnum.PENDING;
         final AuthorityDto authorityDto = AuthorityDto.builder()

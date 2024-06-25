@@ -3,6 +3,7 @@ package com.ingroupe.efti.eftigate.controller;
 import com.ingroupe.efti.eftigate.controller.api.ControlControllerApi;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
+import com.ingroupe.efti.eftigate.dto.log.LogRequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import io.swagger.v3.oas.annotations.Parameter;
