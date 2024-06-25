@@ -30,6 +30,7 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
 
 gate:
+  country: BO
   owner: http://efti.gate.borduria.eu
   ap:
     url: http://efti.gate.borduria.eu:81/domibus/services/wsplugin

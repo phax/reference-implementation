@@ -30,6 +30,7 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
 
 gate:
+  country: SY
   owner: http://efti.gate.syldavia.eu
   ap:
     url: http://efti.gate.syldavia.eu:81/domibus/services/wsplugin
