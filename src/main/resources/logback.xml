@@ -78,7 +78,7 @@
 
 
     <root level="INFO" additivity="false">
-        <appender-ref ref="RollingFile-Appender" />
+        <!--<appender-ref ref="RollingFile-Appender" />-->
         <appender-ref ref="RollingFile-Stats-Appender" />
         <appender-ref ref="Console-Appender" />
     </root>
