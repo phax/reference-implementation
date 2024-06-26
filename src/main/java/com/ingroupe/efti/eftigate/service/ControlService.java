@@ -26,6 +26,7 @@ import com.ingroupe.efti.eftigate.repository.ControlRepository;
 import com.ingroupe.efti.eftigate.service.gate.EftiGateUrlResolver;
 import com.ingroupe.efti.eftigate.service.request.RequestService;
 import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
+import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -62,6 +63,7 @@ public class ControlService {
     public static final String ERROR_REQUEST_UUID_NOT_FOUND = "Error requestUuid not found.";
     private final ControlRepository controlRepository;
     private final EftiGateUrlResolver eftiGateUrlResolver;
+    private final MetadataService metadataService;
     private final MapperUtils mapperUtils;
 
     private final RequestServiceFactory requestServiceFactory;
@@ -100,27 +102,38 @@ public class ControlService {
     }
 
     private <T extends ValidableDto> RequestUuidDto createControl(final T searchDto, final ControlDto controlDto) {
-        final Optional<ErrorDto> errorOptional = this.validateControl(searchDto);
-        errorOptional.ifPresentOrElse(error -> createErrorControl(controlDto, error), () -> {
-            if(searchDto instanceof UilDto) {
-                createUilControl(controlDto);
-            } else if (searchDto instanceof final MetadataRequestDto metadataRequestDto) {
-                createMetadataControl(controlDto, metadataRequestDto);
-            }
-        });
+        this.validateControl(searchDto).ifPresentOrElse(
+                error -> createErrorControl(controlDto, error, true),
+                () -> createControlFromType(searchDto, controlDto));
         return buildResponse(controlDto);
     }
 
-    private void createUilControl(final ControlDto controlDto) {
-        final ControlDto saveControl = this.save(controlDto);
-        getRequestService(controlDto.getRequestType()).createAndSendRequest(saveControl, !gateProperties.isCurrentGate(controlDto.getEftiGateUrl()) ? controlDto.getEftiGateUrl() : null);
-        log.info("Uil control with request uuid '{}' has been register", saveControl.getRequestUuid());
+    public void createUilControl(final ControlDto controlDto) {
+        if(gateProperties.isCurrentGate(controlDto.getEftiGateUrl()) && !checkOnLocalRegistry(controlDto)) {
+            createErrorControl(controlDto, ErrorDto.fromErrorCode(ErrorCodesEnum.DATA_NOT_FOUND_ON_REGISTRY), false);
+            final ControlDto saveControl = this.save(controlDto);
+            //respond with the error
+            if(controlDto.isExternalAsk()) {
+                getRequestService(controlDto.getRequestType()).createAndSendRequest(saveControl, controlDto.getFromGateUrl());
+            }
+        } else {
+            final ControlDto saveControl = this.save(controlDto);
+            getRequestService(controlDto.getRequestType()).createAndSendRequest(saveControl, null);
+            log.info("Uil control with request uuid '{}' has been register", saveControl.getRequestUuid());
+        }
     }
 
-    private static void createErrorControl(final ControlDto controlDto, final ErrorDto error) {
+    private boolean checkOnLocalRegistry(final ControlDto controlDto) {
+        log.info("checking local registry for dataUuid {}", controlDto.getEftiDataUuid());
+        return this.metadataService.existByUIL(controlDto.getEftiDataUuid(), controlDto.getEftiGateUrl(), controlDto.getEftiPlatformUrl());
+    }
+
+    private static void createErrorControl(final ControlDto controlDto, final ErrorDto error, final boolean resetUuid) {
         controlDto.setStatus(StatusEnum.ERROR);
         controlDto.setError(error);
-        controlDto.setRequestUuid(null);
+        if(resetUuid) {
+            controlDto.setRequestUuid(null);
+        }
         log.error(error.getErrorDescription() + ", " + error.getErrorCode());
     }
 
@@ -139,6 +152,14 @@ public class ControlService {
             }
         });
         log.info("Metadata control with request uuid '{}' has been register", saveControl.getRequestUuid());
+    }
+
+    private <T> void createControlFromType(final T searchDto, final ControlDto controlDto) {
+        if(searchDto instanceof UilDto) {
+            createUilControl(controlDto);
+        } else if (searchDto instanceof final MetadataRequestDto metadataRequestDto) {
+            createMetadataControl(controlDto, metadataRequestDto);
+        }
     }
 
     public RequestUuidDto getControlEntity(final String requestUuid) {

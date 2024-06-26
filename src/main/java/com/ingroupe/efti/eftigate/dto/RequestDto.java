@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -32,11 +33,10 @@ public class RequestDto {
     private ErrorDto error;
     private MetadataResults metadataResults;
 
-
-    public RequestDto(final ControlDto controlDto) {
+    public RequestDto(final ControlDto controlDto, final String destinationUrl) {
         this.status = RequestStatusEnum.RECEIVED;
         this.retry = 0;
-        this.gateUrlDest = controlDto.getEftiGateUrl();
+        this.gateUrlDest = StringUtils.isEmpty(destinationUrl) ? controlDto.getEftiGateUrl() : destinationUrl;
         this.control = controlDto;
     }
 }

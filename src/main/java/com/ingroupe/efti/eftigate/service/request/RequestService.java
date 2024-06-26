@@ -24,8 +24,6 @@ import com.ingroupe.efti.eftigate.service.RabbitSenderService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -39,7 +37,6 @@ import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Objects;
 
-import static com.ingroupe.efti.commons.enums.RequestStatusEnum.ERROR;
 import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.EXTERNAL_REQUESTS_TYPES;
 
 @Slf4j
@@ -74,8 +71,7 @@ public abstract class RequestService {
     public abstract void receiveGateRequest(final NotificationDto notificationDto);
 
     public void createAndSendRequest(final ControlDto controlDto, final String destinationUrl) {
-        final RequestDto requestDto = new RequestDto(controlDto);
-        requestDto.setGateUrlDest(StringUtils.isNotBlank(destinationUrl) ? destinationUrl : controlDto.getEftiPlatformUrl());
+        final RequestDto requestDto = new RequestDto(controlDto, destinationUrl);
         log.info("Request has been register with controlId : {}", requestDto.getControl().getId());
         final RequestDto result = this.save(requestDto);
         this.sendRequest(result);
@@ -91,11 +87,6 @@ public abstract class RequestService {
         } catch (final JsonProcessingException e) {
             log.error("Error when try to parse object to json/string", e);
         }
-    }
-
-    public boolean allRequestsAreInErrorStatus(final List<RequestEntity> controlEntityRequests) {
-        return CollectionUtils.emptyIfNull(controlEntityRequests).stream()
-                .allMatch(requestEntity -> ERROR == requestEntity.getStatus());
     }
 
     public void updateWithResponse(final NotificationDto notificationDto) {

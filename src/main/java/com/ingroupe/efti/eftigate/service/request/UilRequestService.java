@@ -78,7 +78,6 @@ public class UilRequestService extends RequestService {
             this.updateStatus(requestDto, RequestStatusEnum.ERROR, notificationDto);
             errorReceived(requestDto, messageBody.getErrorDescription());
         }
-
         responseToOtherGateIfNecessary(requestDto);
     }
 
@@ -105,9 +104,11 @@ public class UilRequestService extends RequestService {
                 .findByControlRequestUuidAndStatus(messageBody.getRequestUuid(), RequestStatusEnum.IN_PROGRESS);
 
         if (requestEntity == null) {
-            askReception(notificationDto, messageBody);
+            this.getControlService().createUilControl(ControlDto
+                    .fromGateToGateMessageBodyDto(messageBody, RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH,
+                            notificationDto, getGateProperties().getOwner()));
         } else {
-            receptionOfResponse(requestEntity, messageBody);
+            manageResponseFromOtherGate(requestEntity, messageBody);
         }
     }
 
@@ -118,7 +119,7 @@ public class UilRequestService extends RequestService {
                 getMapperUtils().errorDtoToErrorEntity(ErrorDto.fromAnyError(messageBody.getErrorDescription()));
     }
 
-    private void receptionOfResponse(final RequestEntity requestEntity, final MessageBodyDto messageBody) {
+    private void manageResponseFromOtherGate(final RequestEntity requestEntity, final MessageBodyDto messageBody) {
         if (!ObjectUtils.isEmpty(messageBody.getEFTIData())) {
             requestEntity.setReponseData(messageBody.getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
             requestEntity.setStatus(RequestStatusEnum.SUCCESS);
@@ -132,20 +133,6 @@ public class UilRequestService extends RequestService {
         }
         getRequestRepository().save(requestEntity);
         getControlService().save(requestEntity.getControl());
-    }
-
-    private void askReception(final NotificationDto notificationDto, final MessageBodyDto messageBody) {
-        final ControlDto controlDto = ControlDto
-                .fromGateToGateMessageBodyDto(messageBody, RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH,
-                        notificationDto, getGateProperties().getOwner());
-        this.createAndSendRequest(getControlService().save(controlDto));
-    }
-
-    public void createAndSendRequest(final ControlDto controlDto) {
-        final RequestDto requestDto = new RequestDto(controlDto);
-        log.info("Request has been register with controlId : {}", requestDto.getControl().getId());
-        final RequestDto result = this.save(requestDto);
-        this.sendRequest(result);
     }
 
     @Override
