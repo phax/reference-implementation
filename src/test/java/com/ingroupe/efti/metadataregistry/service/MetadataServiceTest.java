@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -105,6 +106,20 @@ class MetadataServiceTest extends AbstractServiceTest {
         assertEquals(DATA_UUID, argumentCaptor.getValue().getEFTIDataUuid());
         assertEquals(PLATFORM_URL, argumentCaptor.getValue().getEFTIPlatformUrl());
         assertEquals(GATE_URL, argumentCaptor.getValue().getEFTIGateUrl());
+    }
+
+    @Test
+    void shouldExistByUil() {
+        when(repository.findByUil(GATE_URL, DATA_UUID, PLATFORM_URL)).thenReturn(Optional.of(MetadataEntity.builder().build()));
+
+        assertTrue(service.existByUIL(DATA_UUID, GATE_URL, PLATFORM_URL));
+    }
+
+    @Test
+    void shouldNotExistByUil() {
+        when(repository.findByUil(GATE_URL, DATA_UUID, PLATFORM_URL)).thenReturn(Optional.empty());
+
+        assertFalse(service.existByUIL(DATA_UUID, GATE_URL, PLATFORM_URL));
     }
 
     @Test

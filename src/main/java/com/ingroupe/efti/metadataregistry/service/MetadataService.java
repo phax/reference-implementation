@@ -56,6 +56,10 @@ public class MetadataService {
         this.save(metadataDto);
     }
 
+    public boolean existByUIL(final String dataUuid, final String gate, final String platform) {
+        return this.repository.findByUil(gate, dataUuid, platform).isPresent();
+    }
+
     @Transactional("metadataTransactionManager")
     public List<MetadataDto> search(final MetadataRequestDto metadataRequestDto) {
         return mapper.entityListToDtoList(this.repository.searchByCriteria(metadataRequestDto));
