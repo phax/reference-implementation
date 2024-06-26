@@ -58,6 +58,7 @@ public enum ErrorCodesEnum {
     PLATFORM_ERROR("Platform error"),
 
     DATA_NOT_FOUND("Data not found."),
+    DATA_NOT_FOUND_ON_REGISTRY("Data not found on registry."),
 
     DEFAULT_ERROR("Error");
 
