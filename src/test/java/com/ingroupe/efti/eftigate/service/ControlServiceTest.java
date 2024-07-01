@@ -819,15 +819,13 @@ class ControlServiceTest extends AbstractServiceTest {
         uilDto.setEFTIGateUrl("http://france.lol");
 
         when(controlRepository.save(any())).thenReturn(controlEntity);
-        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
         when(metadataService.existByUIL(any(), any(), any())).thenReturn(false);
 
         final RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
         verify(uilRequestService, never()).createAndSendRequest(any(), any());
-        verify(controlRepository, never()).save(any());
         assertNotNull(requestUuidDtoResult);
-        assertEquals(ErrorCodesEnum.DATA_NOT_FOUND.name(), requestUuidDtoResult.getErrorCode());
-        assertEquals(ErrorCodesEnum.DATA_NOT_FOUND.getMessage(), requestUuidDtoResult.getErrorDescription());
+        assertEquals(ErrorCodesEnum.DATA_NOT_FOUND_ON_REGISTRY.name(), requestUuidDtoResult.getErrorCode());
+        assertEquals(ErrorCodesEnum.DATA_NOT_FOUND_ON_REGISTRY.getMessage(), requestUuidDtoResult.getErrorDescription());
     }
 }
