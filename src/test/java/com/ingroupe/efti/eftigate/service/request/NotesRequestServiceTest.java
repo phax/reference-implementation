@@ -113,7 +113,7 @@ class NotesRequestServiceTest extends BaseServiceTest {
     @Test
     void allRequestsContainsDataTest() {
         //Act and Assert
-        assertFalse(notesRequestService.allRequestsContainsData(List.of(noteRequestEntity)));
+        assertThrows(UnsupportedOperationException.class, () -> notesRequestService.allRequestsContainsData(List.of(noteRequestEntity)));
     }
 
     @Test
