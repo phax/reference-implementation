@@ -9,7 +9,8 @@ public enum EDeliveryAction {
     UPLOAD_METADATA("uploadMetadata"),
     FORWARD_UIL("forwardUil"),
     GET_UIL("getUIL"),
-    GET_IDENTIFIERS("getIdentifiers");
+    GET_IDENTIFIERS("getIdentifiers"),
+    SEND_NOTES("sendNotes");
 
     private final String value;
 
