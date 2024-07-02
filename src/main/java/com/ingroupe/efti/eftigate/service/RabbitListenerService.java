@@ -1,22 +1,18 @@
 package com.ingroupe.efti.eftigate.service;
 
-import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
-import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
-import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
-import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
+import com.ingroupe.efti.eftigate.constant.EftiGateConstants;
+import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
-import com.ingroupe.efti.eftigate.dto.requestbody.MetadataRequestBodyDto;
-import com.ingroupe.efti.eftigate.dto.requestbody.RequestBodyDto;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
+import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.service.request.RequestService;
 import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
@@ -26,12 +22,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedList;
 import java.util.function.Function;
-
-import static com.ingroupe.efti.commons.enums.RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH;
-import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.IDENTIFIERS_TYPES;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
@@ -45,7 +36,9 @@ public class RabbitListenerService {
     private final RequestSendingService requestSendingService;
     private final RequestServiceFactory requestServiceFactory;
     private final ApIncomingService apIncomingService;
-    private final Function<RequestDto, EDeliveryAction> requestToEDeliveryActionFunction;
+    private final Function<RabbitRequestDto, EDeliveryAction> requestToEDeliveryActionFunction;
+    private final MapperUtils mapperUtils;
+
 
     @RabbitListener(queues = "${spring.rabbitmq.queues.eftiReceiveMessageQueue:efti.receive-messages.q}")
     public void listenReceiveMessage(final String message) {
@@ -61,8 +54,9 @@ public class RabbitListenerService {
 
     @RabbitListener(queues = "${spring.rabbitmq.queues.eftiSendMessageQueue:efti.send-messages.q}")
     public void listenSendMessage(final String message) {
+
         log.info("receive message from rabbimq queue");
-        trySendDomibus(serializeUtils.mapJsonStringToClass(message, RequestDto.class));
+        trySendDomibus(serializeUtils.mapJsonStringToClass(message, RabbitRequestDto.class));
     }
 
     @RabbitListener(queues = "${spring.rabbitmq.queues.messageSendDeadLetterQueue:message-send-dead-letter-queue}")
@@ -72,49 +66,12 @@ public class RabbitListenerService {
         this.getRequestService(requestDto.getControl().getRequestType()).manageSendError(requestDto);
     }
 
-    private String getBodyForIdentifiersRequest(final RequestDto requestDto) {
-        if (EXTERNAL_ASK_METADATA_SEARCH == requestDto.getControl().getRequestType()) { //remote sending response
-            final MetadataResponseDto metadataResponseDto = controlService.buildMetadataResponse(requestDto.getControl());
-            return serializeUtils.mapObjectToXmlString(metadataResponseDto);
-        } else { //local sending request
-            final MetadataRequestBodyDto metadataRequestBodyDto = MetadataRequestBodyDto.fromControl(requestDto.getControl());
-            return serializeUtils.mapObjectToXmlString(metadataRequestBodyDto);
-        }
-    }
-
-    private String getBodyForUilRequest(final RequestDto requestDto) {
-        final ControlDto controlDto = requestDto.getControl();
-        if (requestDto.getStatus() == RequestStatusEnum.RESPONSE_IN_PROGRESS ||requestDto.getStatus() == RequestStatusEnum.ERROR) {
-            final boolean hasData = requestDto.getReponseData() != null;
-            final boolean hasError = controlDto.getError() != null;
-
-            return serializeUtils.mapObjectToXmlString(MessageBodyDto.builder()
-                    .requestUuid(controlDto.getRequestUuid())
-                    .eFTIData(hasData ? new String(requestDto.getReponseData()) : null)
-                    .status(hasError ? StatusEnum.ERROR.name() : StatusEnum.COMPLETE.name())
-                    .errorDescription(hasError ? controlDto.getError().getErrorDescription() : null)
-                    .eFTIDataUuid(controlDto.getEftiDataUuid())
-                    .build());
-        }
-
-        final RequestBodyDto requestBodyDto = RequestBodyDto.builder()
-                .eFTIData(requestDto.getReponseData() != null ? new String(requestDto.getReponseData(), StandardCharsets.UTF_8) : null)
-                .eFTIPlatformUrl(requestDto.getControl().getEftiPlatformUrl())
-                .requestUuid(controlDto.getRequestUuid())
-                .eFTIDataUuid(controlDto.getEftiDataUuid())
-                .subsetEU(new LinkedList<>())
-                .subsetMS(new LinkedList<>())
-                .build();
-        return serializeUtils.mapObjectToXmlString(requestBodyDto);
-    }
-
-    private ApRequestDto buildApRequestDto(final RequestDto requestDto) {
+    private ApRequestDto buildApRequestDto(final RabbitRequestDto requestDto, final EDeliveryAction eDeliveryAction) {
         final String receiver = gateProperties.isCurrentGate(requestDto.getGateUrlDest()) ? requestDto.getControl().getEftiPlatformUrl() : requestDto.getGateUrlDest();
         return ApRequestDto.builder()
                 .sender(gateProperties.getOwner())
                 .receiver(receiver)
-                .body(IDENTIFIERS_TYPES.contains(requestDto.getControl().getRequestType()) ?
-                        getBodyForIdentifiersRequest(requestDto) : getBodyForUilRequest(requestDto))
+                .body(getRequestService(eDeliveryAction).buildRequestBody(requestDto))
                 .apConfig(ApConfigDto.builder()
                         .username(gateProperties.getAp().getUsername())
                         .password(gateProperties.getAp().getPassword())
@@ -123,11 +80,12 @@ public class RabbitListenerService {
                 .build();
     }
 
-    private void trySendDomibus(final RequestDto requestDto) {
+    private void trySendDomibus(final RabbitRequestDto rabbitRequestDto) {
         try {
-            final EDeliveryAction eDeliveryAction = requestToEDeliveryActionFunction.apply(requestDto);
-            final String edeliveryMessageId = this.requestSendingService.sendRequest(buildApRequestDto(requestDto), eDeliveryAction);
-            getRequestService(requestDto.getControl().getRequestType()).updateSentRequestStatus(requestDto, edeliveryMessageId);
+            final EDeliveryAction eDeliveryAction = requestToEDeliveryActionFunction.apply(rabbitRequestDto);
+            final String edeliveryMessageId = this.requestSendingService.sendRequest(buildApRequestDto(rabbitRequestDto, eDeliveryAction), eDeliveryAction);
+            final RequestDto requestDto = mapperUtils.rabbitRequestDtoToRequestDto(rabbitRequestDto, EftiGateConstants.REQUEST_TYPE_CLASS_MAP.get(rabbitRequestDto.getRequestType()));
+            getRequestService(eDeliveryAction).updateSentRequestStatus(requestDto, edeliveryMessageId);
         } catch (final SendRequestException e) {
             log.error("error while sending request" + e);
             throw new TechnicalException("Error when try to send message to domibus", e);
@@ -135,6 +93,9 @@ public class RabbitListenerService {
     }
 
     private RequestService getRequestService(final RequestTypeEnum requestType) {
-        return  requestServiceFactory.getRequestServiceByRequestType(requestType);
+        return requestServiceFactory.getRequestServiceByRequestType(requestType);
+    }
+    private RequestService getRequestService(final EDeliveryAction eDeliveryAction) {
+        return  requestServiceFactory.getRequestServiceByEdeliveryActionType(eDeliveryAction);
     }
 }

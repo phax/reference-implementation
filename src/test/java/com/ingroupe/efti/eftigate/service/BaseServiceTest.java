@@ -1,9 +1,12 @@
 package com.ingroupe.efti.eftigate.service;
 
+import com.ingroupe.common.test.log.MemoryAppender;
 import com.ingroupe.efti.commons.dto.MetadataResultDto;
+import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
+import com.ingroupe.efti.commons.enums.TransportMode;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
@@ -13,7 +16,8 @@ import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.MetadataResult;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
-import com.ingroupe.efti.eftigate.repository.RequestRepository;
+import com.ingroupe.efti.eftigate.entity.SearchParameter;
+import com.ingroupe.efti.metadataregistry.entity.TransportVehicle;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,32 +29,31 @@ import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 public abstract class BaseServiceTest extends AbstractServiceTest {
-    @Mock
-    protected RequestRepository requestRepository;
+    protected static final String MESSAGE_ID = "messageId";
+
     @Mock
     protected RabbitSenderService rabbitSenderService;
     @Mock
     protected ControlService controlService;
     @Mock
     protected RequestUpdaterService requestUpdaterService;
-
-
     protected GateProperties gateProperties;
+    protected MemoryAppender memoryAppender;
 
     protected final UilDto uilDto = new UilDto();
     protected final ControlDto controlDto = new ControlDto();
     protected final ControlEntity controlEntity = new ControlEntity();
-    protected final RequestEntity requestEntity = new RequestEntity();
-    protected final RequestEntity secondRequestEntity = new RequestEntity();
+
     protected final RequestDto requestDto = new RequestDto();
     protected final MetadataResult metadataResult = new MetadataResult();
     protected final MetadataResults metadataResults = new MetadataResults();
     protected final MetadataResultDto metadataResultDto = new MetadataResultDto();
+    protected final TransportVehicle transportVehicle = new TransportVehicle();
 
+    protected final SearchParameter searchParameter = new SearchParameter();
 
     public void before() {
         gateProperties = GateProperties.builder().ap(GateProperties.ApConfig.builder().url("url").password("pwd").username("usr").build()).owner("owner").build();
-
 
         final LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         final String requestUuid = "67fe38bd-6bf7-4b06-b20e-206264bd639c";
@@ -58,6 +61,11 @@ public abstract class BaseServiceTest extends AbstractServiceTest {
         this.uilDto.setEFTIGateUrl("gate");
         this.uilDto.setEFTIDataUuid("uuid");
         this.uilDto.setEFTIPlatformUrl("plateform");
+
+        searchParameter.setVehicleId("AA123VV");
+        searchParameter.setVehicleCountry(CountryIndicator.BE.toString());
+        searchParameter.setTransportMode(TransportMode.ROAD.toString());
+
         this.controlDto.setEftiDataUuid(uilDto.getEFTIDataUuid());
         this.controlDto.setEftiGateUrl(uilDto.getEFTIGateUrl());
         this.controlDto.setEftiPlatformUrl(uilDto.getEFTIPlatformUrl());
@@ -83,37 +91,32 @@ public abstract class BaseServiceTest extends AbstractServiceTest {
         this.controlEntity.setTransportMetadata(controlDto.getTransportMetaData());
         this.controlEntity.setFromGateUrl(controlDto.getFromGateUrl());
 
-        this.requestDto.setStatus(RequestStatusEnum.RECEIVED);
-        this.requestDto.setRetry(0);
-        this.requestDto.setCreatedDate(localDateTime);
-        this.requestDto.setGateUrlDest(controlEntity.getEftiGateUrl());
-        this.requestDto.setControl(ControlDto.builder().id(1).build());
-        this.requestDto.setControl(controlDto);
-
-        this.requestEntity.setStatus(this.requestDto.getStatus());
-        this.requestEntity.setRetry(this.requestDto.getRetry());
-        this.requestEntity.setCreatedDate(this.requestEntity.getCreatedDate());
-        this.requestEntity.setGateUrlDest(this.requestDto.getGateUrlDest());
-        this.requestEntity.setControl(controlEntity);
-
-        this.secondRequestEntity.setStatus(this.requestDto.getStatus());
-        this.secondRequestEntity.setRetry(this.requestDto.getRetry());
-        this.secondRequestEntity.setCreatedDate(this.requestEntity.getCreatedDate());
-        this.secondRequestEntity.setGateUrlDest(this.requestDto.getGateUrlDest());
-        this.secondRequestEntity.setControl(controlEntity);
-
-        controlEntity.setRequests(List.of(requestEntity, secondRequestEntity));
-
         metadataResult.setCountryStart("FR");
         metadataResult.setCountryEnd("FR");
         metadataResult.setDisabled(false);
         metadataResult.setDangerousGoods(true);
-
+        metadataResult.setTransportVehicles(List.of(transportVehicle));
         metadataResults.setMetadataResult(Collections.singletonList(metadataResult));
 
         metadataResultDto.setCountryStart("FR");
         metadataResultDto.setCountryEnd("FR");
         metadataResultDto.setDisabled(false);
-        metadataResultDto.setDangerousGoods(true);    }
+        metadataResultDto.setDangerousGoods(true);
+    }
 
+    protected <T extends RequestEntity> void setEntityRequestCommonAttributes(final T requestEntity) {
+        requestEntity.setStatus(this.requestDto.getStatus());
+        requestEntity.setRetry(this.requestDto.getRetry());
+        requestEntity.setCreatedDate(LocalDateTime.now());
+        requestEntity.setGateUrlDest(this.requestDto.getGateUrlDest());
+        requestEntity.setControl(controlEntity);
+    }
+
+    protected <T extends RequestDto> void setDtoRequestCommonAttributes(final T requestDto) {
+        requestDto.setStatus(RequestStatusEnum.RECEIVED);
+        requestDto.setRetry(0);
+        requestDto.setCreatedDate(LocalDateTime.now());
+        requestDto.setGateUrlDest(controlEntity.getEftiGateUrl());
+        requestDto.setControl(ControlDto.builder().id(1).build());
+    }
 }

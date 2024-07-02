@@ -13,13 +13,13 @@ import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.constant.EftiGateConstants;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
+import com.ingroupe.efti.eftigate.dto.NotesDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.dto.log.LogRequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
-import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.exception.AmbiguousIdentifierException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
@@ -96,6 +96,15 @@ public class ControlService {
         return createControl(metadataRequestDto, ControlDto.fromLocalMetadataControl(metadataRequestDto, RequestTypeEnum.LOCAL_METADATA_SEARCH));
     }
 
+    public RequestUuidDto createNoteRequestForControl(final NotesDto notesDto) {
+        log.info("create Note Request for control with data uuid : {}", notesDto.getEFTIDataUuid());
+        final ControlDto savedControl = getControlByRequestUuid(notesDto.getRequestUuid());
+        if (savedControl.isError()) {
+            return buildResponse(savedControl);
+        }
+        return createNoteRequestForControl(savedControl, notesDto);
+    }
+
     public ControlDto createControlFrom(final IdentifiersMessageBodyDto messageBody, final String fromGateUrl, final MetadataResults metadataResults) {
         final ControlDto controlDto = ControlDto.fromExternalMetadataControl(messageBody, EXTERNAL_ASK_METADATA_SEARCH, fromGateUrl, gateProperties.getOwner(), metadataResults);
         return this.save(controlDto);
@@ -106,6 +115,17 @@ public class ControlService {
                 error -> createErrorControl(controlDto, error, true),
                 () -> createControlFromType(searchDto, controlDto));
         return buildResponse(controlDto);
+    }
+
+    private RequestUuidDto createNoteRequestForControl(final ControlDto controlDto, final NotesDto notesDto) {
+        final Optional<ErrorDto> errorOptional = this.validateControl(notesDto);
+        errorOptional.ifPresentOrElse(error -> createErrorControl(controlDto, error,false), () -> {
+            controlDto.setNotes(notesDto.getNote());
+            getRequestService(RequestTypeEnum.NOTE_SEND).createAndSendRequest(controlDto, !gateProperties.isCurrentGate(notesDto.getEFTIGateUrl()) ? notesDto.getEFTIGateUrl() : null);
+            log.info("Note has been registered for control with request uuid '{}'", controlDto.getRequestUuid());
+        });
+        return buildResponse(controlDto);
+
     }
 
     public void createUilControl(final ControlDto controlDto) {
@@ -196,12 +216,12 @@ public class ControlService {
     }
 
     public ControlDto updatePendingControl(final ControlEntity controlEntity) {
-        final List<RequestEntity> controlEntityRequests = controlEntity.getRequests();
         if (hasRequestInProgress(controlEntity)){
             return mapperUtils.controlEntityToControlDto(controlEntity);
         }
-        final RequestService requestService = this.getRequestService(controlEntity.getRequestType());
-        if (requestService.allRequestsContainsData(controlEntityRequests)){
+        final RequestService<?> requestService = this.getRequestService(controlEntity.getRequestType());
+        final boolean allRequestsContainsData =  requestService.allRequestsContainsData(controlEntity.getRequests());
+        if (allRequestsContainsData){
             requestService.setDataFromRequests(controlEntity);
             controlEntity.setStatus(StatusEnum.COMPLETE);
             return mapperUtils.controlEntityToControlDto(controlRepository.save(controlEntity));
@@ -318,7 +338,7 @@ public class ControlService {
                 result.setErrorDescription(controlDto.getError().getErrorDescription());
                 result.setErrorCode(controlDto.getError().getErrorCode());
             }
-        LogRequestDto logRequestDto = LogRequestDto.builder()
+        final LogRequestDto logRequestDto = LogRequestDto.builder()
                 .authorityName(controlDto.getAuthority() != null ? controlDto.getAuthority().getName() : null)
                 .authorityNationalUniqueIdentifier(controlDto.getAuthority() != null ? controlDto.getAuthority().getNationalUniqueIdentifier() : null)
                 .requestId(controlDto.getRequestUuid())
@@ -347,7 +367,7 @@ public class ControlService {
         return result;
     }
 
-    private RequestService getRequestService(final RequestTypeEnum requestType) {
+    private RequestService<?> getRequestService(final RequestTypeEnum requestType) {
         return  requestServiceFactory.getRequestServiceByRequestType(requestType);
     }
 

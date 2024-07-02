@@ -2,10 +2,12 @@ package com.ingroupe.efti.eftigate.controller.api;
 
 import com.ingroupe.efti.eftigate.config.security.Roles;
 import com.ingroupe.efti.eftigate.dto.NotesDto;
+import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,6 +26,6 @@ public interface NoteControllerApi {
     })
     @PostMapping("/notes")
     @Secured(Roles.ROLE_ROAD_CONTROLER)
-    void createNote(final @RequestBody NotesDto notesDto);
+    ResponseEntity<RequestUuidDto> createNote(final @RequestBody NotesDto notesDto);
 
 }

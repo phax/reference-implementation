@@ -101,4 +101,8 @@ public class ControlEntity extends AbstractModel implements Serializable {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadatas")
     private MetadataResults metadataResults;
+
+    public boolean isExternalAsk() {
+        return this.getRequestType() != null && this.getRequestType().isExternalAsk();
+    }
 }

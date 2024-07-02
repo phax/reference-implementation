@@ -7,7 +7,7 @@ import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
-import com.ingroupe.efti.eftigate.service.request.EftiRequestUpdater;
+import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
 import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
 import com.ingroupe.efti.eftigate.service.request.UilRequestService;
@@ -26,9 +26,7 @@ import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto
 import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.SUBMIT_MESSAGE;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ApIncomingServiceTest extends AbstractServiceTest {
@@ -38,7 +36,7 @@ class ApIncomingServiceTest extends AbstractServiceTest {
     @Mock
     private RequestServiceFactory requestServiceFactory;
     @Mock
-    private EftiRequestUpdater eftiRequestUpdater;
+    private RequestRepository<?> requestRepository;
     @Mock
     private UilRequestService uilRequestService;
     @Mock
@@ -86,7 +84,7 @@ class ApIncomingServiceTest extends AbstractServiceTest {
 
     @BeforeEach
     public void before() {
-        service = new ApIncomingService(notificationService, requestServiceFactory, eftiRequestUpdater, metadataService, serializeUtils);
+        service = new ApIncomingService(notificationService, requestServiceFactory, metadataService, serializeUtils, requestRepository);
     }
 
     @Test

@@ -18,10 +18,12 @@ import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
+import com.ingroupe.efti.eftigate.entity.IdentifiersRequestEntity;
 import com.ingroupe.efti.eftigate.entity.MetadataResult;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.entity.SearchParameter;
+import com.ingroupe.efti.eftigate.entity.UilRequestEntity;
 import com.ingroupe.efti.eftigate.exception.AmbiguousIdentifierException;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
 import com.ingroupe.efti.eftigate.service.gate.EftiGateUrlResolver;
@@ -45,17 +47,10 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 
@@ -94,8 +89,8 @@ class ControlServiceTest extends AbstractServiceTest {
     MetadataDto metadataDto= new MetadataDto();
     TransportVehicleDto transportVehicleDto = new TransportVehicleDto();
     private final ControlEntity controlEntity = ControlEntity.builder().requestType(RequestTypeEnum.LOCAL_UIL_SEARCH).build();
-    private final RequestEntity requestEntity = new RequestEntity();
-    private final RequestEntity secondRequestEntity = new RequestEntity();
+    private final UilRequestEntity uilRequestEntity = new UilRequestEntity();
+    private final IdentifiersRequestEntity identifiersRequestEntity = new IdentifiersRequestEntity();
 
     MetadataResult metadataResult = new MetadataResult();
     MetadataResults metadataResults = new MetadataResults();
@@ -193,7 +188,7 @@ class ControlServiceTest extends AbstractServiceTest {
 
         metadataResults.setMetadataResult(Collections.singletonList(metadataResult));
 
-        requestEntity.setControl(controlEntity);
+        uilRequestEntity.setControl(controlEntity);
 
 
         transportVehicleDto.setCountryStart("FR");
@@ -228,10 +223,10 @@ class ControlServiceTest extends AbstractServiceTest {
     void getByIdWithDataTest() {
         when(controlRepository.findById(1L)).thenReturn(Optional.of(new ControlEntity()));
 
-        final ControlEntity controlEntity = controlService.getById(1L);
+        final ControlEntity savedControlEntity = controlService.getById(1L);
 
         verify(controlRepository, times(1)).findById(1L);
-        assertNotNull(controlEntity);
+        assertNotNull(savedControlEntity);
     }
 
     @Test
@@ -239,7 +234,7 @@ class ControlServiceTest extends AbstractServiceTest {
         uilDto.setEFTIGateUrl("http://france.lol");
 
         when(controlRepository.save(any())).thenReturn(controlEntity);
-        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
+        when(requestServiceFactory.getRequestServiceByRequestType(any(RequestTypeEnum.class))).thenReturn(uilRequestService);
         when(metadataService.existByUIL(any(), any(), any())).thenReturn(true);
 
         final RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
@@ -254,7 +249,7 @@ class ControlServiceTest extends AbstractServiceTest {
     @Test
     void createControlEntityTest() {
         when(controlRepository.save(any())).thenReturn(controlEntity);
-        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
+        when(requestServiceFactory.getRequestServiceByRequestType(any(RequestTypeEnum.class))).thenReturn(uilRequestService);
 
         final RequestUuidDto requestUuidDtoResult = controlService.createUilControl(uilDto);
 
@@ -354,10 +349,10 @@ class ControlServiceTest extends AbstractServiceTest {
 
     @Test
     void getControlEntitySuccessTest() {
-        requestEntity.setStatus(RequestStatusEnum.SUCCESS);
-        controlEntity.setRequests(Collections.singletonList(requestEntity));
+        uilRequestEntity.setStatus(RequestStatusEnum.SUCCESS);
+        controlEntity.setRequests(Collections.singletonList(uilRequestEntity));
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
-        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
+        when(requestServiceFactory.getRequestServiceByRequestType(any(RequestTypeEnum.class))).thenReturn(uilRequestService);
         when(controlRepository.save(any())).thenReturn(controlEntity);
 
         final RequestUuidDto requestUuidDtoResult = controlService.getControlEntity(requestUuid);
@@ -386,16 +381,14 @@ class ControlServiceTest extends AbstractServiceTest {
     void shouldUpdatePendingControl_whenMetadataSearchAndRequestsContainsData() {
         //Arrange
         controlEntity.setRequestType(RequestTypeEnum.LOCAL_METADATA_SEARCH);
-        controlEntity.setRequests(Collections.singletonList(requestEntity));
-
-        requestEntity.setMetadataResults(metadataResults);
-        requestEntity.setStatus(RequestStatusEnum.SUCCESS);
-
+        controlEntity.setRequests(Collections.singletonList(identifiersRequestEntity));
+        identifiersRequestEntity.setMetadataResults(metadataResults);
+        identifiersRequestEntity.setStatus(RequestStatusEnum.SUCCESS);
 
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
         when(metadataRequestService.allRequestsContainsData(any())).thenReturn(true);
         when(controlRepository.save(controlEntity)).thenReturn(controlEntity);
-        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(metadataRequestService);
+        when(requestServiceFactory.getRequestServiceByRequestType(any(RequestTypeEnum.class))).thenReturn(metadataRequestService);
 
         //Act
         controlService.getControlEntity(requestUuid);
@@ -412,16 +405,16 @@ class ControlServiceTest extends AbstractServiceTest {
     void shouldUpdatePendingControl_whenUilSearchAndRequestsContainsData() {
         //Arrange
         controlEntity.setRequestType(RequestTypeEnum.LOCAL_UIL_SEARCH);
-        controlEntity.setRequests(Collections.singletonList(requestEntity));
+        controlEntity.setRequests(Collections.singletonList(uilRequestEntity));
 
         final byte[] data = {10, 20, 30, 40};
-        requestEntity.setReponseData(data);
-        requestEntity.setStatus(RequestStatusEnum.SUCCESS);
+        uilRequestEntity.setReponseData(data);
+        uilRequestEntity.setStatus(RequestStatusEnum.SUCCESS);
 
         when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
         when(uilRequestService.allRequestsContainsData(any())).thenReturn(true);
         when(controlRepository.save(controlEntity)).thenReturn(controlEntity);
-        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
+        when(requestServiceFactory.getRequestServiceByRequestType(any(RequestTypeEnum.class))).thenReturn(uilRequestService);
 
         //Act
         controlService.getControlEntity(requestUuid);
@@ -466,7 +459,7 @@ class ControlServiceTest extends AbstractServiceTest {
     @Test
     void createMetadataControlTest() {
         when(controlRepository.save(any())).thenReturn(controlEntity);
-        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(metadataRequestService);
+        when(requestServiceFactory.getRequestServiceByRequestType(any(RequestTypeEnum.class))).thenReturn(metadataRequestService);
         when(gateToRequestTypeFunction.apply(any())).thenReturn(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);
         when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of("http://efti.gate.borduria.eu"));
 
@@ -502,7 +495,7 @@ class ControlServiceTest extends AbstractServiceTest {
     void shouldCreateMetadataControlWithPendingStatus_whenSomeOfGivenDestinationGatesDoesNotExist() {
         controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_METADATA_SEARCH);
         metadataRequestDto.setEFTIGateIndicator(List.of("IT", "RO"));
-        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(metadataRequestService);
+        when(requestServiceFactory.getRequestServiceByRequestType(any(RequestTypeEnum.class))).thenReturn(metadataRequestService);
         when(controlRepository.save(any())).thenReturn(controlEntity);
         when(gateToRequestTypeFunction.apply(any())).thenReturn(RequestTypeEnum.EXTERNAL_METADATA_SEARCH);
         when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of("http://italie.it"));
@@ -544,7 +537,7 @@ class ControlServiceTest extends AbstractServiceTest {
         when(controlRepository.save(any())).thenReturn(controlEntity);
         when(gateToRequestTypeFunction.apply(any())).thenReturn(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);
         when(eftiGateUrlResolver.resolve(any())).thenReturn(List.of("http://efti.gate.borduria.eu"));
-        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(metadataRequestService);
+        when(requestServiceFactory.getRequestServiceByRequestType(any(RequestTypeEnum.class))).thenReturn(metadataRequestService);
 
 
         final RequestUuidDto requestUuidDtoResult = controlService.createMetadataControl(metadataRequestDto);
@@ -638,12 +631,10 @@ class ControlServiceTest extends AbstractServiceTest {
                         .build())
                 .build();
         when(controlRepository.save(any())).thenReturn(metadataControl);
-
         //Act
-        final ControlDto controlDto = controlService.createControlFrom(messageBodyDto, "https://efti.gate.france.eu", metadataResults);
-
+        final ControlDto cretaedControlDto = controlService.createControlFrom(messageBodyDto, "https://efti.gate.france.eu", metadataResults);
         //Assert
-        assertThat(controlDto)
+        assertThat(cretaedControlDto)
                 .usingRecursiveComparison()
                 .ignoringFields("id")
                 .isEqualTo(expectedControl);
@@ -697,8 +688,8 @@ class ControlServiceTest extends AbstractServiceTest {
     @Test
     void shouldGetControlWithCriteria_whenControlExistsAndIsUnique(){
         //Arrange
-        final RequestEntity expectedRequest = new RequestEntity();
-        requestEntity.setStatus(RequestStatusEnum.IN_PROGRESS);
+        final RequestEntity expectedRequest = new UilRequestEntity();
+        uilRequestEntity.setStatus(RequestStatusEnum.IN_PROGRESS);
         final ControlEntity expectedControl = ControlEntity.builder().requestUuid(requestUuid).status(StatusEnum.PENDING).requests(List.of(expectedRequest)).build();
         when(controlRepository.findByCriteria(anyString(), any(RequestStatusEnum.class))).thenReturn(List.of(expectedControl));
         //Act
@@ -711,9 +702,9 @@ class ControlServiceTest extends AbstractServiceTest {
     @Test
     void shouldThrowException_whenControlExistsAndIsNotUnique(){
         //Arrange
-        final RequestEntity firstRequest = new RequestEntity();
+        final UilRequestEntity firstRequest = new UilRequestEntity();
         firstRequest.setStatus(RequestStatusEnum.IN_PROGRESS);
-        final RequestEntity secondRequest = new RequestEntity();
+        final UilRequestEntity secondRequest = new UilRequestEntity();
         secondRequest.setStatus(RequestStatusEnum.IN_PROGRESS);
         final ControlEntity firstControl = ControlEntity.builder().requestUuid(requestUuid).status(StatusEnum.PENDING).requests(List.of(firstRequest)).build();
         final ControlEntity secondControl = ControlEntity.builder().requestUuid(requestUuid).status(StatusEnum.PENDING).requests(List.of(secondRequest)).build();
@@ -743,8 +734,8 @@ class ControlServiceTest extends AbstractServiceTest {
     @Test
     void shouldNotUpdatePendingControl_whenControlRequestIsInProgessAndIsNotTimeout(){
         //Arrange
-        requestEntity.setStatus(RequestStatusEnum.IN_PROGRESS);
-        controlEntity.setRequests(List.of(requestEntity));
+        identifiersRequestEntity.setStatus(RequestStatusEnum.IN_PROGRESS);
+        controlEntity.setRequests(List.of(identifiersRequestEntity));
         controlEntity.setStatus(StatusEnum.PENDING);
 
         //Act
@@ -757,13 +748,10 @@ class ControlServiceTest extends AbstractServiceTest {
     @Test
     void shouldUpdatePendingControlToComplete_whenControlhasRequestsInSuccessAndRequestsHaveNoData(){
         //Arrange
-        requestEntity.setStatus(RequestStatusEnum.SUCCESS);
-        secondRequestEntity.setStatus(RequestStatusEnum.SUCCESS);
-        controlEntity.setRequests(List.of(requestEntity, secondRequestEntity));
+        uilRequestEntity.setStatus(RequestStatusEnum.SUCCESS);
         controlEntity.setStatus(StatusEnum.PENDING);
-        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
+        when(requestServiceFactory.getRequestServiceByRequestType(any(RequestTypeEnum.class))).thenReturn(uilRequestService);
         when(controlRepository.save(controlEntity)).thenReturn(controlEntity);
-
 
         //Act
         controlService.updatePendingControl(controlEntity);
@@ -776,10 +764,10 @@ class ControlServiceTest extends AbstractServiceTest {
     @Test
     void shouldUpdatePendingControlToError_whenControlhasRequestInError(){
         //Arrange
-        requestEntity.setStatus(RequestStatusEnum.ERROR);
-        controlEntity.setRequests(List.of(requestEntity));
+        identifiersRequestEntity.setStatus(RequestStatusEnum.ERROR);
+        controlEntity.setRequests(List.of(identifiersRequestEntity));
         controlEntity.setStatus(StatusEnum.PENDING);
-        when(requestServiceFactory.getRequestServiceByRequestType(any())).thenReturn(uilRequestService);
+        when(requestServiceFactory.getRequestServiceByRequestType(any(RequestTypeEnum.class))).thenReturn(uilRequestService);
         when(controlRepository.save(controlEntity)).thenReturn(controlEntity);
 
         //Act
@@ -792,8 +780,8 @@ class ControlServiceTest extends AbstractServiceTest {
     @Test
     void shouldUpdatePendingControls(){
         //Arrange
-        requestEntity.setStatus(RequestStatusEnum.IN_PROGRESS);
-        controlEntity.setRequests(List.of(requestEntity));
+        identifiersRequestEntity.setStatus(RequestStatusEnum.IN_PROGRESS);
+        controlEntity.setRequests(List.of(identifiersRequestEntity));
         controlEntity.setStatus(StatusEnum.PENDING);
         when(controlRepository.findByCriteria(anyString(), anyInt())).thenReturn(List.of(controlEntity));
 

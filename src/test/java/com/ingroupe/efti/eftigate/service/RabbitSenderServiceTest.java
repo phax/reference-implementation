@@ -3,7 +3,8 @@ package com.ingroupe.efti.eftigate.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.RequestDto;
+import com.ingroupe.efti.eftigate.dto.UilRequestDto;
+import com.ingroupe.efti.eftigate.enums.RequestType;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,11 +30,12 @@ class RabbitSenderServiceTest {
 
     @Test
     void sendMessageToRabbitTest() throws JsonProcessingException {
-        final RequestDto requestDto = new RequestDto();
+        final UilRequestDto requestDto = new UilRequestDto();
         requestDto.setStatus(RequestStatusEnum.RECEIVED);
         requestDto.setRetry(0);
         requestDto.setControl(ControlDto.builder().id(1).build());
         requestDto.setGateUrlDest("https://efti.gate.be.eu");
+        requestDto.setRequestType(RequestType.UIL);
 
         rabbitSenderService.sendMessageToRabbit("exchange", "key", requestDto);
 
@@ -41,6 +43,5 @@ class RabbitSenderServiceTest {
         final String requestJson = testFile("/json/request.json");
 
         verify(rabbitTemplate).convertAndSend("exchange", "key", StringUtils.deleteWhitespace(requestJson));
-
     }
 }

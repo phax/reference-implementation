@@ -4,6 +4,7 @@ import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
+import com.ingroupe.efti.eftigate.entity.UilRequestEntity;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,9 +34,9 @@ class ControlRepositoryTest {
     @Test
     void shouldFindControlByCriteria(){
         //Arrange
-        final RequestEntity firstRequest = new RequestEntity();
+        final RequestEntity firstRequest = new UilRequestEntity();
         firstRequest.setStatus(RequestStatusEnum.IN_PROGRESS);
-        final RequestEntity secondRequest = new RequestEntity();
+        final RequestEntity secondRequest = new UilRequestEntity();
         secondRequest.setStatus(RequestStatusEnum.RECEIVED);
         final ControlEntity firstControl = ControlEntity.builder().requestUuid("67fe38bd-6bf7-4b06-b20e-206264bd639c").status(StatusEnum.PENDING).requests(List.of(firstRequest)).build();
         firstRequest.setControl(firstControl);
