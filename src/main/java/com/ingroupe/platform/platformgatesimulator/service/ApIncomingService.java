@@ -7,6 +7,7 @@ import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotesMessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
@@ -66,15 +67,20 @@ public class ApIncomingService {
             return;
         }
         final NotificationContentDto notificationContentDto = notificationDto.get().getContent();
+        final EDeliveryAction action = EDeliveryAction.getFromValue(notificationContentDto.getAction());
 
-        final MessageBodyDto messageBody = xmlMapper.readValue(notificationContentDto.getBody(), MessageBodyDto.class);
-
-        final String eftidataUuid = messageBody.getEFTIDataUuid();
-        if (eftidataUuid.endsWith("1")) {
-            return;
+        if (action == EDeliveryAction.SEND_NOTES) {
+            final NotesMessageBodyDto messageBody = xmlMapper.readValue(notificationContentDto.getBody(), NotesMessageBodyDto.class);
+            log.info("note {} received for request with id {}", messageBody.getNote(), messageBody.getRequestUuid());
+            //todo mark as downloaded(efti-848)
+        } else {
+            final MessageBodyDto messageBody = xmlMapper.readValue(notificationContentDto.getBody(), MessageBodyDto.class);
+            final String eftidataUuid = messageBody.getEFTIDataUuid();
+            if (eftidataUuid.endsWith("1")) {
+                return;
+            }
+            sendResponse(buildApConf(), eftidataUuid, messageBody.getRequestUuid(), readerService.readFromFile(gateProperties.getCdaPath() + eftidataUuid));
         }
-
-        sendResponse(buildApConf(), eftidataUuid, messageBody.getRequestUuid(), readerService.readFromFile(gateProperties.getCdaPath() + eftidataUuid));
     }
 
     private void sendResponse(final ApConfigDto apConfigDto, final String eftidataUuid, final String requestUuid, final String data) throws JsonProcessingException {
