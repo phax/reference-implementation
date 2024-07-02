@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 public class RequestServiceFactory {
 
-    private final List<RequestService> requestServices;
+    private final List<RequestService<?>> requestServices;
 
     public RequestService getRequestServiceByRequestType(final RequestTypeEnum requestType)
     {
@@ -24,6 +24,13 @@ public class RequestServiceFactory {
     {
         return requestServices.stream()
                 .filter(requestService -> requestService.supports(eDeliveryAction)).findFirst()
+                .orElse(null);
+    }
+
+    public RequestService getRequestServiceByRequestType(final String requestType)
+    {
+        return requestServices.stream()
+                .filter(requestService -> requestService.supports(requestType)).findFirst()
                 .orElse(null);
     }
 }

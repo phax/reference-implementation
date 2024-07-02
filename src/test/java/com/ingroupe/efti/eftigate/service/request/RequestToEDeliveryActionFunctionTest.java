@@ -6,7 +6,7 @@ import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.RequestDto;
+import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -16,13 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.stream.Stream;
 
-import static com.ingroupe.efti.commons.enums.RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH;
-import static com.ingroupe.efti.commons.enums.RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH;
-import static com.ingroupe.efti.commons.enums.RequestTypeEnum.EXTERNAL_METADATA_SEARCH;
-import static com.ingroupe.efti.commons.enums.RequestTypeEnum.EXTERNAL_UIL_SEARCH;
-import static com.ingroupe.efti.commons.enums.RequestTypeEnum.LOCAL_METADATA_SEARCH;
-import static com.ingroupe.efti.commons.enums.RequestTypeEnum.LOCAL_UIL_SEARCH;
-import static com.ingroupe.efti.commons.enums.RequestTypeEnum.NOTE_SEND;
+import static com.ingroupe.efti.commons.enums.RequestTypeEnum.*;
 import static com.ingroupe.efti.commons.enums.StatusEnum.COMPLETE;
 import static com.ingroupe.efti.commons.enums.StatusEnum.PENDING;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -36,7 +30,7 @@ class RequestToEDeliveryActionFunctionTest {
 
     @ParameterizedTest
     @MethodSource("provideMyObject")
-    void myTestMethod(final RequestDto actual, final EDeliveryAction expected) {
+    void myTestMethod(final RabbitRequestDto actual, final EDeliveryAction expected) {
         final GateProperties gateProperties = GateProperties.builder().owner(FR_GATE_URL).ap(GateProperties.ApConfig.builder().url(FR_GATE_URL).build()).build();
         final RequestToEDeliveryActionFunction requestToEDeliveryActionFunction = new RequestToEDeliveryActionFunction(gateProperties);
 
@@ -67,8 +61,8 @@ class RequestToEDeliveryActionFunctionTest {
                 );
     }
 
-    private static RequestDto buildRequestDto(final RequestTypeEnum requestType, final String eftiGateUrl, final StatusEnum controlStatus) {
-        return RequestDto.builder()
+    private static RabbitRequestDto buildRequestDto(final RequestTypeEnum requestType, final String eftiGateUrl, final StatusEnum controlStatus) {
+        return RabbitRequestDto.builder()
                 .control(ControlDto.builder().requestType(requestType).eftiGateUrl(eftiGateUrl).status(controlStatus).build())
                 .build();
     }

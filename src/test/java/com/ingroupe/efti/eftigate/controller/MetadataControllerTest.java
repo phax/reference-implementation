@@ -6,7 +6,6 @@ import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.service.ControlService;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,8 +18,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
+import static com.jayway.jsonassert.JsonAssert.with;
+import static org.hamcrest.core.Is.is;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -49,7 +49,7 @@ class MetadataControllerTest {
 
     @Test
     @WithMockUser
-    void requestUilTest() throws Exception {
+    void requestMetadataTest() throws Exception {
         final MetadataRequestDto metadataRequestDto = MetadataRequestDto.builder().vehicleID("abc123").build();
 
         Mockito.when(controlService.createMetadataControl(metadataRequestDto)).thenReturn(
@@ -58,27 +58,52 @@ class MetadataControllerTest {
                 .requestUuid(REQUEST_UUID)
                 .build());
 
-        mockMvc.perform(post("/v1/getMetadata")
+        String result = mockMvc.perform(post("/v1/getMetadata")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsBytes(metadataRequestDto)))
                 .andExpect(status().isAccepted())
-                .andReturn();
+                .andReturn().getResponse().getContentAsString();
+
+        with(result)
+                .assertThat("$.requestUuid", is("requestUuid"))
+                .assertThat("$.status", is("PENDING"));
     }
 
     @Test
     @WithMockUser
-    void requestUilGetTest() throws Exception {
+    void requestMetadataGetTest() throws Exception {
         Mockito.when(controlService.getMetadataResponse(REQUEST_UUID)).thenReturn(metadataResponseDto);
 
-        final MvcResult result = mockMvc.perform(get("/v1/getMetadata").param("requestUuid", REQUEST_UUID))
+        final String result = mockMvc.perform(get("/v1/getMetadata").param("requestUuid", REQUEST_UUID))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-        final String contentAsString = result.getResponse().getContentAsString();
+                .andReturn().getResponse().getContentAsString();
 
-        final MetadataResponseDto response = new ObjectMapper().readValue(contentAsString, MetadataResponseDto.class);
-        Assertions.assertNotNull(response);
-        Assertions.assertEquals(REQUEST_UUID, response.getRequestUuid());
+        with(result)
+                .assertThat("$.requestUuid", is("requestUuid"))
+                .assertThat("$.status", is("COMPLETE"));
     }
+
+    @Test
+    @WithMockUser
+    void requestMetadataNotFoundGetTest() throws Exception {
+        metadataResponseDto.setRequestUuid(null);
+        metadataResponseDto.setErrorCode("Uuid not found.");
+        metadataResponseDto.setErrorDescription("Error requestUuid not found.");
+        Mockito.when(controlService.getMetadataResponse(REQUEST_UUID)).thenReturn(metadataResponseDto);
+
+        final String result = mockMvc.perform(get("/v1/getMetadata").param("requestUuid", REQUEST_UUID))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        with(result)
+                .assertThat("$.errorCode", is("Uuid not found."))
+                .assertThat("$.errorDescription", is("Error requestUuid not found."))
+                .assertThat("$.status", is("COMPLETE"));
+        ;
+    }
+
+
 }

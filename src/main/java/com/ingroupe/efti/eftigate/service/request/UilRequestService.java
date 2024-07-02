@@ -5,20 +5,26 @@ import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
+import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
+import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
+import com.ingroupe.efti.eftigate.dto.UilRequestDto;
+import com.ingroupe.efti.eftigate.dto.requestbody.RequestBodyDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
+import com.ingroupe.efti.eftigate.entity.UilRequestEntity;
+import com.ingroupe.efti.eftigate.enums.RequestType;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
-import com.ingroupe.efti.eftigate.repository.RequestRepository;
+import com.ingroupe.efti.eftigate.repository.UilRequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
 import lombok.extern.slf4j.Slf4j;
@@ -28,40 +34,51 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
+import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.RESPONSE_IN_PROGRESS;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SUCCESS;
+import static com.ingroupe.efti.commons.enums.RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH;
 import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.UIL_ACTIONS;
 import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.UIL_TYPES;
 
 @Slf4j
 @Component
-public class UilRequestService extends RequestService {
+public class UilRequestService extends RequestService<UilRequestEntity> {
 
-    public UilRequestService(final RequestRepository requestRepository,
-                             final MapperUtils mapperUtils,
+    private static final String UIL = "UIL";
+    private final UilRequestRepository uilRequestRepository;
+
+    public UilRequestService(final UilRequestRepository uilRequestRepository, final MapperUtils mapperUtils,
                              final RabbitSenderService rabbitSenderService,
                              final ControlService controlService,
                              final GateProperties gateProperties,
                              final RequestUpdaterService requestUpdaterService,
                              final SerializeUtils serializeUtils) {
-        super(requestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils);
+        super(mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils);
+        this.uilRequestRepository = uilRequestRepository;
     }
+
 
     @Override
     public boolean allRequestsContainsData(final List<RequestEntity> controlEntityRequests) {
         return CollectionUtils.emptyIfNull(controlEntityRequests).stream()
+                .filter(UilRequestEntity.class::isInstance)
+                .map(UilRequestEntity.class::cast)
                 .allMatch(requestEntity -> Objects.nonNull(requestEntity.getReponseData()));
     }
 
     @Override
     public void setDataFromRequests(final ControlEntity controlEntity) {
         controlEntity.setEftiData(controlEntity.getRequests().stream()
-                .map(RequestEntity::getReponseData).toList().stream()
-                .collect(ByteArrayOutputStream::new, (byteArrayOutputStream, bytes) -> byteArrayOutputStream.write(bytes, 0, bytes.length), (arrayOutputStream, byteArrayOutputStream) -> {
-                })
+                .map(UilRequestEntity.class::cast)
+                .map(UilRequestEntity::getReponseData).toList().stream()
+                .collect(ByteArrayOutputStream::new, (byteArrayOutputStream, bytes) -> byteArrayOutputStream.write(bytes, 0, bytes.length), (arrayOutputStream, byteArrayOutputStream) -> {})
                 .toByteArray());
     }
 
@@ -70,37 +87,84 @@ public class UilRequestService extends RequestService {
         final MessageBodyDto messageBody =
                 getSerializeUtils().mapXmlStringToClass(notificationDto.getContent().getBody(), MessageBodyDto.class);
 
-        final RequestDto requestDto = this.findByRequestUuidOrThrow(messageBody.getRequestUuid());
+        final UilRequestEntity uilRequestEntity = this.findByRequestUuidOrThrow(messageBody.getRequestUuid());
         if (messageBody.getStatus().equals(StatusEnum.COMPLETE.name())) {
-            requestDto.setReponseData(messageBody.getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
-            this.updateStatus(requestDto, RequestStatusEnum.SUCCESS, notificationDto);
+            uilRequestEntity.setReponseData(messageBody.getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
+            this.updateStatus(uilRequestEntity, RequestStatusEnum.SUCCESS, notificationDto.getMessageId());
         } else {
-            this.updateStatus(requestDto, RequestStatusEnum.ERROR, notificationDto);
-            errorReceived(requestDto, messageBody.getErrorDescription());
+            this.updateStatus(uilRequestEntity, RequestStatusEnum.ERROR, notificationDto.getMessageId());
+            errorReceived(uilRequestEntity, messageBody.getErrorDescription());
         }
-        responseToOtherGateIfNecessary(requestDto);
+        responseToOtherGateIfNecessary(uilRequestEntity);
     }
 
-    private void responseToOtherGateIfNecessary(final RequestDto requestDto) {
-        if (!requestDto.getControl().isExternalAsk()) return;
-        this.updateStatus(requestDto, RequestStatusEnum.RESPONSE_IN_PROGRESS);
-        requestDto.setGateUrlDest(requestDto.getControl().getFromGateUrl());
-        requestDto.getControl().setEftiData(requestDto.getReponseData());
-        getControlService().save(requestDto.getControl());
+    @Override
+    public void manageSendSuccess(final String eDeliveryMessageId) {
+        final UilRequestEntity externalRequest = uilRequestRepository.findByControlRequestTypeAndStatusAndEdeliveryMessageId(EXTERNAL_ASK_UIL_SEARCH,
+                RESPONSE_IN_PROGRESS, eDeliveryMessageId);
+        if (externalRequest == null) {
+            log.info(" sent message {} successfully", eDeliveryMessageId);
+        } else {
+            externalRequest.getControl().setStatus(StatusEnum.COMPLETE);
+            this.updateStatus(externalRequest, SUCCESS);
+        }
+    }
+
+    public void updateStatus(final UilRequestEntity requestEntity, final RequestStatusEnum status, final String eDeliveryMessageId) {
+        this.updateStatus(requestEntity, status);
+        try {
+            getRequestUpdaterService().setMarkedAsDownload(createApConfig(), eDeliveryMessageId);
+        } catch (final MalformedURLException e) {
+            log.error("Error while try to set mark as download", e);
+        }
+    }
+
+    private ApConfigDto createApConfig() {
+        return ApConfigDto.builder()
+                .username(getGateProperties().getAp().getUsername())
+                .password(getGateProperties().getAp().getPassword())
+                .url(getGateProperties().getAp().getUrl())
+                .build();
+    }
+
+    protected void errorReceived(final UilRequestEntity requestEntity, final String errorDescription) {
+        log.error("Error received, change status of requestId : {}", requestEntity.getControl().getRequestUuid());
+        final ErrorEntity errorEntity = ErrorEntity.builder()
+                .errorDescription(errorDescription)
+                .errorCode(ErrorCodesEnum.PLATFORM_ERROR.toString())
+                .build();
+
+        final ControlEntity controlEntity = requestEntity.getControl();
+        controlEntity.setError(errorEntity);
+        controlEntity.setStatus(StatusEnum.ERROR);
+
+        requestEntity.setControl(controlEntity);
+        uilRequestRepository.save(requestEntity);
+        getControlService().save(controlEntity);
+    }
+
+    private void responseToOtherGateIfNecessary(final UilRequestEntity requestEntity) {
+        if (!requestEntity.getControl().isExternalAsk()) return;
+        this.updateStatus(requestEntity, RESPONSE_IN_PROGRESS);
+        requestEntity.setGateUrlDest(requestEntity.getControl().getFromGateUrl());
+        requestEntity.getControl().setEftiData(requestEntity.getReponseData());
+        getControlService().save(requestEntity.getControl());
+        final UilRequestDto requestDto = getMapperUtils().requestToRequestDto(requestEntity, UilRequestDto.class);
+        requestDto.setRequestType(RequestType.UIL);
         this.sendRequest(requestDto);
     }
 
-    private RequestDto findByRequestUuidOrThrow(final String requestId) {
-        return getMapperUtils().requestToRequestDto(Optional.ofNullable(
-                        this.getRequestRepository().findByControlRequestUuidAndStatus(requestId, RequestStatusEnum.IN_PROGRESS))
-                .orElseThrow(() -> new RequestNotFoundException("couldn't find request for requestUuid: " + requestId)));
+    private UilRequestEntity findByRequestUuidOrThrow(final String requestId) {
+        return Optional.ofNullable(
+                        this.uilRequestRepository.findByControlRequestUuidAndStatus(requestId, RequestStatusEnum.IN_PROGRESS))
+                .orElseThrow(() -> new RequestNotFoundException("couldn't find request for requestUuid: " + requestId));
     }
 
     @Override
     public void receiveGateRequest(final NotificationDto notificationDto) {
         final MessageBodyDto messageBody = getSerializeUtils().mapXmlStringToClass(notificationDto.getContent().getBody(), MessageBodyDto.class);
 
-        final RequestEntity requestEntity = getRequestRepository()
+        final UilRequestEntity requestEntity = uilRequestRepository
                 .findByControlRequestUuidAndStatus(messageBody.getRequestUuid(), RequestStatusEnum.IN_PROGRESS);
 
         if (requestEntity == null) {
@@ -119,19 +183,70 @@ public class UilRequestService extends RequestService {
                 getMapperUtils().errorDtoToErrorEntity(ErrorDto.fromAnyError(messageBody.getErrorDescription()));
     }
 
-    private void manageResponseFromOtherGate(final RequestEntity requestEntity, final MessageBodyDto messageBody) {
+    @Override
+    public UilRequestDto createRequest(final ControlDto controlDto) {
+        return new UilRequestDto(controlDto);
+    }
+
+    @Override
+    public String buildRequestBody(final RabbitRequestDto requestDto) {
+        final ControlDto controlDto = requestDto.getControl();
+        if (requestDto.getStatus() == RESPONSE_IN_PROGRESS || requestDto.getStatus() == RequestStatusEnum.ERROR) {
+            final boolean hasData = requestDto.getReponseData() != null;
+            final boolean hasError = controlDto.getError() != null;
+
+            return getSerializeUtils().mapObjectToXmlString(MessageBodyDto.builder()
+                    .requestUuid(controlDto.getRequestUuid())
+                    .eFTIData(hasData ? new String(requestDto.getReponseData()) : null)
+                    .status(hasError ? StatusEnum.ERROR.name() : StatusEnum.COMPLETE.name())
+                    .errorDescription(hasError ? controlDto.getError().getErrorDescription() : null)
+                    .eFTIDataUuid(controlDto.getEftiDataUuid())
+                    .build());
+        }
+
+        final RequestBodyDto requestBodyDto = RequestBodyDto.builder()
+                .eFTIData(requestDto.getReponseData() != null ? new String(requestDto.getReponseData(), StandardCharsets.UTF_8) : null)
+                .eFTIPlatformUrl(requestDto.getControl().getEftiPlatformUrl())
+                .requestUuid(controlDto.getRequestUuid())
+                .eFTIDataUuid(controlDto.getEftiDataUuid())
+                .subsetEU(new LinkedList<>())
+                .subsetMS(new LinkedList<>())
+                .build();
+        return getSerializeUtils().mapObjectToXmlString(requestBodyDto);
+    }
+
+    @Override
+    public RequestDto save(final RequestDto requestDto) {
+        return getMapperUtils().requestToRequestDto(
+                uilRequestRepository.save(getMapperUtils().requestDtoToRequestEntity(requestDto, UilRequestEntity.class)),
+                UilRequestDto.class);
+    }
+
+    @Override
+    public void updateStatus(final UilRequestEntity uilRequestEntity, final RequestStatusEnum status) {
+        uilRequestEntity.setStatus(status);
+        uilRequestRepository.save(uilRequestEntity);
+    }
+
+    @Override
+    protected UilRequestEntity findRequestByMessageIdOrThrow(final String eDeliveryMessageId) {
+        return Optional.ofNullable(this.uilRequestRepository.findByEdeliveryMessageId(eDeliveryMessageId))
+                .orElseThrow(() -> new RequestNotFoundException("couldn't find Uil request for messageId: " + eDeliveryMessageId));
+    }
+
+    private void manageResponseFromOtherGate(final UilRequestEntity requestEntity, final MessageBodyDto messageBody) {
         if (!ObjectUtils.isEmpty(messageBody.getEFTIData())) {
             requestEntity.setReponseData(messageBody.getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
             requestEntity.setStatus(RequestStatusEnum.SUCCESS);
         } else {
             requestEntity.setStatus(RequestStatusEnum.ERROR);
             requestEntity.setError(setErrorFromMessageBodyDto(messageBody));
-            ControlEntity controlEntity = requestEntity.getControl();
+            final ControlEntity controlEntity = requestEntity.getControl();
             controlEntity.setError(setErrorFromMessageBodyDto(messageBody));
             controlEntity.setStatus(StatusEnum.ERROR);
             requestEntity.setControl(controlEntity);
         }
-        getRequestRepository().save(requestEntity);
+        uilRequestRepository.save(requestEntity);
         getControlService().save(requestEntity.getControl());
     }
 
@@ -141,7 +256,12 @@ public class UilRequestService extends RequestService {
     }
 
     @Override
-    public boolean supports(EDeliveryAction eDeliveryAction) {
+    public boolean supports(final EDeliveryAction eDeliveryAction) {
         return UIL_ACTIONS.contains(eDeliveryAction);
+    }
+
+    @Override
+    public boolean supports(final String requestType) {
+        return UIL.equalsIgnoreCase(requestType);
     }
 }

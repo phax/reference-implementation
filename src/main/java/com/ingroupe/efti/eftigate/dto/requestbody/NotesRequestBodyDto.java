@@ -9,23 +9,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name = "body")
-public class RequestBodyDto {
-    @XmlElement(name = "eFTIData")
-    private String eFTIData;
+@XmlAccessorType(XmlAccessType.FIELD)
+public class NotesRequestBodyDto {
+    private String requestUuid;
     @XmlElement(name = "eFTIPlatformUrl")
     private String eFTIPlatformUrl;
-    private String requestUuid;
+    @XmlElement(name = "eFTIGateUrl")
+    private String eFTIGateUrl ;
     @XmlElement(name = "eFTIDataUuid")
     private String eFTIDataUuid;
-    private List<String> subsetEU;
-    private List<String> subsetMS;
-    private AuthorityBodyDto authority;
+    private String note;
 }

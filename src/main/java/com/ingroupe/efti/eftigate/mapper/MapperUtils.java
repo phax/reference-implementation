@@ -4,6 +4,7 @@ import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataResultDto;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
+import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
@@ -44,12 +45,16 @@ public class MapperUtils {
         return modelMapper.map(controlEntity, ControlDto.class);
     }
 
-    public RequestEntity requestDtoToRequestEntity(final RequestDto requestDto) {
-        return modelMapper.map(requestDto, RequestEntity.class);
+    public <T extends RequestEntity> T requestDtoToRequestEntity(final RequestDto requestDto, final Class<T> destinationClass) {
+        return modelMapper.map(requestDto, destinationClass);
     }
 
-    public RequestDto requestToRequestDto(final RequestEntity requestEntity) {
-        return modelMapper.map(requestEntity, RequestDto.class);
+    public <T extends RequestDto> T rabbitRequestDtoToRequestDto(final RabbitRequestDto rabbitRequestDto, final Class<T> destinationClass) {
+        return modelMapper.map(rabbitRequestDto, destinationClass);
+    }
+
+    public <T extends RequestEntity, D extends RequestDto> D requestToRequestDto(final T requestEntity, final Class<D> destinationClass) {
+        return modelMapper.map(requestEntity, destinationClass);
     }
 
     public List<MetadataResult> metadataDtosToMetadataEntities(final List<MetadataDto> metadataDtoList) {

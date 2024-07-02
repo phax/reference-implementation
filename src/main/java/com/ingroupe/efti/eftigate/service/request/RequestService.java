@@ -5,25 +5,24 @@ import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
-import com.ingroupe.efti.commons.enums.StatusEnum;
-import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
+import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
 import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
-import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -33,18 +32,19 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.StringReader;
-import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Objects;
 
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.ERROR;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SEND_ERROR;
 import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.EXTERNAL_REQUESTS_TYPES;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
 @Getter
-public abstract class RequestService {
-    private final RequestRepository requestRepository;
+
+public abstract class RequestService<T extends RequestEntity> {
     private final MapperUtils mapperUtils;
     private final RabbitSenderService rabbitSenderService;
     @Lazy
@@ -64,21 +64,41 @@ public abstract class RequestService {
 
     public abstract void manageMessageReceive(final NotificationDto notificationDto);
 
+    public abstract void manageSendSuccess(final String eDeliveryMessageId);
+
     public abstract boolean supports(final RequestTypeEnum requestTypeEnum);
 
     public abstract boolean supports(final EDeliveryAction eDeliveryAction);
 
+    public abstract boolean supports(final String requestType);
+
     public abstract void receiveGateRequest(final NotificationDto notificationDto);
 
-    public void createAndSendRequest(final ControlDto controlDto, final String destinationUrl) {
-        final RequestDto requestDto = new RequestDto(controlDto, destinationUrl);
-        log.info("Request has been register with controlId : {}", requestDto.getControl().getId());
+    public abstract RequestDto createRequest(final ControlDto controlDto);
+
+    public abstract String buildRequestBody(final RabbitRequestDto rabbitRequestDto);
+
+    public abstract RequestDto save(final RequestDto requestDto);
+
+    protected abstract void updateStatus(final T requestEntity, final RequestStatusEnum status);
+
+    protected abstract T findRequestByMessageIdOrThrow(final String eDeliveryMessageId);
+
+    public void manageSendFailure(final NotificationDto notificationDto) {
+        this.updateStatus(findRequestByMessageIdOrThrow(notificationDto.getMessageId()), SEND_ERROR);
+    }
+
+    public void createAndSendRequest(final ControlDto controlDto, final String destinationUrl){
+        final RequestDto requestDto = initRequest(controlDto, destinationUrl);
         final RequestDto result = this.save(requestDto);
         this.sendRequest(result);
     }
 
-    public RequestDto save(final RequestDto requestDto) {
-        return mapperUtils.requestToRequestDto(requestRepository.save(mapperUtils.requestDtoToRequestEntity(requestDto)));
+    protected RequestDto initRequest(final ControlDto controlDto, final String destinationUrl) {
+        final RequestDto requestDto = createRequest(controlDto);
+        requestDto.setGateUrlDest(StringUtils.isNotBlank(destinationUrl) ? destinationUrl : controlDto.getEftiPlatformUrl());
+        log.info("Request has been register with controlId : {}", requestDto.getControl().getId());
+        return requestDto;
     }
 
     protected void sendRequest(final RequestDto requestDto) {
@@ -108,16 +128,7 @@ public abstract class RequestService {
         }
     }
 
-    public void updateStatus(final RequestDto requestDto, final RequestStatusEnum status, final NotificationDto notificationDto) {
-        this.updateStatus(requestDto, status);
-        try {
-            requestUpdaterService.setMarkedAsDownload(createApConfig(), notificationDto.getMessageId());
-        } catch (final MalformedURLException e) {
-            log.error("Error while try to set mark as download", e);
-        }
-    }
-
-    public RequestDto updateStatus(final RequestDto requestDto, final RequestStatusEnum status) {
+    public <R extends RequestDto> RequestDto updateStatus(final R requestDto, final RequestStatusEnum status) {
         requestDto.setStatus(status);
         return this.save(requestDto);
     }
@@ -159,30 +170,6 @@ public abstract class RequestService {
                 .control(controlDto)
                 .status(status)
                 .gateUrlDest(controlDto.getFromGateUrl())
-                .build();
-    }
-
-    protected void errorReceived(final RequestDto requestDto, final String errorDescription) {
-        log.error("Error received, change status of requestId : {}", requestDto.getControl().getRequestUuid());
-        final ErrorDto errorDto = ErrorDto.builder()
-                .errorDescription(errorDescription)
-                .errorCode(ErrorCodesEnum.PLATFORM_ERROR.toString())
-                .build();
-
-        final ControlDto controlDto = requestDto.getControl();
-        controlDto.setError(errorDto);
-        controlDto.setStatus(StatusEnum.ERROR);
-
-        requestDto.setControl(controlDto);
-        this.save(requestDto);
-        controlService.setError(controlDto, errorDto);
-    }
-
-    private ApConfigDto createApConfig() {
-        return ApConfigDto.builder()
-                .username(gateProperties.getAp().getUsername())
-                .password(gateProperties.getAp().getPassword())
-                .url(gateProperties.getAp().getUrl())
                 .build();
     }
 }

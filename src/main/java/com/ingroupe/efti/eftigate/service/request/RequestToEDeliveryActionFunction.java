@@ -4,7 +4,8 @@ import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.eftigate.config.GateProperties;
 import com.ingroupe.efti.eftigate.constant.EftiGateConstants;
-import com.ingroupe.efti.eftigate.dto.RequestDto;
+import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
+import com.ingroupe.efti.eftigate.enums.RequestType;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,24 +16,27 @@ import java.util.function.Function;
 @Slf4j
 @Component
 @AllArgsConstructor
-public class RequestToEDeliveryActionFunction implements Function<RequestDto, EDeliveryAction> {
+public class RequestToEDeliveryActionFunction implements Function<RabbitRequestDto, EDeliveryAction> {
 
     private final GateProperties gateProperties;
 
     @Override
-    public EDeliveryAction apply(final RequestDto requestDto) {
-        final RequestTypeEnum requestType = requestDto.getControl().getRequestType();
-        if (requestType == null) {
+    public EDeliveryAction apply(final RabbitRequestDto requestDto) {
+        final RequestTypeEnum controlRequestType = requestDto.getControl().getRequestType();
+        if (controlRequestType == null) {
             throw new TechnicalException("Empty Request type for requestId " + requestDto.getId());
         }
-        if (EftiGateConstants.IDENTIFIERS_TYPES.contains(requestType)) {
+        if (RequestType.NOTE.equals(requestDto.getRequestType())) {
+            return EDeliveryAction.SEND_NOTES;
+        }
+        if (EftiGateConstants.IDENTIFIERS_TYPES.contains(controlRequestType)) {
             return EDeliveryAction.GET_IDENTIFIERS;
-        } else if (EftiGateConstants.UIL_TYPES.contains(requestType)) {
-            return getEDeliveryActionForGateToGateOrGetUil(requestType, requestDto);
+        } else if (EftiGateConstants.UIL_TYPES.contains(controlRequestType)) {
+            return getEDeliveryActionForGateToGateOrGetUil(controlRequestType, requestDto);
         } else return null;
     }
 
-    private EDeliveryAction getEDeliveryActionForGateToGateOrGetUil(final RequestTypeEnum requestType, final RequestDto requestDto) {
+    private EDeliveryAction getEDeliveryActionForGateToGateOrGetUil(final RequestTypeEnum requestType, final RabbitRequestDto requestDto) {
         return switch (requestType) {
             case LOCAL_UIL_SEARCH -> EDeliveryAction.GET_UIL;
             case EXTERNAL_ASK_UIL_SEARCH -> gateProperties.isCurrentGate(requestDto.getGateUrlDest()) ? EDeliveryAction.GET_UIL : EDeliveryAction.FORWARD_UIL;
