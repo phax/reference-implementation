@@ -1,7 +1,12 @@
 package com.ingroupe.efti.eftigate.service;
 
 import com.ingroupe.common.test.log.MemoryAppender;
+import com.ingroupe.efti.commons.dto.ControlDto;
 import com.ingroupe.efti.commons.dto.MetadataResultDto;
+import com.ingroupe.efti.commons.dto.MetadataResultsDto;
+import com.ingroupe.efti.commons.dto.RequestDto;
+import com.ingroupe.efti.commons.dto.SearchParameter;
+import com.ingroupe.efti.commons.dto.UilDto;
 import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
@@ -9,14 +14,11 @@ import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.commons.enums.TransportMode;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.RequestDto;
-import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.MetadataResult;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
-import com.ingroupe.efti.eftigate.entity.SearchParameter;
+import com.ingroupe.efti.eftigate.service.gate.EftiGateUrlResolver;
 import com.ingroupe.efti.metadataregistry.entity.TransportVehicle;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -37,8 +39,13 @@ public abstract class BaseServiceTest extends AbstractServiceTest {
     protected ControlService controlService;
     @Mock
     protected RequestUpdaterService requestUpdaterService;
+    @Mock
     protected GateProperties gateProperties;
     protected MemoryAppender memoryAppender;
+    @Mock
+    protected LogManager logManager;
+    @Mock
+    protected EftiGateUrlResolver eftiGateUrlResolver;
 
     protected final UilDto uilDto = new UilDto();
     protected final ControlDto controlDto = new ControlDto();
@@ -48,6 +55,7 @@ public abstract class BaseServiceTest extends AbstractServiceTest {
     protected final MetadataResult metadataResult = new MetadataResult();
     protected final MetadataResults metadataResults = new MetadataResults();
     protected final MetadataResultDto metadataResultDto = new MetadataResultDto();
+    protected final MetadataResultsDto metadataResultsDto = new MetadataResultsDto();
     protected final TransportVehicle transportVehicle = new TransportVehicle();
 
     protected final SearchParameter searchParameter = new SearchParameter();
@@ -102,6 +110,7 @@ public abstract class BaseServiceTest extends AbstractServiceTest {
         metadataResultDto.setCountryEnd("FR");
         metadataResultDto.setDisabled(false);
         metadataResultDto.setDangerousGoods(true);
+        metadataResultsDto.setMetadataResult(Collections.singletonList(metadataResultDto));
     }
 
     protected <T extends RequestEntity> void setEntityRequestCommonAttributes(final T requestEntity) {

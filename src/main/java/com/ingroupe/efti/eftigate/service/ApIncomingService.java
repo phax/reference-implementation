@@ -2,14 +2,13 @@ package com.ingroupe.efti.eftigate.service;
 
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
+import com.ingroupe.efti.commons.exception.TechnicalException;
+import com.ingroupe.efti.commons.utils.SerializeUtils;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
-import com.ingroupe.efti.eftigate.exception.TechnicalException;
-import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
-import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.request.EftiRequestUpdater;
 import com.ingroupe.efti.eftigate.service.request.RequestService;
 import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
@@ -27,16 +26,14 @@ public class ApIncomingService {
     private final RequestServiceFactory requestServiceFactory;
     private final MetadataService metadataService;
     private final SerializeUtils serializeUtils;
-    private final RequestRepository<?> requestRepository;
     private final EftiRequestUpdater eftiRequestUpdater;
-
-
 
     public void manageIncomingNotification(final ReceivedNotificationDto receivedNotificationDto) {
          notificationService.consume(receivedNotificationDto).ifPresent(this::rootResponse);
     }
 
     private void rootResponse(final NotificationDto notificationDto) {
+
         if (NotificationType.SEND_SUCCESS.equals(notificationDto.getNotificationType())) {
             eftiRequestUpdater.manageSendSuccess(notificationDto);
             return;
@@ -44,6 +41,7 @@ public class ApIncomingService {
             eftiRequestUpdater.manageSendFailure(notificationDto);
             return;
         }
+
         final EDeliveryAction action = getAction(notificationDto.getContent());
         final RequestService<?> requestService = getRequestService(action);
         switch (action) {

@@ -23,7 +23,8 @@ import java.util.stream.Collectors;
 public class EftiGateUrlResolver {
 
     private final GateRepository gateRepository;
-    public List<String> resolve(final MetadataRequestDto metadataRequestDto){
+
+    public List<String> resolve(final MetadataRequestDto metadataRequestDto) {
         final Map<CountryIndicator, GateEntity> destinationGatesIndicatorMap;
 
         if (CollectionUtils.isNotEmpty(metadataRequestDto.getEFTIGateIndicator())){
@@ -41,6 +42,11 @@ public class EftiGateUrlResolver {
                 .stream()
                 .map(gateEntity -> gateEntity != null ? gateEntity.getUrl() : null)
                 .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public String resolve(final String url) {
+        final GateEntity gateEntity = gateRepository.findByUrl(url);
+        return gateEntity != null ? gateEntity.getCountry().name() : null;
     }
 
     private Map<CountryIndicator, GateEntity> mapRequestedCountriesToRegisteredGates(final List<CountryIndicator> requestedCountryIndicators, final List<GateEntity> registeredDestinationGates) {

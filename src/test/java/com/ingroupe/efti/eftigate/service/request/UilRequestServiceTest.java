@@ -6,21 +6,21 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingroupe.common.test.log.MemoryAppender;
+import com.ingroupe.efti.commons.dto.ControlDto;
+import com.ingroupe.efti.commons.dto.ErrorDto;
+import com.ingroupe.efti.commons.dto.UilRequestDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
+import com.ingroupe.efti.commons.enums.RequestType;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
-import com.ingroupe.efti.eftigate.dto.UilRequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.UilRequestEntity;
-import com.ingroupe.efti.eftigate.enums.RequestType;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.repository.UilRequestRepository;
 import com.ingroupe.efti.eftigate.service.BaseServiceTest;
@@ -47,10 +47,17 @@ import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SUCCESS;
 import static com.ingroupe.efti.commons.enums.StatusEnum.COMPLETE;
 import static com.ingroupe.efti.eftigate.EftiTestUtils.testFile;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UilRequestServiceTest extends BaseServiceTest {
@@ -70,7 +77,8 @@ class UilRequestServiceTest extends BaseServiceTest {
         super.setEntityRequestCommonAttributes(uilRequestEntity);
         super.setEntityRequestCommonAttributes(secondUilRequestEntity);
         controlEntity.setRequests(List.of(uilRequestEntity, secondUilRequestEntity));
-        uilRequestService = new UilRequestService(uilRequestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils);
+        uilRequestService = new UilRequestService(uilRequestRepository, mapperUtils, rabbitSenderService, controlService,
+                gateProperties, requestUpdaterService, serializeUtils, logManager);
         final Logger memoryAppenderTestLogger = (Logger) LoggerFactory.getLogger(UilRequestService.class);
         memoryAppender = MemoryAppender.createInitializedMemoryAppender(Level.INFO, memoryAppenderTestLogger);
     }
@@ -134,6 +142,7 @@ class UilRequestServiceTest extends BaseServiceTest {
         uilRequestService.receiveGateRequest(notificationDto);
 
         verify(uilRequestRepository).save(uilRequestEntityArgumentCaptor.capture());
+        verify(logManager).logReceivedMessage(any(), any(), any());
         assertEquals(RequestStatusEnum.SUCCESS, uilRequestEntityArgumentCaptor.getValue().getStatus());
     }
 
@@ -167,6 +176,7 @@ class UilRequestServiceTest extends BaseServiceTest {
 
         uilRequestService.receiveGateRequest(notificationDto);
 
+        verify(logManager).logReceivedMessage(any(), any(), any());
         verify(uilRequestRepository).save(uilRequestEntityArgumentCaptor.capture());
         assertEquals(RequestStatusEnum.ERROR, uilRequestEntityArgumentCaptor.getValue().getStatus());
     }
@@ -202,6 +212,7 @@ class UilRequestServiceTest extends BaseServiceTest {
 
         uilRequestService.receiveGateRequest(notificationDto);
 
+        verify(logManager).logReceivedMessage(any(), any(), any());
         verify(uilRequestRepository).save(uilRequestEntityArgumentCaptor.capture());
         assertEquals(RequestStatusEnum.ERROR, uilRequestEntityArgumentCaptor.getValue().getStatus());
     }
@@ -233,6 +244,7 @@ class UilRequestServiceTest extends BaseServiceTest {
 
         uilRequestService.receiveGateRequest(notificationDto);
 
+        verify(logManager).logReceivedMessage(any(), anyString(), anyString());
         verify(controlService).createUilControl(argumentCaptorControlDto.capture());
         assertEquals(RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH, argumentCaptorControlDto.getValue().getRequestType());
     }

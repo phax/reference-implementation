@@ -8,8 +8,8 @@ import com.fasterxml.jackson.databind.cfg.CoercionInputShape;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.jakarta.xmlbind.JakartaXmlBindAnnotationModule;
+import com.ingroupe.efti.commons.utils.SerializeUtils;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
-import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import org.mockito.Spy;
 import org.modelmapper.ModelMapper;
 

@@ -1,10 +1,10 @@
 package com.ingroupe.efti.eftigate.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.ingroupe.efti.commons.dto.ControlDto;
+import com.ingroupe.efti.commons.dto.UilRequestDto;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.UilRequestDto;
-import com.ingroupe.efti.eftigate.enums.RequestType;
+import com.ingroupe.efti.commons.enums.RequestType;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

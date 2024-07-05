@@ -4,20 +4,20 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ingroupe.common.test.log.MemoryAppender;
+import com.ingroupe.efti.commons.dto.ControlDto;
+import com.ingroupe.efti.commons.dto.ErrorDto;
+import com.ingroupe.efti.commons.dto.NotesRequestDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
+import com.ingroupe.efti.commons.enums.RequestType;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.eftigate.EftiTestUtils;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.ErrorDto;
-import com.ingroupe.efti.eftigate.dto.NotesRequestDto;
 import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
 import com.ingroupe.efti.eftigate.entity.NoteRequestEntity;
 import com.ingroupe.efti.eftigate.entity.UilRequestEntity;
-import com.ingroupe.efti.eftigate.enums.RequestType;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.repository.NotesRequestRepository;
 import com.ingroupe.efti.eftigate.service.BaseServiceTest;
@@ -78,7 +78,7 @@ class NotesRequestServiceTest extends BaseServiceTest {
         super.setEntityRequestCommonAttributes(uilRequestEntity);
 
         controlEntity.setRequests(List.of(uilRequestEntity, noteRequestEntity));
-        notesRequestService = new NotesRequestService(notesRequestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils);
+        notesRequestService = new NotesRequestService(notesRequestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils, logManager);
         final Logger memoryAppenderTestLogger = (Logger) LoggerFactory.getLogger(NotesRequestService.class);
         memoryAppender = MemoryAppender.createInitializedMemoryAppender(Level.INFO, memoryAppenderTestLogger);
     }
@@ -251,3 +251,4 @@ class NotesRequestServiceTest extends BaseServiceTest {
         );
     }
 }
+

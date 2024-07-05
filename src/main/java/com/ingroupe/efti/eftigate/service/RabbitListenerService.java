@@ -1,19 +1,20 @@
 package com.ingroupe.efti.eftigate.service;
 
+import com.ingroupe.efti.commons.constant.EftiGateConstants;
+import com.ingroupe.efti.commons.dto.RequestDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
+import com.ingroupe.efti.commons.exception.TechnicalException;
+import com.ingroupe.efti.commons.utils.SerializeUtils;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApRequestDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestSendingService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
-import com.ingroupe.efti.eftigate.constant.EftiGateConstants;
 import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
-import com.ingroupe.efti.eftigate.dto.RequestDto;
-import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
-import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
+import com.ingroupe.efti.eftigate.service.gate.EftiGateUrlResolver;
 import com.ingroupe.efti.eftigate.service.request.RequestService;
 import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,8 @@ public class RabbitListenerService {
     private final ApIncomingService apIncomingService;
     private final Function<RabbitRequestDto, EDeliveryAction> requestToEDeliveryActionFunction;
     private final MapperUtils mapperUtils;
+    private final LogManager logManager;
+    private final EftiGateUrlResolver eftiGateUrlResolver;
 
 
     @RabbitListener(queues = "${spring.rabbitmq.queues.eftiReceiveMessageQueue:efti.receive-messages.q}")
@@ -81,21 +84,30 @@ public class RabbitListenerService {
     }
 
     private void trySendDomibus(final RabbitRequestDto rabbitRequestDto) {
+
+        final EDeliveryAction eDeliveryAction = requestToEDeliveryActionFunction.apply(rabbitRequestDto);
+        final boolean isCurrentGate = gateProperties.isCurrentGate(rabbitRequestDto.getGateUrlDest());
+        final String receiver = isCurrentGate ? rabbitRequestDto.getControl().getEftiPlatformUrl() : rabbitRequestDto.getGateUrlDest();
+        final String body = getRequestService(eDeliveryAction).buildRequestBody(rabbitRequestDto);
+        final RequestDto requestDto = mapperUtils.rabbitRequestDtoToRequestDto(rabbitRequestDto, EftiGateConstants.REQUEST_TYPE_CLASS_MAP.get(rabbitRequestDto.getRequestType()));
+        boolean hasBeenSent = false;
+
         try {
-            final EDeliveryAction eDeliveryAction = requestToEDeliveryActionFunction.apply(rabbitRequestDto);
             final String edeliveryMessageId = this.requestSendingService.sendRequest(buildApRequestDto(rabbitRequestDto, eDeliveryAction), eDeliveryAction);
-            final RequestDto requestDto = mapperUtils.rabbitRequestDtoToRequestDto(rabbitRequestDto, EftiGateConstants.REQUEST_TYPE_CLASS_MAP.get(rabbitRequestDto.getRequestType()));
             getRequestService(eDeliveryAction).updateSentRequestStatus(requestDto, edeliveryMessageId);
+            hasBeenSent = true;
         } catch (final SendRequestException e) {
             log.error("error while sending request" + e);
             throw new TechnicalException("Error when try to send message to domibus", e);
+        } finally {
+            logManager.logSentMessage(requestDto.getControl(), body, receiver, isCurrentGate, hasBeenSent);
         }
     }
 
-    private RequestService getRequestService(final RequestTypeEnum requestType) {
+    private RequestService<?> getRequestService(final RequestTypeEnum requestType) {
         return requestServiceFactory.getRequestServiceByRequestType(requestType);
     }
-    private RequestService getRequestService(final EDeliveryAction eDeliveryAction) {
+    private RequestService<?> getRequestService(final EDeliveryAction eDeliveryAction) {
         return  requestServiceFactory.getRequestServiceByEdeliveryActionType(eDeliveryAction);
     }
 }

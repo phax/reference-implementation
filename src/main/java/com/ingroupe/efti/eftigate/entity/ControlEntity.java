@@ -1,5 +1,6 @@
 package com.ingroupe.efti.eftigate.entity;
 
+import com.ingroupe.efti.commons.dto.SearchParameter;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.commons.model.AbstractModel;

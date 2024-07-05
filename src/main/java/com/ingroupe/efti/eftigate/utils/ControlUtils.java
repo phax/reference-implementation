@@ -1,56 +1,29 @@
-package com.ingroupe.efti.eftigate.dto;
+package com.ingroupe.efti.eftigate.utils;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingroupe.efti.commons.dto.AuthorityDto;
+import com.ingroupe.efti.commons.dto.ControlDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
+import com.ingroupe.efti.commons.dto.MetadataResultsDto;
+import com.ingroupe.efti.commons.dto.NotesDto;
+import com.ingroupe.efti.commons.dto.SearchParameter;
+import com.ingroupe.efti.commons.dto.UilDto;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.IdentifiersMessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotesMessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
-import com.ingroupe.efti.eftigate.entity.MetadataResults;
-import com.ingroupe.efti.eftigate.entity.SearchParameter;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.experimental.UtilityClass;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import static com.ingroupe.efti.commons.enums.StatusEnum.PENDING;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class ControlDto {
+@UtilityClass
+public class ControlUtils {
+
     public static final String SUBSET_EU_REQUESTED = "SubsetEuRequested";
     public static final String SUBSET_MS_REQUESTED = "SubsetMsRequested";
-    private int id;
-    private String eftiDataUuid;
-    private String requestUuid;
-    private RequestTypeEnum requestType;
-    private StatusEnum status;
-    private String eftiPlatformUrl;
-    private String eftiGateUrl;
-    private String subsetEuRequested;
-    private String subsetMsRequested;
-    private LocalDateTime createdDate;
-    private LocalDateTime lastModifiedDate;
-    private byte[] eftiData;
-    private SearchParameter transportMetaData;
-    private String fromGateUrl;
-    @ToString.Exclude
-    @JsonIgnore
-    private List<RequestDto> requests;
-    private AuthorityDto authority;
-    private ErrorDto error;
-    private MetadataResults metadataResults;
-    private String notes;
 
     public static ControlDto fromGateToGateMessageBodyDto(final MessageBodyDto messageBodyDto, final RequestTypeEnum requestTypeEnum, final NotificationDto notificationDto, final String eftiGateUrl) {
         final ControlDto controlDto = new ControlDto();
@@ -89,19 +62,19 @@ public class ControlDto {
     }
 
     public static ControlDto fromUilControl(final UilDto uilDto, final RequestTypeEnum requestTypeEnum) {
-                final String uuidGenerator = UUID.randomUUID().toString();
+        final String uuidGenerator = UUID.randomUUID().toString();
 
-                final ControlDto controlDto = new ControlDto();
-                controlDto.setEftiDataUuid(uilDto.getEFTIDataUuid());
-                controlDto.setEftiGateUrl(uilDto.getEFTIGateUrl());
-                controlDto.setEftiPlatformUrl(uilDto.getEFTIPlatformUrl());
-                controlDto.setRequestUuid(uuidGenerator);
-                controlDto.setRequestType(requestTypeEnum);
-                controlDto.setStatus(StatusEnum.PENDING);
-                controlDto.setSubsetEuRequested(SUBSET_EU_REQUESTED);
-                controlDto.setSubsetMsRequested(SUBSET_MS_REQUESTED);
-                controlDto.setAuthority(uilDto.getAuthority());
-                return controlDto;
+        final ControlDto controlDto = new ControlDto();
+        controlDto.setEftiDataUuid(uilDto.getEFTIDataUuid());
+        controlDto.setEftiGateUrl(uilDto.getEFTIGateUrl());
+        controlDto.setEftiPlatformUrl(uilDto.getEFTIPlatformUrl());
+        controlDto.setRequestUuid(uuidGenerator);
+        controlDto.setRequestType(requestTypeEnum);
+        controlDto.setStatus(StatusEnum.PENDING);
+        controlDto.setSubsetEuRequested(SUBSET_EU_REQUESTED);
+        controlDto.setSubsetMsRequested(SUBSET_MS_REQUESTED);
+        controlDto.setAuthority(uilDto.getAuthority());
+        return controlDto;
     }
 
     public static ControlDto fromLocalMetadataControl(final MetadataRequestDto metadataRequestDto, final RequestTypeEnum requestTypeEnum) {
@@ -117,7 +90,7 @@ public class ControlDto {
         return controlDto;
     }
 
-    public static ControlDto fromExternalMetadataControl(final IdentifiersMessageBodyDto messageBodyDto, final RequestTypeEnum requestTypeEnum, final String fromGateUrl, final String eftiGateUrl, final MetadataResults metadataResults) {
+    public static ControlDto fromExternalMetadataControl(final IdentifiersMessageBodyDto messageBodyDto, final RequestTypeEnum requestTypeEnum, final String fromGateUrl, final String eftiGateUrl, final MetadataResultsDto metadataResults) {
         final ControlDto controlDto = getControlFrom(requestTypeEnum, null, messageBodyDto.getRequestUuid());
         //to check
         controlDto.setEftiGateUrl(eftiGateUrl);
@@ -156,13 +129,5 @@ public class ControlDto {
         controlDto.setSubsetEuRequested(SUBSET_EU_REQUESTED);
         controlDto.setSubsetMsRequested(SUBSET_MS_REQUESTED);
         return controlDto;
-    }
-
-    public boolean isError() {
-        return StatusEnum.ERROR == status;
-    }
-
-public boolean isExternalAsk() {
-        return this.getRequestType() != null && this.getRequestType().isExternalAsk();
     }
 }

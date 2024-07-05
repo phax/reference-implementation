@@ -1,8 +1,14 @@
 package com.ingroupe.efti.eftigate.service;
 
+import com.ingroupe.efti.commons.constant.EftiGateConstants;
+import com.ingroupe.efti.commons.dto.ControlDto;
+import com.ingroupe.efti.commons.dto.ErrorDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.commons.dto.MetadataResultDto;
+import com.ingroupe.efti.commons.dto.MetadataResultsDto;
+import com.ingroupe.efti.commons.dto.NotesDto;
+import com.ingroupe.efti.commons.dto.UilDto;
 import com.ingroupe.efti.commons.dto.ValidableDto;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
@@ -10,22 +16,16 @@ import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.IdentifiersMessageBodyDto;
 import com.ingroupe.efti.eftigate.config.GateProperties;
-import com.ingroupe.efti.eftigate.constant.EftiGateConstants;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.ErrorDto;
-import com.ingroupe.efti.eftigate.dto.NotesDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
-import com.ingroupe.efti.eftigate.dto.UilDto;
-import com.ingroupe.efti.eftigate.dto.log.LogRequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
-import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.exception.AmbiguousIdentifierException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
 import com.ingroupe.efti.eftigate.service.gate.EftiGateUrlResolver;
 import com.ingroupe.efti.eftigate.service.request.RequestService;
 import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
+import com.ingroupe.efti.eftigate.utils.ControlUtils;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -44,7 +44,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -61,13 +60,12 @@ import static java.util.Collections.emptyList;
 public class ControlService {
 
     public static final String ERROR_REQUEST_UUID_NOT_FOUND = "Error requestUuid not found.";
-    public static final String CA_AAP = "CA_AAP";
     private final ControlRepository controlRepository;
     private final EftiGateUrlResolver eftiGateUrlResolver;
     private final MetadataService metadataService;
     private final MapperUtils mapperUtils;
-
     private final RequestServiceFactory requestServiceFactory;
+    private final LogManager logManager;
 
     @Value("${efti.control.pending.timeout:60}")
     private Integer timeoutValue;
@@ -78,8 +76,6 @@ public class ControlService {
 
     private final GateProperties gateProperties;
 
-    private final LoggerService loggerService;
-
     public ControlEntity getById(final long id) {
         final Optional<ControlEntity> controlEntity = controlRepository.findById(id);
         return controlEntity.orElse(null);
@@ -88,13 +84,13 @@ public class ControlService {
     @Transactional("controlTransactionManager")
     public RequestUuidDto createUilControl(final UilDto uilDto) {
         log.info("create Uil control for uuid : {}", uilDto.getEFTIDataUuid());
-        return createControl(uilDto, ControlDto
+        return createControl(uilDto, ControlUtils
                 .fromUilControl(uilDto, gateProperties.isCurrentGate(uilDto.getEFTIGateUrl()) ? RequestTypeEnum.LOCAL_UIL_SEARCH : RequestTypeEnum.EXTERNAL_UIL_SEARCH));
     }
 
     public RequestUuidDto createMetadataControl(final MetadataRequestDto metadataRequestDto) {
         log.info("create metadata control for vehicleId : {}", metadataRequestDto.getVehicleID());
-        return createControl(metadataRequestDto, ControlDto.fromLocalMetadataControl(metadataRequestDto, RequestTypeEnum.LOCAL_METADATA_SEARCH));
+        return createControl(metadataRequestDto, ControlUtils.fromLocalMetadataControl(metadataRequestDto, RequestTypeEnum.LOCAL_METADATA_SEARCH));
     }
 
     public RequestUuidDto createNoteRequestForControl(final NotesDto notesDto) {
@@ -106,8 +102,8 @@ public class ControlService {
         return createNoteRequestForControl(savedControl, notesDto);
     }
 
-    public ControlDto createControlFrom(final IdentifiersMessageBodyDto messageBody, final String fromGateUrl, final MetadataResults metadataResults) {
-        final ControlDto controlDto = ControlDto.fromExternalMetadataControl(messageBody, EXTERNAL_ASK_METADATA_SEARCH, fromGateUrl, gateProperties.getOwner(), metadataResults);
+    public ControlDto createControlFrom(final IdentifiersMessageBodyDto messageBody, final String fromGateUrl, final MetadataResultsDto metadataResults) {
+        final ControlDto controlDto = ControlUtils.fromExternalMetadataControl(messageBody, EXTERNAL_ASK_METADATA_SEARCH, fromGateUrl, gateProperties.getOwner(), metadataResults);
         return this.save(controlDto);
     }
 
@@ -115,6 +111,8 @@ public class ControlService {
         this.validateControl(searchDto).ifPresentOrElse(
                 error -> createErrorControl(controlDto, error, true),
                 () -> createControlFromType(searchDto, controlDto));
+
+        logManager.logAppRequest(controlDto, searchDto);
         return buildResponse(controlDto);
     }
 
@@ -129,7 +127,7 @@ public class ControlService {
 
     }
 
-    public void createUilControl(final ControlDto controlDto) {
+    public ControlDto createUilControl(final ControlDto controlDto) {
         if(gateProperties.isCurrentGate(controlDto.getEftiGateUrl()) && !checkOnLocalRegistry(controlDto)) {
             createErrorControl(controlDto, ErrorDto.fromErrorCode(ErrorCodesEnum.DATA_NOT_FOUND_ON_REGISTRY), false);
             final ControlDto saveControl = this.save(controlDto);
@@ -137,10 +135,12 @@ public class ControlService {
             if(controlDto.isExternalAsk()) {
                 getRequestService(controlDto.getRequestType()).createAndSendRequest(saveControl, controlDto.getFromGateUrl(), RequestStatusEnum.ERROR);
             }
+            return saveControl;
         } else {
             final ControlDto saveControl = this.save(controlDto);
             getRequestService(controlDto.getRequestType()).createAndSendRequest(saveControl, null);
             log.info("Uil control with request uuid '{}' has been register", saveControl.getRequestUuid());
+            return saveControl;
         }
     }
 
@@ -222,7 +222,7 @@ public class ControlService {
         }
         final RequestService<?> requestService = this.getRequestService(controlEntity.getRequestType());
         final boolean allRequestsContainsData =  requestService.allRequestsContainsData(controlEntity.getRequests());
-        if (allRequestsContainsData){
+        if (allRequestsContainsData) {
             requestService.setDataFromRequests(controlEntity);
             controlEntity.setStatus(StatusEnum.COMPLETE);
             return mapperUtils.controlEntityToControlDto(controlRepository.save(controlEntity));
@@ -245,7 +245,8 @@ public class ControlService {
         final MetadataResponseDto result = MetadataResponseDto.builder()
                 .requestUuid(controlDto.getRequestUuid())
                 .status(controlDto.getStatus())
-                .metadata(getMetadataResultDtos(controlDto)).build();
+                .metadata(getMetadataResultDtos(controlDto))
+                .build();
         if(controlDto.isError()  && controlDto.getError() != null){
             result.setRequestUuid(null);
             result.setErrorDescription(controlDto.getError().getErrorDescription());
@@ -255,9 +256,8 @@ public class ControlService {
     }
 
     private List<MetadataResultDto> getMetadataResultDtos(final ControlDto controlDto) {
-        final MetadataResults metadataResults = controlDto.getMetadataResults();
-        if (metadataResults != null){
-            return mapperUtils.metadataResultEntitiesToMetadataResultDtos(metadataResults.getMetadataResult());
+        if(controlDto.getMetadataResults() != null) {
+            return controlDto.getMetadataResults().getMetadataResult();
         }
         return emptyList();
     }
@@ -304,12 +304,11 @@ public class ControlService {
     }
 
     public ControlDto save(final ControlDto controlDto) {
-        return mapperUtils.controlEntityToControlDto(
-                controlRepository.save(mapperUtils.controlDtoToControEntity(controlDto)));
+        return this.save(mapperUtils.controlDtoToControEntity(controlDto));
     }
 
-    public void save(final ControlEntity controlEntity) {
-        controlRepository.save(controlEntity);
+    public ControlDto save(final ControlEntity controlEntity) {
+        return mapperUtils.controlEntityToControlDto(controlRepository.save(controlEntity));
     }
 
     private Optional<ErrorDto> validateControl(final ValidableDto validable) {
@@ -336,35 +335,12 @@ public class ControlService {
                 .status(controlDto.getStatus())
                 .eFTIData(controlDto.getEftiData()).build();
         if(controlDto.isError() && controlDto.getError() != null) {
-                result.setErrorDescription(controlDto.getError().getErrorDescription());
-                result.setErrorCode(controlDto.getError().getErrorCode());
-            }
-        final LogRequestDto logRequestDto = LogRequestDto.builder()
-                .authorityName(controlDto.getAuthority() != null ? controlDto.getAuthority().getName() : null)
-                .authorityNationalUniqueIdentifier(controlDto.getAuthority() != null ? controlDto.getAuthority().getNationalUniqueIdentifier() : null)
-                .requestId(controlDto.getRequestUuid())
-                .officerId("officerId")
-                .responseId("responseId")
-                .subsetEURequested(controlDto.getSubsetEuRequested())
-                .subsetMSRequested(controlDto.getSubsetMsRequested())
-                .eFTIDataId("eFTIDataId")
-                .messageEndDate("messageEndDate")
-                .componentType(CA_AAP)
-                .componentId("compenentId")
-                .componentCountry(gateProperties.getCountry())
-                .requestingComponentType(CA_AAP)
-                .requestingComponentId("requestingComponentId")
-                .requestingComponentCountry(gateProperties.getCountry())
-                .respondingComponentType(CA_AAP)
-                .respondingComponentId("respondingComponentId")
-                .respondingComponentCountry(gateProperties.getCountry())
-                .messageContent(controlDto.getEftiData() != null ? Base64.getEncoder().encodeToString(controlDto.getEftiData()) : null)
-                .statusMessage(controlDto.getStatus().name())
-                .errorCodeMessage(controlDto.getError() != null ? controlDto.getError().getErrorCode() : null)
-                .errorDescriptionMessage(controlDto.getError() != null ? controlDto.getError().getErrorDescription() : null)
-                .timeoutComponentType("timeoutComponentType")
-                .build();
-        loggerService.log(logRequestDto.getLinkedListFields());
+            result.setErrorDescription(controlDto.getError().getErrorDescription());
+            result.setErrorCode(controlDto.getError().getErrorCode());
+        }
+        if(controlDto.getStatus() != PENDING) { // pending request are not logged
+            logManager.logAppResponse(controlDto, result);
+        }
         return result;
     }
 

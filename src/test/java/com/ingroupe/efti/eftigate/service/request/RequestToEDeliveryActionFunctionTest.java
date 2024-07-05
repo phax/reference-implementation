@@ -1,13 +1,13 @@
 package com.ingroupe.efti.eftigate.service.request;
 
 
+import com.ingroupe.efti.commons.dto.ControlDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
+import com.ingroupe.efti.commons.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.config.GateProperties;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
-import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,7 +16,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.stream.Stream;
 
-import static com.ingroupe.efti.commons.enums.RequestTypeEnum.*;
+import static com.ingroupe.efti.commons.enums.RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH;
+import static com.ingroupe.efti.commons.enums.RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH;
+import static com.ingroupe.efti.commons.enums.RequestTypeEnum.EXTERNAL_METADATA_SEARCH;
+import static com.ingroupe.efti.commons.enums.RequestTypeEnum.EXTERNAL_UIL_SEARCH;
+import static com.ingroupe.efti.commons.enums.RequestTypeEnum.LOCAL_METADATA_SEARCH;
+import static com.ingroupe.efti.commons.enums.RequestTypeEnum.LOCAL_UIL_SEARCH;
+import static com.ingroupe.efti.commons.enums.RequestTypeEnum.NOTE_SEND;
 import static com.ingroupe.efti.commons.enums.StatusEnum.COMPLETE;
 import static com.ingroupe.efti.commons.enums.StatusEnum.PENDING;
 import static org.junit.jupiter.api.Assertions.assertThrows;

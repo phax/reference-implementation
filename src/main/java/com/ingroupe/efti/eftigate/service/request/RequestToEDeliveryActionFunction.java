@@ -1,12 +1,12 @@
 package com.ingroupe.efti.eftigate.service.request;
 
+import com.ingroupe.efti.commons.constant.EftiGateConstants;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
+import com.ingroupe.efti.commons.enums.RequestType;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
+import com.ingroupe.efti.commons.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.config.GateProperties;
-import com.ingroupe.efti.eftigate.constant.EftiGateConstants;
 import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
-import com.ingroupe.efti.eftigate.enums.RequestType;
-import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

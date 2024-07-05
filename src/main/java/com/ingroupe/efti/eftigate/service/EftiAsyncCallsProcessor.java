@@ -1,11 +1,11 @@
 package com.ingroupe.efti.eftigate.service;
 
+import com.ingroupe.efti.commons.dto.ControlDto;
+import com.ingroupe.efti.commons.dto.IdentifiersRequestDto;
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.IdentifiersRequestDto;
 import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +22,12 @@ import java.util.List;
 public class EftiAsyncCallsProcessor {
     private final MetadataRequestService metadataRequestService;
     private final MetadataService metadataService;
+    private final LogManager logManager;
 
     @Async
     public void checkLocalRepoAsync(final MetadataRequestDto metadataRequestDto, final ControlDto savedControl) {
         final List<MetadataDto> metadataDtoList = metadataService.search(metadataRequestDto);
+        logManager.logLocalRegistryMessage(savedControl, metadataDtoList);
         final IdentifiersRequestDto request = metadataRequestService.createRequest(savedControl, RequestStatusEnum.SUCCESS, metadataDtoList);
         if (shouldUpdateControl(savedControl, request, metadataDtoList)) {
             metadataRequestService.updateControlMetadata(request.getControl(), metadataDtoList);
