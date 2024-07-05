@@ -225,6 +225,7 @@ public class UilRequestService extends RequestService<UilRequestEntity> {
     @Override
     public void updateStatus(final UilRequestEntity uilRequestEntity, final RequestStatusEnum status) {
         uilRequestEntity.setStatus(status);
+        getControlService().save(uilRequestEntity.getControl());
         uilRequestRepository.save(uilRequestEntity);
     }
 

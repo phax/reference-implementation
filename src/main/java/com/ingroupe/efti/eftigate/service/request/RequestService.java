@@ -35,8 +35,7 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.Objects;
 
-import static com.ingroupe.efti.commons.enums.RequestStatusEnum.ERROR;
-import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SEND_ERROR;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.*;
 import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.EXTERNAL_REQUESTS_TYPES;
 
 @Slf4j
@@ -89,14 +88,19 @@ public abstract class RequestService<T extends RequestEntity> {
     }
 
     public void createAndSendRequest(final ControlDto controlDto, final String destinationUrl){
+        this.createAndSendRequest(controlDto, destinationUrl, RequestStatusEnum.RECEIVED);
+    }
+
+    public void createAndSendRequest(final ControlDto controlDto, final String destinationUrl, final RequestStatusEnum status) {
         final RequestDto requestDto = initRequest(controlDto, destinationUrl);
+        requestDto.setStatus(status);
         final RequestDto result = this.save(requestDto);
         this.sendRequest(result);
     }
 
     protected RequestDto initRequest(final ControlDto controlDto, final String destinationUrl) {
         final RequestDto requestDto = createRequest(controlDto);
-        requestDto.setGateUrlDest(StringUtils.isNotBlank(destinationUrl) ? destinationUrl : controlDto.getEftiPlatformUrl());
+        requestDto.setGateUrlDest(StringUtils.isNotBlank(destinationUrl) ? destinationUrl : controlDto.getEftiGateUrl());
         log.info("Request has been register with controlId : {}", requestDto.getControl().getId());
         return requestDto;
     }
@@ -154,8 +158,9 @@ public abstract class RequestService<T extends RequestEntity> {
 
     public void updateSentRequestStatus(final RequestDto requestDto, final String edeliveryMessageId) {
         requestDto.setEdeliveryMessageId(edeliveryMessageId);
-        if (!RequestStatusEnum.RESPONSE_IN_PROGRESS.equals(requestDto.getStatus())){
-            requestDto.setStatus(RequestStatusEnum.IN_PROGRESS);
+        final RequestStatusEnum requestStatus = requestDto.getStatus();
+        if (!(RESPONSE_IN_PROGRESS.equals(requestStatus) || ERROR.equals(requestStatus))){
+            requestDto.setStatus(IN_PROGRESS);
         }
         this.save(requestDto);
     }

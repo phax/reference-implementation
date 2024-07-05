@@ -33,7 +33,6 @@ public class RequestDto {
     private RequestType requestType;
 
     protected RequestDto(final ControlDto controlDto) {
-        this.status = RequestStatusEnum.RECEIVED;
         this.retry = 0;
         this.gateUrlDest = controlDto.getEftiGateUrl();
         this.control = controlDto;

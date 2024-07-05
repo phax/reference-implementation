@@ -7,10 +7,10 @@ import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
-import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
+import com.ingroupe.efti.eftigate.service.request.EftiRequestUpdater;
 import com.ingroupe.efti.eftigate.service.request.RequestService;
 import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
@@ -28,27 +28,24 @@ public class ApIncomingService {
     private final MetadataService metadataService;
     private final SerializeUtils serializeUtils;
     private final RequestRepository<?> requestRepository;
+    private final EftiRequestUpdater eftiRequestUpdater;
+
+
 
     public void manageIncomingNotification(final ReceivedNotificationDto receivedNotificationDto) {
          notificationService.consume(receivedNotificationDto).ifPresent(this::rootResponse);
     }
 
     private void rootResponse(final NotificationDto notificationDto) {
-        RequestService<?> requestService = getRequestService(notificationDto);
-        if (requestService != null) {
-            if (NotificationType.SEND_SUCCESS.equals(notificationDto.getNotificationType())) {
-                requestService.manageSendSuccess(notificationDto.getMessageId());
-                return;
-            } else if (NotificationType.SEND_FAILURE.equals(notificationDto.getNotificationType())) {
-                requestService.manageSendFailure(notificationDto);
-                return;
-            }
+        if (NotificationType.SEND_SUCCESS.equals(notificationDto.getNotificationType())) {
+            eftiRequestUpdater.manageSendSuccess(notificationDto);
+            return;
+        } else if (NotificationType.SEND_FAILURE.equals(notificationDto.getNotificationType())) {
+            eftiRequestUpdater.manageSendFailure(notificationDto);
+            return;
         }
         final EDeliveryAction action = getAction(notificationDto.getContent());
-
-        if (requestService == null){
-            requestService = getRequestService(action);
-        }
+        final RequestService<?> requestService = getRequestService(action);
         switch (action) {
             case GET_UIL, GET_IDENTIFIERS -> requestService.updateWithResponse(notificationDto);
             case FORWARD_UIL -> requestService.receiveGateRequest(notificationDto);
@@ -56,17 +53,6 @@ public class ApIncomingService {
             case UPLOAD_METADATA -> metadataService.createOrUpdate(parseBodyToMetadata(notificationDto.getContent()));
             default -> log.warn("unmanaged notification type {}", notificationDto.getContent().getAction());
         }
-    }
-
-    private RequestService<?> getRequestService(final NotificationDto notificationDto) {
-        if (notificationDto.getContent() != null){
-            return getRequestService(getAction(notificationDto.getContent()));
-        }
-        final RequestEntity requestEntity = requestRepository.findByEdeliveryMessageId(notificationDto.getMessageId());
-        if (requestEntity != null) {
-            return getRequestService(requestEntity.getRequestType());
-        }
-        return null;
     }
 
     private EDeliveryAction getAction(final NotificationContentDto notificationContentDto) {

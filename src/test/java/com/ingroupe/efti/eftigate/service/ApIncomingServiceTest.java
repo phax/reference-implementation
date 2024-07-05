@@ -8,6 +8,7 @@ import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
 import com.ingroupe.efti.eftigate.exception.TechnicalException;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
+import com.ingroupe.efti.eftigate.service.request.EftiRequestUpdater;
 import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
 import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
 import com.ingroupe.efti.eftigate.service.request.UilRequestService;
@@ -43,6 +44,9 @@ class ApIncomingServiceTest extends AbstractServiceTest {
     private MetadataRequestService metadataRequestService;
     @Mock
     private MetadataService metadataService;
+    @Mock
+    private EftiRequestUpdater eftiRequestUpdater;
+
 
     private final static String url = "url";
     private final static String password = "password";
@@ -84,7 +88,7 @@ class ApIncomingServiceTest extends AbstractServiceTest {
 
     @BeforeEach
     public void before() {
-        service = new ApIncomingService(notificationService, requestServiceFactory, metadataService, serializeUtils, requestRepository);
+        service = new ApIncomingService(notificationService, requestServiceFactory, metadataService, serializeUtils, requestRepository, eftiRequestUpdater);
     }
 
     @Test

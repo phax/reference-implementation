@@ -17,6 +17,7 @@ public class UilRequestDto extends RequestDto {
     private byte[] reponseData;
     public UilRequestDto(final ControlDto controlDto) {
         super(controlDto);
+        this.setError(controlDto.getError());
         this.setRequestType(RequestType.UIL);
     }
 }
