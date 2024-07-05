@@ -279,7 +279,7 @@ class UilRequestServiceTest extends BaseServiceTest {
 
         uilRequestService.updateWithResponse(notificationDto);
 
-        verify(controlService).save(controlEntityArgumentCaptor.capture());
+        verify(controlService, times(3)).save(controlEntityArgumentCaptor.capture());
         assertEquals(RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH, controlEntityArgumentCaptor.getValue().getRequestType());
     }
 

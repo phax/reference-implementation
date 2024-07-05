@@ -292,6 +292,7 @@ public class MetadataRequestService extends RequestService<IdentifiersRequestEnt
     @Override
     protected void updateStatus(final IdentifiersRequestEntity identifiersRequestEntity, final RequestStatusEnum status) {
         identifiersRequestEntity.setStatus(status);
+        getControlService().save(identifiersRequestEntity.getControl());
         identifiersRequestRepository.save(identifiersRequestEntity);
     }
 

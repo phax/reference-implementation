@@ -23,6 +23,7 @@ import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serializable;
@@ -63,8 +64,9 @@ public class RequestEntity extends AbstractModel implements Serializable {
     @JoinColumn(name = "control")
     ControlEntity control;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "error", referencedColumnName = "id")
+    @ToString.Exclude @EqualsAndHashCode.Exclude
     ErrorEntity error;
 
     @Getter

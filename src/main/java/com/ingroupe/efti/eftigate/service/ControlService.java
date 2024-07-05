@@ -134,7 +134,7 @@ public class ControlService {
             final ControlDto saveControl = this.save(controlDto);
             //respond with the error
             if(controlDto.isExternalAsk()) {
-                getRequestService(controlDto.getRequestType()).createAndSendRequest(saveControl, controlDto.getFromGateUrl());
+                getRequestService(controlDto.getRequestType()).createAndSendRequest(saveControl, controlDto.getFromGateUrl(), RequestStatusEnum.ERROR);
             }
         } else {
             final ControlDto saveControl = this.save(controlDto);
