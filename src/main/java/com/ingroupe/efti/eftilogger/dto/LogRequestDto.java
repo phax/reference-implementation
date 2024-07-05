@@ -1,9 +1,12 @@
 package com.ingroupe.efti.eftilogger.dto;
 
+import lombok.Data;
 import lombok.experimental.SuperBuilder;
 
-@SuperBuilder
-public class LogRequestDto extends LogAllDto {
+@SuperBuilder(toBuilder = true)
+@Data
+public class LogRequestDto extends LogCommonDto {
+
     public final String requestId;
     public final String eFTIDataId;
     public final String responseId;
