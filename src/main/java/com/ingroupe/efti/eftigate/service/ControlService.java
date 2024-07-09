@@ -61,6 +61,7 @@ import static java.util.Collections.emptyList;
 public class ControlService {
 
     public static final String ERROR_REQUEST_UUID_NOT_FOUND = "Error requestUuid not found.";
+    public static final String CA_AAP = "CA_AAP";
     private final ControlRepository controlRepository;
     private final EftiGateUrlResolver eftiGateUrlResolver;
     private final MetadataService metadataService;
@@ -348,13 +349,13 @@ public class ControlService {
                 .subsetMSRequested(controlDto.getSubsetMsRequested())
                 .eFTIDataId("eFTIDataId")
                 .messageEndDate("messageEndDate")
-                .componentType("CA_AAP")
+                .componentType(CA_AAP)
                 .componentId("compenentId")
                 .componentCountry(gateProperties.getCountry())
-                .requestingComponentType("CA_AAP")
+                .requestingComponentType(CA_AAP)
                 .requestingComponentId("requestingComponentId")
                 .requestingComponentCountry(gateProperties.getCountry())
-                .respondingComponentType("CA_AAP")
+                .respondingComponentType(CA_AAP)
                 .respondingComponentId("respondingComponentId")
                 .respondingComponentCountry(gateProperties.getCountry())
                 .messageContent(controlDto.getEftiData() != null ? Base64.getEncoder().encodeToString(controlDto.getEftiData()) : null)
