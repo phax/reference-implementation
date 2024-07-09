@@ -68,9 +68,6 @@ public class ApIncomingService {
         return serializeUtils.mapXmlStringToClass(notificationContent.getBody(), MetadataDto.class);
     }
 
-    private RequestService<?> getRequestService(final String requestType) {
-        return  requestServiceFactory.getRequestServiceByRequestType(requestType);
-    }
     private RequestService<?> getRequestService(final EDeliveryAction eDeliveryAction) {
         return  requestServiceFactory.getRequestServiceByEdeliveryActionType(eDeliveryAction);
     }
