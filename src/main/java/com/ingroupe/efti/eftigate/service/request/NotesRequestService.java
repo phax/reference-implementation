@@ -86,6 +86,7 @@ public class NotesRequestService extends RequestService<NoteRequestEntity> {
             final ControlDto controlDto = getMapperUtils().controlEntityToControlDto(controlEntity);
             controlDto.setNotes(messageBody.getNote());
             createAndSendRequest(controlDto, messageBody.getEFTIPlatformUrl());
+            markMessageAsDownloaded(notificationDto.getMessageId());
         });
     }
 
@@ -110,7 +111,6 @@ public class NotesRequestService extends RequestService<NoteRequestEntity> {
     @Override
     public boolean supports(final String requestType) {
         return NOTE.equalsIgnoreCase(requestType);
-
     }
 
     @Override
