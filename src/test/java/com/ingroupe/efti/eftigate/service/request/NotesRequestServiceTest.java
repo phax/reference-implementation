@@ -7,12 +7,14 @@ import com.ingroupe.common.test.log.MemoryAppender;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
+import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.eftigate.EftiTestUtils;
 import com.ingroupe.efti.eftigate.dto.ControlDto;
 import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.NotesRequestDto;
 import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
-import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.NoteRequestEntity;
 import com.ingroupe.efti.eftigate.entity.UilRequestEntity;
 import com.ingroupe.efti.eftigate.enums.RequestType;
@@ -34,13 +36,24 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import org.xmlunit.matchers.CompareMatcher;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
-import static com.ingroupe.efti.commons.enums.RequestStatusEnum.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.ERROR;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.IN_PROGRESS;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.RECEIVED;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SUCCESS;
+import static com.ingroupe.efti.eftigate.EftiTestUtils.testFile;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -51,13 +64,10 @@ class NotesRequestServiceTest extends BaseServiceTest {
     private NotesRequestRepository notesRequestRepository;
     @Captor
     ArgumentCaptor<NoteRequestEntity> noteRequestEntityArgumentCaptor;
-    @Captor
-    private ArgumentCaptor<ControlEntity> controlEntityArgumentCaptor;
 
     private final NoteRequestEntity noteRequestEntity = new NoteRequestEntity();
     private final UilRequestEntity uilRequestEntity = new UilRequestEntity();
     private final NotesRequestDto notesRequestDto = new NotesRequestDto();
-
 
     @Override
     @BeforeEach
@@ -119,6 +129,42 @@ class NotesRequestServiceTest extends BaseServiceTest {
     @Test
     void setDataFromRequestsTest() {
         assertThrows(UnsupportedOperationException.class, () -> notesRequestService.setDataFromRequests(controlEntity));
+    }
+
+    @Test
+    void receiveGateRequestTest() {
+        final NotificationDto notificationDto = NotificationDto.builder().build();
+        //Act and Assert
+        assertThrows(UnsupportedOperationException.class, () -> notesRequestService.receiveGateRequest(notificationDto));
+    }
+
+    @Test
+    void shouldManageMessageReceiveAndMarkMessageAsDownloaded_whenControlExists() throws IOException {
+        final NotificationDto notificationDto = NotificationDto.builder()
+                .notificationType(NotificationType.RECEIVED)
+                .messageId("")
+                .content(NotificationContentDto.builder()
+                        .messageId(MESSAGE_ID)
+                        .body(testFile("/xml/FTI026.xml"))
+                        .fromPartyId("gate")
+                        .build())
+                .build();
+        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH);
+        noteRequestEntity.setStatus(IN_PROGRESS);
+        noteRequestEntity.setGateUrlDest("gate");
+
+        controlEntity.setRequests(List.of(uilRequestEntity));
+        when(controlService.getByRequestUuid("67fe38bd-6bf7-4b06-b20e-206264bd639c")).thenReturn(Optional.of(controlEntity));
+        Mockito.when(notesRequestRepository.save(any())).thenReturn(noteRequestEntity);
+        //Act
+        notesRequestService.manageMessageReceive(notificationDto);
+
+        //assert
+        verify(controlService, never()).createControlFrom(any(), any(), any());
+        verify(rabbitSenderService, times(1)).sendMessageToRabbit(any(), any(), any());
+        verify(requestUpdaterService).setMarkedAsDownload(any(), any());
+        verify(notesRequestRepository).save(noteRequestEntityArgumentCaptor.capture());
+        assertEquals("The inspection did not reveal any anomalies. We recommend that you replace the tires as they are on the verge of wear", noteRequestEntityArgumentCaptor.getValue().getNote());
     }
 
     @Test

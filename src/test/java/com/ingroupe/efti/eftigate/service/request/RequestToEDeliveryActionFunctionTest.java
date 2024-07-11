@@ -29,8 +29,8 @@ class RequestToEDeliveryActionFunctionTest {
     public static final String DE_GATE_URL = "https://efti.gate.de.eu";
 
     @ParameterizedTest
-    @MethodSource("provideMyObject")
-    void myTestMethod(final RabbitRequestDto actual, final EDeliveryAction expected) {
+    @MethodSource("provideRequests")
+    void shouldGetEDeliveryActionFromRequest(final RabbitRequestDto actual, final EDeliveryAction expected) {
         final GateProperties gateProperties = GateProperties.builder().owner(FR_GATE_URL).ap(GateProperties.ApConfig.builder().url(FR_GATE_URL).build()).build();
         final RequestToEDeliveryActionFunction requestToEDeliveryActionFunction = new RequestToEDeliveryActionFunction(gateProperties);
 
@@ -40,14 +40,14 @@ class RequestToEDeliveryActionFunctionTest {
     }
 
     @Test
-    void myTestMethod() {
+    void shouldThrowException_whenGettingEdeliveryActionFromRequestAndRequestTypeIsNull() {
         final GateProperties gateProperties = GateProperties.builder().owner(FR_GATE_URL).ap(GateProperties.ApConfig.builder().url(FR_GATE_URL).build()).build();
         final RequestToEDeliveryActionFunction requestToEDeliveryActionFunction = new RequestToEDeliveryActionFunction(gateProperties);
-
-        assertThrows(TechnicalException.class, () -> requestToEDeliveryActionFunction.apply(buildRequestDto(null, FR_GATE_URL, PENDING)));
+        final RabbitRequestDto rabbitRequestDto = buildRequestDto(null, FR_GATE_URL, PENDING);
+        assertThrows(TechnicalException.class, () -> requestToEDeliveryActionFunction.apply(rabbitRequestDto));
     }
 
-    static Stream<Arguments> provideMyObject() {
+    static Stream<Arguments> provideRequests() {
         return Stream.of(
                 arguments(buildRequestDto(LOCAL_METADATA_SEARCH, FR_GATE_URL, PENDING), EDeliveryAction.GET_IDENTIFIERS),
                 arguments(buildRequestDto(EXTERNAL_METADATA_SEARCH, FR_GATE_URL, PENDING), EDeliveryAction.GET_IDENTIFIERS),

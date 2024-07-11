@@ -5,6 +5,7 @@ import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
+import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
@@ -32,6 +33,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.StringReader;
+import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Objects;
 
@@ -51,6 +53,7 @@ public abstract class RequestService<T extends RequestEntity> {
     private final GateProperties gateProperties;
     private final RequestUpdaterService requestUpdaterService;
     private final SerializeUtils serializeUtils;
+
 
     @Value("${spring.rabbitmq.queues.eftiSendMessageExchange:efti.send-message.exchange}")
     private String eftiSendMessageExchange;
@@ -163,6 +166,22 @@ public abstract class RequestService<T extends RequestEntity> {
             requestDto.setStatus(IN_PROGRESS);
         }
         this.save(requestDto);
+    }
+
+    protected void markMessageAsDownloaded(String eDeliveryMessageId){
+        try {
+            getRequestUpdaterService().setMarkedAsDownload(createApConfig(), eDeliveryMessageId);
+        } catch (final MalformedURLException e) {
+            log.error("Error while try to set mark as download", e);
+        }
+    }
+
+    private ApConfigDto createApConfig() {
+        return ApConfigDto.builder()
+                .username(getGateProperties().getAp().getUsername())
+                .password(getGateProperties().getAp().getPassword())
+                .url(getGateProperties().getAp().getUrl())
+                .build();
     }
 
     protected boolean isExternalRequest(final RequestDto requestDto) {

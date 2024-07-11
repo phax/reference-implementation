@@ -5,7 +5,6 @@ import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
-import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
@@ -34,7 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
-import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
@@ -112,19 +110,7 @@ public class UilRequestService extends RequestService<UilRequestEntity> {
 
     public void updateStatus(final UilRequestEntity requestEntity, final RequestStatusEnum status, final String eDeliveryMessageId) {
         this.updateStatus(requestEntity, status);
-        try {
-            getRequestUpdaterService().setMarkedAsDownload(createApConfig(), eDeliveryMessageId);
-        } catch (final MalformedURLException e) {
-            log.error("Error while try to set mark as download", e);
-        }
-    }
-
-    private ApConfigDto createApConfig() {
-        return ApConfigDto.builder()
-                .username(getGateProperties().getAp().getUsername())
-                .password(getGateProperties().getAp().getPassword())
-                .url(getGateProperties().getAp().getUrl())
-                .build();
+        markMessageAsDownloaded(eDeliveryMessageId);
     }
 
     protected void errorReceived(final UilRequestEntity requestEntity, final String errorDescription) {
