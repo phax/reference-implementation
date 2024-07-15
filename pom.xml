@@ -17,7 +17,7 @@
         <jacoco-maven-plugin.version>0.8.10</jacoco-maven-plugin.version>
         <nexus.home>https://nexus.imprimerienationale.fr</nexus.home>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <revision>0.1.0-SNAPSHOT</revision>
+        <revision>0.4.0-SNAPSHOT</revision>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <sonar.coverage.jacoco.xmlReportPaths>
             ${project.basedir}/../coverage-aggregate/target/site/jacoco-aggregate/jacoco.xml
@@ -75,11 +75,29 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.ingroupe.efti</groupId>
+            <artifactId>commons</artifactId>
+            <version>0.4.0-SNAPSHOT</version>
+        </dependency>
+
         <!-- Test Logs -->
         <dependency>
             <groupId>com.ingroupe.common</groupId>
             <artifactId>common-test</artifactId>
             <version>2.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+            <version>2.14.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
