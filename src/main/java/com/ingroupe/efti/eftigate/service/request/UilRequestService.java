@@ -1,31 +1,33 @@
 package com.ingroupe.efti.eftigate.service.request;
 
+import com.ingroupe.efti.commons.dto.ControlDto;
+import com.ingroupe.efti.commons.dto.ErrorDto;
+import com.ingroupe.efti.commons.dto.RequestDto;
+import com.ingroupe.efti.commons.dto.UilRequestDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
+import com.ingroupe.efti.commons.enums.RequestType;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
+import com.ingroupe.efti.commons.utils.SerializeUtils;
 import com.ingroupe.efti.edeliveryapconnector.dto.MessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
-import com.ingroupe.efti.eftigate.dto.RequestDto;
-import com.ingroupe.efti.eftigate.dto.UilRequestDto;
 import com.ingroupe.efti.eftigate.dto.requestbody.RequestBodyDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.entity.UilRequestEntity;
-import com.ingroupe.efti.eftigate.enums.RequestType;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
-import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.repository.UilRequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
+import com.ingroupe.efti.eftigate.service.LogManager;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
+import com.ingroupe.efti.eftigate.utils.ControlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -39,11 +41,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.ingroupe.efti.commons.constant.EftiGateConstants.UIL_ACTIONS;
+import static com.ingroupe.efti.commons.constant.EftiGateConstants.UIL_TYPES;
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.RESPONSE_IN_PROGRESS;
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SUCCESS;
 import static com.ingroupe.efti.commons.enums.RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH;
-import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.UIL_ACTIONS;
-import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.UIL_TYPES;
 
 @Slf4j
 @Component
@@ -57,8 +59,9 @@ public class UilRequestService extends RequestService<UilRequestEntity> {
                              final ControlService controlService,
                              final GateProperties gateProperties,
                              final RequestUpdaterService requestUpdaterService,
-                             final SerializeUtils serializeUtils) {
-        super(mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils);
+                             final SerializeUtils serializeUtils,
+                             final LogManager logManager) {
+        super(mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils, logManager);
         this.uilRequestRepository = uilRequestRepository;
     }
 
@@ -93,6 +96,8 @@ public class UilRequestService extends RequestService<UilRequestEntity> {
             this.updateStatus(uilRequestEntity, RequestStatusEnum.ERROR, notificationDto.getMessageId());
             errorReceived(uilRequestEntity, messageBody.getErrorDescription());
         }
+        final ControlDto controlDto = getMapperUtils().controlEntityToControlDto(uilRequestEntity.getControl());
+        getLogManager().logReceivedMessage(controlDto, notificationDto.getContent().getBody(), notificationDto.getContent().getFromPartyId());
         responseToOtherGateIfNecessary(uilRequestEntity);
     }
 
@@ -153,13 +158,12 @@ public class UilRequestService extends RequestService<UilRequestEntity> {
         final UilRequestEntity requestEntity = uilRequestRepository
                 .findByControlRequestUuidAndStatus(messageBody.getRequestUuid(), RequestStatusEnum.IN_PROGRESS);
 
-        if (requestEntity == null) {
-            this.getControlService().createUilControl(ControlDto
+        final ControlDto controlDto = requestEntity != null ? manageResponseFromOtherGate(requestEntity, messageBody) :
+                this.getControlService().createUilControl(ControlUtils
                     .fromGateToGateMessageBodyDto(messageBody, RequestTypeEnum.EXTERNAL_ASK_UIL_SEARCH,
                             notificationDto, getGateProperties().getOwner()));
-        } else {
-            manageResponseFromOtherGate(requestEntity, messageBody);
-        }
+
+        getLogManager().logReceivedMessage(controlDto, notificationDto.getContent().getBody(), notificationDto.getContent().getFromPartyId());
     }
 
     private ErrorEntity setErrorFromMessageBodyDto(final MessageBodyDto messageBody) {
@@ -221,7 +225,7 @@ public class UilRequestService extends RequestService<UilRequestEntity> {
                 .orElseThrow(() -> new RequestNotFoundException("couldn't find Uil request for messageId: " + eDeliveryMessageId));
     }
 
-    private void manageResponseFromOtherGate(final UilRequestEntity requestEntity, final MessageBodyDto messageBody) {
+    private ControlDto manageResponseFromOtherGate(final UilRequestEntity requestEntity, final MessageBodyDto messageBody) {
         if (!ObjectUtils.isEmpty(messageBody.getEFTIData())) {
             requestEntity.setReponseData(messageBody.getEFTIData().toString().getBytes(StandardCharsets.UTF_8));
             requestEntity.setStatus(RequestStatusEnum.SUCCESS);
@@ -234,7 +238,7 @@ public class UilRequestService extends RequestService<UilRequestEntity> {
             requestEntity.setControl(controlEntity);
         }
         uilRequestRepository.save(requestEntity);
-        getControlService().save(requestEntity.getControl());
+        return getControlService().save(requestEntity.getControl());
     }
 
     @Override

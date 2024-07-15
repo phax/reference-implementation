@@ -1,7 +1,7 @@
 package com.ingroupe.efti.eftigate.controller;
 
+import com.ingroupe.efti.commons.dto.NotesDto;
 import com.ingroupe.efti.eftigate.controller.api.NoteControllerApi;
-import com.ingroupe.efti.eftigate.dto.NotesDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.service.ControlService;
 import lombok.AllArgsConstructor;

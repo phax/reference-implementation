@@ -1,12 +1,14 @@
 package com.ingroupe.efti.eftigate.service;
 
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
+import com.ingroupe.efti.commons.exception.TechnicalException;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.service.NotificationService;
-import com.ingroupe.efti.eftigate.exception.TechnicalException;
+import com.ingroupe.efti.eftigate.config.GateProperties;
+import com.ingroupe.efti.eftigate.mapper.MapperUtils;
 import com.ingroupe.efti.eftigate.repository.RequestRepository;
 import com.ingroupe.efti.eftigate.service.request.EftiRequestUpdater;
 import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
@@ -23,14 +25,15 @@ import org.springframework.http.MediaType;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.MESSAGE_ID;
 import static com.ingroupe.efti.edeliveryapconnector.dto.ReceivedNotificationDto.SUBMIT_MESSAGE;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ApIncomingServiceTest extends AbstractServiceTest {
+class ApIncomingServiceTest extends BaseServiceTest {
     private ApIncomingService service;
     @Mock
     private NotificationService notificationService;
@@ -46,7 +49,12 @@ class ApIncomingServiceTest extends AbstractServiceTest {
     private MetadataService metadataService;
     @Mock
     private EftiRequestUpdater eftiRequestUpdater;
-
+    @Mock
+    private LogManager logManager;
+    @Mock
+    private GateProperties gateProperties;
+    @Mock
+    private MapperUtils mapperUtils;
 
     private final static String url = "url";
     private final static String password = "password";
@@ -88,7 +96,7 @@ class ApIncomingServiceTest extends AbstractServiceTest {
 
     @BeforeEach
     public void before() {
-        service = new ApIncomingService(notificationService, requestServiceFactory, metadataService, serializeUtils, requestRepository, eftiRequestUpdater);
+        service = new ApIncomingService(notificationService, requestServiceFactory, metadataService, serializeUtils, eftiRequestUpdater);
     }
 
     @Test

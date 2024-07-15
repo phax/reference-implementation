@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ingroupe.common.test.log.MemoryAppender;
+import com.ingroupe.efti.commons.dto.IdentifiersRequestDto;
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.commons.dto.TransportVehicleDto;
@@ -16,7 +17,6 @@ import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.exception.SendRequestException;
-import com.ingroupe.efti.eftigate.dto.IdentifiersRequestDto;
 import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.IdentifiersRequestEntity;
@@ -48,13 +48,25 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static com.ingroupe.efti.commons.enums.RequestStatusEnum.*;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.IN_PROGRESS;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.RESPONSE_IN_PROGRESS;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SUCCESS;
 import static com.ingroupe.efti.commons.enums.StatusEnum.COMPLETE;
 import static com.ingroupe.efti.eftigate.EftiTestUtils.testFile;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class MetadataRequestServiceTest extends BaseServiceTest {
@@ -102,7 +114,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
                 .transportVehicles(List.of(TransportVehicle.builder()
                         .vehicleId("abc123").vehicleCountry(CountryIndicator.FR).build(), TransportVehicle.builder()
                         .vehicleId("abc124").vehicleCountry(CountryIndicator.BE).build())).build();
-        metadataRequestService = new MetadataRequestService(identifiersRequestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, metadataService, requestUpdaterService, serializeUtils);
+        metadataRequestService = new MetadataRequestService(identifiersRequestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, metadataService, requestUpdaterService, serializeUtils, logManager);
 
         final Logger memoryAppenderTestLogger = (Logger) LoggerFactory.getLogger(MetadataRequestService.class);
         memoryAppender = MemoryAppender.createInitializedMemoryAppender(Level.INFO, memoryAppenderTestLogger);
@@ -423,7 +435,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
     @Test
     void shouldBuildRequestBody_whenRemoteGateSentResponse(){
         controlDto.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);
-        controlDto.setMetadataResults(metadataResults);
+        controlDto.setMetadataResults(metadataResultsDto);
         final RabbitRequestDto rabbitRequestDto = new RabbitRequestDto();
         rabbitRequestDto.setControl(controlDto);
         final MetadataResponseDto metadataResponseDto = com.ingroupe.efti.commons.dto.MetadataResponseDto.builder()
@@ -443,7 +455,7 @@ class MetadataRequestServiceTest extends BaseServiceTest {
     @Test
     void shouldBuildRequestBody_whenLocalGateSendsRequest(){
         controlDto.setRequestType(RequestTypeEnum.EXTERNAL_METADATA_SEARCH);
-        controlDto.setMetadataResults(metadataResults);
+        controlDto.setMetadataResults(metadataResultsDto);
         controlDto.setTransportMetaData(searchParameter);
         final RabbitRequestDto rabbitRequestDto = new RabbitRequestDto();
         rabbitRequestDto.setControl(controlDto);

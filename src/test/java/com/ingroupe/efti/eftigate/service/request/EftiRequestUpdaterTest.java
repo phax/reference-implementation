@@ -1,5 +1,7 @@
 package com.ingroupe.efti.eftigate.service.request;
 
+import com.ingroupe.efti.commons.dto.ControlDto;
+import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationContentDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
@@ -11,7 +13,6 @@ import com.ingroupe.efti.eftigate.service.BaseServiceTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,7 +21,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -47,6 +48,8 @@ class EftiRequestUpdaterTest extends BaseServiceTest {
         requestEntity.setEdeliveryMessageId("messageId");
         requestEntity.setRequestType("UIL");
         final ControlEntity controlEntity = new ControlEntity();
+        controlEntity.setRequestType(RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH);
+        requestEntity.setControl(controlEntity);
         controlEntity.setRequests(List.of(requestEntity));
     }
 
@@ -73,12 +76,12 @@ class EftiRequestUpdaterTest extends BaseServiceTest {
                         .messageId(messageId)
                         .build())
                 .build();
-        final ArgumentCaptor<ControlEntity> controlEntityArgumentCaptor = ArgumentCaptor.forClass(ControlEntity.class);
         when(requestRepository.findByEdeliveryMessageId(any())).thenReturn(requestEntity);
 
         eftiRequestUpdater.manageSendFailure(notificationDto);
 
-        verify(controlService).save(controlEntityArgumentCaptor.capture());
+        verify(controlService).save(any(ControlDto.class));
+        verify(logManager).logAckMessage(any(), anyBoolean());
     }
 
     @Test
@@ -91,12 +94,13 @@ class EftiRequestUpdaterTest extends BaseServiceTest {
                         .messageId(messageId)
                         .build())
                 .build();
-        when(requestRepository.findByControlRequestTypeInAndEdeliveryMessageId(anyList(), any())).thenReturn(requestEntity);
+        when(requestRepository.findByEdeliveryMessageId(any())).thenReturn(requestEntity);
         when(requestServiceFactory.getRequestServiceByRequestType(any(String.class))).thenReturn(uilRequestService);
 
         eftiRequestUpdater.manageSendSuccess(notificationDto);
 
         verify(uilRequestService).manageSendSuccess(messageId);
+        verify(logManager).logAckMessage(any(), anyBoolean());
     }
 
 }

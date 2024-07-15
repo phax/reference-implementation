@@ -1,25 +1,26 @@
 package com.ingroupe.efti.eftigate.service.request;
 
+import com.ingroupe.efti.commons.dto.ControlDto;
+import com.ingroupe.efti.commons.dto.NotesRequestDto;
+import com.ingroupe.efti.commons.dto.RequestDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
+import com.ingroupe.efti.commons.utils.SerializeUtils;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotesMessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.NotesRequestDto;
 import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
-import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.requestbody.NotesRequestBodyDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.NoteRequestEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
-import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.repository.NotesRequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
+import com.ingroupe.efti.eftigate.service.LogManager;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -28,9 +29,9 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 
+import static com.ingroupe.efti.commons.constant.EftiGateConstants.NOTES_TYPES;
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.IN_PROGRESS;
 import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SUCCESS;
-import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.NOTES_TYPES;
 
 @Slf4j
 @Component
@@ -40,13 +41,14 @@ public class NotesRequestService extends RequestService<NoteRequestEntity> {
     private final NotesRequestRepository notesRequestRepository;
 
     public NotesRequestService(final NotesRequestRepository notesRequestRepository,
-                                  final MapperUtils mapperUtils,
-                                  final RabbitSenderService rabbitSenderService,
-                                  final ControlService controlService,
-                                  final GateProperties gateProperties,
-                                  final RequestUpdaterService requestUpdaterService,
-                                  final SerializeUtils serializeUtils) {
-        super(mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils);
+                               final MapperUtils mapperUtils,
+                               final RabbitSenderService rabbitSenderService,
+                               final ControlService controlService,
+                               final GateProperties gateProperties,
+                               final RequestUpdaterService requestUpdaterService,
+                               final SerializeUtils serializeUtils,
+                               final LogManager logManager) {
+        super(mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils, logManager);
         this.notesRequestRepository = notesRequestRepository;
     }
 

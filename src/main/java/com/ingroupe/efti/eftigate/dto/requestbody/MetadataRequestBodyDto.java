@@ -1,10 +1,10 @@
 package com.ingroupe.efti.eftigate.dto.requestbody;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.ingroupe.efti.commons.dto.ControlDto;
+import com.ingroupe.efti.commons.dto.SearchParameter;
 import com.ingroupe.efti.commons.enums.CountryIndicator;
 import com.ingroupe.efti.commons.validator.ValueOfEnum;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.entity.SearchParameter;
 import jakarta.validation.Valid;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.AllArgsConstructor;

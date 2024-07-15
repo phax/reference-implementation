@@ -1,7 +1,7 @@
 package com.ingroupe.efti.eftigate.controller.api;
 
+import com.ingroupe.efti.commons.dto.NotesDto;
 import com.ingroupe.efti.eftigate.config.security.Roles;
-import com.ingroupe.efti.eftigate.dto.NotesDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

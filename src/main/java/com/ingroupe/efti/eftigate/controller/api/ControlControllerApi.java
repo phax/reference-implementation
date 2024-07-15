@@ -1,8 +1,8 @@
 package com.ingroupe.efti.eftigate.controller.api;
 
+import com.ingroupe.efti.commons.dto.UilDto;
 import com.ingroupe.efti.eftigate.config.security.Roles;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
-import com.ingroupe.efti.eftigate.dto.UilDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;

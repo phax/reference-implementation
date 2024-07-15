@@ -1,24 +1,25 @@
 package com.ingroupe.efti.eftigate.service.request;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.ingroupe.efti.commons.dto.ControlDto;
+import com.ingroupe.efti.commons.dto.ErrorDto;
+import com.ingroupe.efti.commons.dto.RequestDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.ErrorCodesEnum;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.ApConfigDto;
+import com.ingroupe.efti.commons.utils.SerializeUtils;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationType;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.ErrorDto;
 import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
-import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
-import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.service.ControlService;
+import com.ingroupe.efti.eftigate.service.LogManager;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +38,11 @@ import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Objects;
 
-import static com.ingroupe.efti.commons.enums.RequestStatusEnum.*;
-import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.EXTERNAL_REQUESTS_TYPES;
+import static com.ingroupe.efti.commons.constant.EftiGateConstants.EXTERNAL_REQUESTS_TYPES;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.ERROR;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.IN_PROGRESS;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.RESPONSE_IN_PROGRESS;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SEND_ERROR;
 
 @Slf4j
 @Component
@@ -53,7 +57,7 @@ public abstract class RequestService<T extends RequestEntity> {
     private final GateProperties gateProperties;
     private final RequestUpdaterService requestUpdaterService;
     private final SerializeUtils serializeUtils;
-
+    private final LogManager logManager;
 
     @Value("${spring.rabbitmq.queues.eftiSendMessageExchange:efti.send-message.exchange}")
     private String eftiSendMessageExchange;
@@ -144,7 +148,7 @@ public abstract class RequestService<T extends RequestEntity> {
         final ErrorDto errorDto = ErrorDto.fromErrorCode(ErrorCodesEnum.AP_SUBMISSION_ERROR);
         requestDto.setError(errorDto);
         controlService.setError(requestDto.getControl(), errorDto);
-        final RequestDto requestDtoUpdated = this.updateStatus(requestDto, RequestStatusEnum.ERROR);
+        final RequestDto requestDtoUpdated = this.updateStatus(requestDto, ERROR);
         if (requestDtoUpdated.getControl().getFromGateUrl() != null &&
                 !gateProperties.isCurrentGate(requestDtoUpdated.getControl().getFromGateUrl()) &&
                 ErrorCodesEnum.AP_SUBMISSION_ERROR.name().equals(requestDto.getControl().getError().getErrorCode())) {

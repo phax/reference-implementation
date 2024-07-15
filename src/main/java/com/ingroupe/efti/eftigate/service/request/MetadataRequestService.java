@@ -1,33 +1,35 @@
 package com.ingroupe.efti.eftigate.service.request;
 
+import com.ingroupe.efti.commons.dto.ControlDto;
+import com.ingroupe.efti.commons.dto.IdentifiersRequestDto;
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.commons.dto.MetadataResultDto;
+import com.ingroupe.efti.commons.dto.MetadataResultsDto;
+import com.ingroupe.efti.commons.dto.RequestDto;
 import com.ingroupe.efti.commons.enums.EDeliveryAction;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
+import com.ingroupe.efti.commons.enums.RequestType;
 import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
+import com.ingroupe.efti.commons.utils.SerializeUtils;
 import com.ingroupe.efti.edeliveryapconnector.dto.IdentifiersMessageBodyDto;
 import com.ingroupe.efti.edeliveryapconnector.dto.NotificationDto;
 import com.ingroupe.efti.edeliveryapconnector.service.RequestUpdaterService;
 import com.ingroupe.efti.eftigate.config.GateProperties;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.IdentifiersRequestDto;
 import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
-import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.requestbody.MetadataRequestBodyDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.IdentifiersRequestEntity;
 import com.ingroupe.efti.eftigate.entity.MetadataResult;
 import com.ingroupe.efti.eftigate.entity.MetadataResults;
 import com.ingroupe.efti.eftigate.entity.RequestEntity;
-import com.ingroupe.efti.eftigate.enums.RequestType;
 import com.ingroupe.efti.eftigate.exception.RequestNotFoundException;
 import com.ingroupe.efti.eftigate.mapper.MapperUtils;
-import com.ingroupe.efti.eftigate.mapper.SerializeUtils;
 import com.ingroupe.efti.eftigate.repository.IdentifiersRequestRepository;
 import com.ingroupe.efti.eftigate.service.ControlService;
+import com.ingroupe.efti.eftigate.service.LogManager;
 import com.ingroupe.efti.eftigate.service.RabbitSenderService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
 import lombok.extern.slf4j.Slf4j;
@@ -42,10 +44,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.ingroupe.efti.commons.enums.RequestStatusEnum.*;
+import static com.ingroupe.efti.commons.constant.EftiGateConstants.IDENTIFIERS_ACTIONS;
+import static com.ingroupe.efti.commons.constant.EftiGateConstants.IDENTIFIERS_TYPES;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.RECEIVED;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.RESPONSE_IN_PROGRESS;
+import static com.ingroupe.efti.commons.enums.RequestStatusEnum.SUCCESS;
 import static com.ingroupe.efti.commons.enums.RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH;
-import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.IDENTIFIERS_ACTIONS;
-import static com.ingroupe.efti.eftigate.constant.EftiGateConstants.IDENTIFIERS_TYPES;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 @Slf4j
@@ -64,8 +68,9 @@ public class MetadataRequestService extends RequestService<IdentifiersRequestEnt
                                   final GateProperties gateProperties,
                                   final MetadataService metadataService,
                                   final RequestUpdaterService requestUpdaterService,
-                                  final SerializeUtils serializeUtils) {
-        super(mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils);
+                                  final SerializeUtils serializeUtils,
+                                  final LogManager logManager) {
+        super(mapperUtils, rabbitSenderService, controlService, gateProperties, requestUpdaterService, serializeUtils, logManager);
         this.metadataService = metadataService;
         this.identifiersRequestRepository = identifiersRequestRepository;
     }
@@ -131,7 +136,7 @@ public class MetadataRequestService extends RequestService<IdentifiersRequestEnt
     private void handleNewControlRequest(final NotificationDto notificationDto, final String bodyFromNotification) {
         final IdentifiersMessageBodyDto requestMessage = getSerializeUtils().mapXmlStringToClass(bodyFromNotification, IdentifiersMessageBodyDto.class);
         final List<MetadataDto> metadataDtoList = metadataService.search(buildMetadataRequestDtoFrom(requestMessage));
-        final MetadataResults metadataResults = buildMetadataResult(metadataDtoList);
+        final MetadataResultsDto metadataResults = buildMetadataResultDto(metadataDtoList);
         final ControlDto controlDto = getControlService().createControlFrom(requestMessage, notificationDto.getContent().getFromPartyId(), metadataResults);
         final RequestDto request = createReceivedRequest(controlDto, metadataDtoList);
         sendRequest(request);
@@ -205,7 +210,7 @@ public class MetadataRequestService extends RequestService<IdentifiersRequestEnt
                 .retry(0)
                 .control(controlDto)
                 .status(status)
-                .metadataResults(buildMetadataResult(metadataDtoList))
+                .metadataResults(buildMetadataResultDto(metadataDtoList))
                 .gateUrlDest(controlDto.getFromGateUrl())
                 .requestType(RequestType.IDENTIFIER)
                 .build();
@@ -230,13 +235,19 @@ public class MetadataRequestService extends RequestService<IdentifiersRequestEnt
                 .build();
     }
 
+    public MetadataResultsDto buildMetadataResultDto(final List<MetadataDto> metadataDtos) {
+        final List<MetadataResultDto> metadataResultList = getMapperUtils().metadataDtosToMetadataResultDto(metadataDtos);
+        return MetadataResultsDto.builder()
+                .metadataResult(metadataResultList)
+                .build();
+    }
+
     public MetadataResults buildMetadataResult(final List<MetadataDto> metadataDtos) {
         final List<MetadataResult> metadataResultList = getMapperUtils().metadataDtosToMetadataEntities(metadataDtos);
         return MetadataResults.builder()
                 .metadataResult(metadataResultList)
                 .build();
     }
-
     private MetadataResults buildMetadataResultFrom(final List<MetadataResultDto> metadataResultDtos) {
         final List<MetadataResult> metadataResultList = getMapperUtils().metadataResultDtosToMetadataEntities(metadataResultDtos);
         return MetadataResults.builder()

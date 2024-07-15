@@ -1,11 +1,11 @@
 package com.ingroupe.efti.eftigate.mapper;
 
+import com.ingroupe.efti.commons.dto.ControlDto;
+import com.ingroupe.efti.commons.dto.ErrorDto;
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataResultDto;
-import com.ingroupe.efti.eftigate.dto.ControlDto;
-import com.ingroupe.efti.eftigate.dto.ErrorDto;
+import com.ingroupe.efti.commons.dto.RequestDto;
 import com.ingroupe.efti.eftigate.dto.RabbitRequestDto;
-import com.ingroupe.efti.eftigate.dto.RequestDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
 import com.ingroupe.efti.eftigate.entity.MetadataResult;
@@ -60,6 +60,12 @@ public class MapperUtils {
     public List<MetadataResult> metadataDtosToMetadataEntities(final List<MetadataDto> metadataDtoList) {
         return CollectionUtils.emptyIfNull(metadataDtoList).stream()
                 .map(metadataDto -> modelMapper.map(metadataDto, MetadataResult.class))
+                .toList();
+    }
+
+    public List<MetadataResultDto> metadataDtosToMetadataResultDto(final List<MetadataDto> metadataDtoList) {
+        return CollectionUtils.emptyIfNull(metadataDtoList).stream()
+                .map(metadataDto -> modelMapper.map(metadataDto, MetadataResultDto.class))
                 .toList();
     }
 
