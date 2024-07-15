@@ -45,9 +45,10 @@ class MetadataServiceTest extends AbstractServiceTest {
     @BeforeEach
     public void before() {
         openMocks = MockitoAnnotations.openMocks(this);
-        service = new MetadataService(repository, mapperUtils);
+        service = new MetadataService(repository, mapperUtils, auditRegistryLogService, serializeUtils);
 
-        ReflectionTestUtils.setField(service, "gateFrom", "http://efti.gate.borduria.eu");
+        ReflectionTestUtils.setField(service, "gateOwner", "http://efti.gate.borduria.eu");
+        ReflectionTestUtils.setField(service, "gateCountry", "BO");
 
         metadataDto = MetadataDto.builder()
                 .eFTIDataUuid(DATA_UUID)
@@ -71,6 +72,7 @@ class MetadataServiceTest extends AbstractServiceTest {
         service.createOrUpdate(metadataDto);
 
         verify(repository).save(argumentCaptor.capture());
+        verify(auditRegistryLogService).log(any(), any(), any(), any());
         assertEquals(DATA_UUID, argumentCaptor.getValue().getEFTIDataUuid());
         assertEquals(PLATFORM_URL, argumentCaptor.getValue().getEFTIPlatformUrl());
         assertEquals(GATE_URL, argumentCaptor.getValue().getEFTIGateUrl());
@@ -84,6 +86,7 @@ class MetadataServiceTest extends AbstractServiceTest {
         service.createOrUpdate(metadataDto);
 
         verify(repository).save(argumentCaptor.capture());
+        verify(auditRegistryLogService).log(any(), any(), any(), any());
         assertEquals(DATA_UUID, argumentCaptor.getValue().getEFTIDataUuid());
         assertEquals(PLATFORM_URL, argumentCaptor.getValue().getEFTIPlatformUrl());
         assertEquals(GATE_URL, argumentCaptor.getValue().getEFTIGateUrl());
@@ -102,6 +105,7 @@ class MetadataServiceTest extends AbstractServiceTest {
         service.createOrUpdate(metadataDto);
 
         verify(repository).save(argumentCaptor.capture());
+        verify(auditRegistryLogService).log(any(), any(), any(), any());
         verify(repository).findByUil(GATE_URL, DATA_UUID, PLATFORM_URL);
         assertEquals(DATA_UUID, argumentCaptor.getValue().getEFTIDataUuid());
         assertEquals(PLATFORM_URL, argumentCaptor.getValue().getEFTIPlatformUrl());
@@ -131,6 +135,7 @@ class MetadataServiceTest extends AbstractServiceTest {
         service.createOrUpdate(metadataDto);
 
         verify(repository).save(argumentCaptor.capture());
+        verify(auditRegistryLogService).log(any(), any(), any(), any());
         verify(repository).findByUil(GATE_URL, DATA_UUID, PLATFORM_URL);
         assertEquals(DATA_UUID, argumentCaptor.getValue().getEFTIDataUuid());
         assertEquals(PLATFORM_URL, argumentCaptor.getValue().getEFTIPlatformUrl());

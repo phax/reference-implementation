@@ -2,6 +2,8 @@ package com.ingroupe.efti.metadataregistry.service;
 
 import com.ingroupe.efti.commons.dto.MetadataDto;
 import com.ingroupe.efti.commons.dto.MetadataRequestDto;
+import com.ingroupe.efti.commons.utils.SerializeUtils;
+import com.ingroupe.efti.eftilogger.service.AuditRegistryLogService;
 import com.ingroupe.efti.metadataregistry.MetadataMapper;
 import com.ingroupe.efti.metadataregistry.entity.MetadataEntity;
 import com.ingroupe.efti.metadataregistry.exception.InvalidMetadataException;
@@ -28,13 +30,18 @@ public class MetadataService {
 
     private final MetadataRepository repository;
     private final MetadataMapper mapper;
+    private final AuditRegistryLogService logService;
+    private final SerializeUtils serializeUtils;
 
     @Value("${gate.owner}")
-    private String gateFrom;
+    private String gateOwner;
+    @Value("${gate.country}")
+    private String gateCountry;
 
     public void createOrUpdate(final MetadataDto metadataDto) {
+        final String bodyBase64 = serializeUtils.mapObjectToBase64String(metadataDto);
 
-        this.enrichAndValidate(metadataDto);
+        this.enrichAndValidate(metadataDto, bodyBase64);
 
         final Optional<MetadataEntity> entityOptional = repository.findByUil(metadataDto.getEFTIGateUrl(),
                 metadataDto.getEFTIDataUuid(), metadataDto.getEFTIPlatformUrl());
@@ -43,12 +50,12 @@ public class MetadataService {
             metadataDto.setId(entityOptional.get().getId());
             metadataDto.setMetadataUUID(entityOptional.get().getMetadataUUID());
             log.info("updating metadata for uuid {}", metadataDto.getMetadataUUID());
-            this.save(metadataDto);
-            return;
+        } else {
+            metadataDto.setMetadataUUID(UUID.randomUUID().toString());
+            log.info("creating new entry for uuid {}", metadataDto.getMetadataUUID());
         }
-        metadataDto.setMetadataUUID(UUID.randomUUID().toString());
-        log.info("creating new entry for uuid {}", metadataDto.getMetadataUUID());
         this.save(metadataDto);
+        logService.log(metadataDto, gateOwner, gateCountry, bodyBase64);
     }
 
     public void disable(final MetadataDto metadataDto) {
@@ -65,8 +72,8 @@ public class MetadataService {
         return mapper.entityListToDtoList(this.repository.searchByCriteria(metadataRequestDto));
     }
 
-    private void enrichAndValidate(final MetadataDto metadataDto) {
-        metadataDto.setEFTIGateUrl(gateFrom);
+    private void enrichAndValidate(final MetadataDto metadataDto, final String bodyBase64) {
+        metadataDto.setEFTIGateUrl(gateOwner);
 
         final Validator validator;
         try (final ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
@@ -78,6 +85,8 @@ public class MetadataService {
             final String message = String.format("rejecting metadata for uil (gate=%s, uuid=%s, platform=%s) because %s",
                     metadataDto.getEFTIGateUrl(), metadataDto.getEFTIPlatformUrl(), metadataDto.getEFTIPlatformUrl(), violations);
             log.error(message);
+
+            logService.log(metadataDto, gateOwner, gateCountry, bodyBase64, violations.iterator().next().getMessage());
             throw new InvalidMetadataException(message);
         }
     }
