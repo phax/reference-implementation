@@ -12,6 +12,9 @@ import lombok.ToString;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.ingroupe.efti.commons.enums.ErrorCodesEnum.UUID_NOT_FOUND;
+
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -43,7 +46,13 @@ public class ControlDto {
         return StatusEnum.ERROR == status;
     }
 
+    @JsonIgnore
     public boolean isExternalAsk() {
         return this.getRequestType() != null && this.getRequestType().isExternalAsk();
+    }
+
+    @JsonIgnore
+    public boolean isFound() {
+        return !(isError() && UUID_NOT_FOUND.name().equals(this.getError().getErrorCode()));
     }
 }
