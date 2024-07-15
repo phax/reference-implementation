@@ -18,7 +18,6 @@ import java.time.format.DateTimeFormatter;
 @RequiredArgsConstructor
 public class AuditRegistryLogService implements LogService<LogRegistryDto> {
 
-    private final String EDELIVERY = "EDELIVERY";
     private static final LogMarkerEnum MARKER = LogMarkerEnum.REGISTRY;
     private final SerializeUtils serializeUtils;
 
@@ -28,6 +27,7 @@ public class AuditRegistryLogService implements LogService<LogRegistryDto> {
                     final String body,
                     final String errorCode) {
         final boolean isError = errorCode != null;
+        final String edelivery = "EDELIVERY";
         this.log(LogRegistryDto.builder()
                 .messageDate(DateTimeFormatter.ofPattern(DATE_FORMAT).format(LocalDateTime.now()))
                 .componentType(ComponentType.GATE)
@@ -46,7 +46,7 @@ public class AuditRegistryLogService implements LogService<LogRegistryDto> {
                 .timeoutComponentType(TIMEOUT_COMPONENT_TYPE)
                 .metadataId(metadataDto.getMetadataUUID())
                 .eFTIDataId(metadataDto.getEFTIDataUuid())
-                .interfaceType(EDELIVERY)
+                .interfaceType(edelivery)
                 .build());
     }
         public void log(final MetadataDto metadataDto,
