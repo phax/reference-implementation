@@ -2,6 +2,7 @@ package com.ingroupe.efti.eftigate.controller.api;
 
 import com.ingroupe.efti.commons.dto.NotesDto;
 import com.ingroupe.efti.eftigate.config.security.Roles;
+import com.ingroupe.efti.eftigate.dto.NoteResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -25,6 +26,6 @@ public interface NoteControllerApi {
     })
     @PostMapping("/notes")
     @Secured(Roles.ROLE_ROAD_CONTROLER)
-    ResponseEntity<String> createNote(final @RequestBody NotesDto notesDto);
+    ResponseEntity<NoteResponseDto> createNote(final @RequestBody NotesDto notesDto);
 
 }

@@ -16,6 +16,7 @@ import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.IdentifiersMessageBodyDto;
 import com.ingroupe.efti.eftigate.config.GateProperties;
+import com.ingroupe.efti.eftigate.dto.NoteResponseDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.ErrorEntity;
@@ -49,6 +50,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+import static com.ingroupe.efti.commons.enums.ErrorCodesEnum.UUID_NOT_FOUND;
 import static com.ingroupe.efti.commons.enums.RequestTypeEnum.EXTERNAL_ASK_METADATA_SEARCH;
 import static com.ingroupe.efti.commons.enums.StatusEnum.PENDING;
 import static java.lang.String.format;
@@ -60,6 +62,7 @@ import static java.util.Collections.emptyList;
 public class ControlService {
 
     public static final String ERROR_REQUEST_UUID_NOT_FOUND = "Error requestUuid not found.";
+    public static final String NOTE_WAS_NOT_SENT = "note was not sent";
     private final ControlRepository controlRepository;
     private final EftiGateUrlResolver eftiGateUrlResolver;
     private final MetadataService metadataService;
@@ -93,14 +96,16 @@ public class ControlService {
         return createControl(metadataRequestDto, ControlUtils.fromLocalMetadataControl(metadataRequestDto, RequestTypeEnum.LOCAL_METADATA_SEARCH));
     }
 
-    public RequestUuidDto createNoteRequestForControl(final NotesDto notesDto) {
+    public NoteResponseDto createNoteRequestForControl(final NotesDto notesDto) {
         log.info("create Note Request for control with data uuid : {}", notesDto.getEFTIDataUuid());
         final ControlDto savedControl = getControlByRequestUuid(notesDto.getRequestUuid());
-        if (savedControl.isError()) {
-            return buildResponse(savedControl);
+        if (savedControl != null && savedControl.isFound()) {
+            return createNoteRequestForControl(savedControl, notesDto);
+        } else {
+            return new NoteResponseDto(NOTE_WAS_NOT_SENT, UUID_NOT_FOUND.name(), UUID_NOT_FOUND.getMessage());
         }
-        return createNoteRequestForControl(savedControl, notesDto);
     }
+
 
     public ControlDto createControlFrom(final IdentifiersMessageBodyDto messageBody, final String fromGateUrl, final MetadataResultsDto metadataResults) {
         final ControlDto controlDto = ControlUtils.fromExternalMetadataControl(messageBody, EXTERNAL_ASK_METADATA_SEARCH, fromGateUrl, gateProperties.getOwner(), metadataResults);
@@ -116,15 +121,17 @@ public class ControlService {
         return buildResponse(controlDto);
     }
 
-    private RequestUuidDto createNoteRequestForControl(final ControlDto controlDto, final NotesDto notesDto) {
+    private NoteResponseDto createNoteRequestForControl(final ControlDto controlDto, final NotesDto notesDto) {
         final Optional<ErrorDto> errorOptional = this.validateControl(notesDto);
-        errorOptional.ifPresentOrElse(error -> createErrorControl(controlDto, error,false), () -> {
+        if (errorOptional.isPresent()){
+            final ErrorDto errorDto = errorOptional.get();
+            return new NoteResponseDto(NOTE_WAS_NOT_SENT, errorDto.getErrorCode(), errorDto.getErrorDescription());
+        } else {
             controlDto.setNotes(notesDto.getNote());
-            getRequestService(RequestTypeEnum.NOTE_SEND).createAndSendRequest(controlDto, !gateProperties.isCurrentGate(notesDto.getEFTIGateUrl()) ? notesDto.getEFTIGateUrl() : null);
+            getRequestService(RequestTypeEnum.NOTE_SEND).createAndSendRequest(controlDto, !gateProperties.isCurrentGate(controlDto.getEftiGateUrl()) ? controlDto.getEftiGateUrl() : null);
             log.info("Note has been registered for control with request uuid '{}'", controlDto.getRequestUuid());
-        });
-        return buildResponse(controlDto);
-
+            return  NoteResponseDto.builder().message("Note sent").build();
+        }
     }
 
     public ControlDto createUilControl(final ControlDto controlDto) {
@@ -288,7 +295,7 @@ public class ControlService {
     private ControlDto buildNotFoundControlEntity() {
         return mapperUtils.controlEntityToControlDto(ControlEntity.builder()
                 .status(StatusEnum.ERROR)
-                .error(buildErrorEntity(ErrorCodesEnum.UUID_NOT_FOUND.name())).build());
+                .error(buildErrorEntity(UUID_NOT_FOUND.name())).build());
     }
 
     private static ErrorEntity buildErrorEntity(final String errorCode) {

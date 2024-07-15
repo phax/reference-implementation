@@ -9,6 +9,7 @@ import com.ingroupe.efti.commons.dto.MetadataRequestDto;
 import com.ingroupe.efti.commons.dto.MetadataResponseDto;
 import com.ingroupe.efti.commons.dto.MetadataResultDto;
 import com.ingroupe.efti.commons.dto.MetadataResultsDto;
+import com.ingroupe.efti.commons.dto.NotesDto;
 import com.ingroupe.efti.commons.dto.SearchParameter;
 import com.ingroupe.efti.commons.dto.TransportVehicleDto;
 import com.ingroupe.efti.commons.dto.UilDto;
@@ -18,6 +19,7 @@ import com.ingroupe.efti.commons.enums.RequestTypeEnum;
 import com.ingroupe.efti.commons.enums.StatusEnum;
 import com.ingroupe.efti.edeliveryapconnector.dto.IdentifiersMessageBodyDto;
 import com.ingroupe.efti.eftigate.config.GateProperties;
+import com.ingroupe.efti.eftigate.dto.NoteResponseDto;
 import com.ingroupe.efti.eftigate.dto.RequestUuidDto;
 import com.ingroupe.efti.eftigate.entity.ControlEntity;
 import com.ingroupe.efti.eftigate.entity.IdentifiersRequestEntity;
@@ -29,6 +31,7 @@ import com.ingroupe.efti.eftigate.exception.AmbiguousIdentifierException;
 import com.ingroupe.efti.eftigate.repository.ControlRepository;
 import com.ingroupe.efti.eftigate.service.gate.EftiGateUrlResolver;
 import com.ingroupe.efti.eftigate.service.request.MetadataRequestService;
+import com.ingroupe.efti.eftigate.service.request.NotesRequestService;
 import com.ingroupe.efti.eftigate.service.request.RequestServiceFactory;
 import com.ingroupe.efti.eftigate.service.request.UilRequestService;
 import com.ingroupe.efti.metadataregistry.service.MetadataService;
@@ -70,6 +73,8 @@ class ControlServiceTest extends AbstractServiceTest {
     @Mock
     private UilRequestService uilRequestService;
     @Mock
+    private NotesRequestService notesRequestService;
+    @Mock
     private MetadataRequestService metadataRequestService;
     @Mock
     private MetadataService metadataService;
@@ -92,6 +97,7 @@ class ControlServiceTest extends AbstractServiceTest {
 
 
     private final UilDto uilDto = new UilDto();
+    private final NotesDto notesDto = new NotesDto();
     private final MetadataRequestDto metadataRequestDto = new MetadataRequestDto();
     private final ControlDto controlDto = new ControlDto();
     MetadataDto metadataDto= new MetadataDto();
@@ -543,7 +549,7 @@ class ControlServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    void  souldCreateMetadataControlWithPendingStatus_whenAllGivenDestinationGatesDoesNotExist() {
+    void  shouldCreateMetadataControlWithPendingStatus_whenAllGivenDestinationGatesDoesNotExist() {
         metadataRequestDto.setEFTIGateIndicator(List.of("IT", "RO"));
         when(controlRepository.save(any())).thenReturn(controlEntity);
         when(gateToRequestTypeFunction.apply(any())).thenReturn(RequestTypeEnum.EXTERNAL_METADATA_SEARCH);
@@ -860,5 +866,44 @@ class ControlServiceTest extends AbstractServiceTest {
         assertNotNull(requestUuidDtoResult);
         assertEquals(ErrorCodesEnum.DATA_NOT_FOUND_ON_REGISTRY.name(), requestUuidDtoResult.getErrorCode());
         assertEquals(ErrorCodesEnum.DATA_NOT_FOUND_ON_REGISTRY.getMessage(), requestUuidDtoResult.getErrorDescription());
+    }
+
+    @Test
+    void shouldCreateNoteRequestForExistingControl() {
+        notesDto.setRequestUuid("requestUuid");
+        notesDto.setEFTIGateUrl("http://www.gate.com");
+        notesDto.setEFTIDataUuid("12345678-ab12-4ab6-8999-123456789abc");
+        notesDto.setEFTIPlatformUrl("http://www.platform.com");
+
+        when(controlRepository.save(any())).thenReturn(controlEntity);
+        when(requestServiceFactory.getRequestServiceByRequestType(any(RequestTypeEnum.class))).thenReturn(notesRequestService);
+        when(controlRepository.findByRequestUuid(any())).thenReturn(Optional.of(controlEntity));
+
+
+        final NoteResponseDto noteResponseDto = controlService.createNoteRequestForControl(notesDto);
+
+        verify(notesRequestService, times(1)).createAndSendRequest(any(), any());
+        verify(controlRepository, times(1)).save(any());
+        assertNotNull(noteResponseDto);
+        assertEquals("Note sent", noteResponseDto.getMessage());
+        assertNull(noteResponseDto.getErrorCode());
+        assertNull(noteResponseDto.getErrorDescription());
+    }
+
+    @Test
+    void shouldNotCreateNoteRequestForNotControl() {
+        notesDto.setRequestUuid("requestUuid");
+        notesDto.setEFTIGateUrl("http://www.gate.com");
+        notesDto.setEFTIDataUuid("12345678-ab12-4ab6-8999-123456789abc");
+        notesDto.setEFTIPlatformUrl("http://www.platform.com");
+
+        final NoteResponseDto noteResponseDto = controlService.createNoteRequestForControl(notesDto);
+
+        verify(notesRequestService, never()).createAndSendRequest(any(), any());
+        verify(controlRepository, never()).save(any());
+        assertNotNull(noteResponseDto);
+        assertEquals("note was not sent", noteResponseDto.getMessage());
+        assertNotNull(noteResponseDto.getErrorCode());
+        assertNotNull(noteResponseDto.getErrorDescription());
     }
 }
