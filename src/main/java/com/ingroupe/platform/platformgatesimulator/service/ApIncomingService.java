@@ -39,7 +39,6 @@ public class ApIncomingService {
     @Autowired
     private final GateProperties gateProperties;
     private final ReaderService readerService;
-
     private final XmlMapper xmlMapper;
 
     public void uploadMetadata(final MetadataDto metadataDto) throws JsonProcessingException {
@@ -71,8 +70,7 @@ public class ApIncomingService {
 
         if (action == EDeliveryAction.SEND_NOTES) {
             final NotesMessageBodyDto messageBody = xmlMapper.readValue(notificationContentDto.getBody(), NotesMessageBodyDto.class);
-            log.info("note {} received for request with id {}", messageBody.getNote(), messageBody.getRequestUuid());
-            //todo mark as downloaded(efti-848)
+            log.info("note \"{}\" received for request with id {}", messageBody.getNote(), messageBody.getRequestUuid());
         } else {
             final MessageBodyDto messageBody = xmlMapper.readValue(notificationContentDto.getBody(), MessageBodyDto.class);
             final String eftidataUuid = messageBody.getEFTIDataUuid();
