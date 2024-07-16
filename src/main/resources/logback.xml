@@ -68,7 +68,7 @@
             <OnMismatch>DENY</OnMismatch>
             <OnMatch>ACCEPT</OnMatch>
         </filter>
-        <file>${LOG_PATH}/request/${LOG_REQUEST_NAME}.log</file>
+        <file>${LOG_PATH}/requests/${LOG_REQUEST_NAME}.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOG_ARCHIVE}/${LOG_REQUEST_NAME}-%i-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
             <maxFileSize>${LOG_MAX_FILE_SIZE}</maxFileSize>
