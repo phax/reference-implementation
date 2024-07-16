@@ -23,6 +23,7 @@ spring:
 
 gate:
   owner: https://mock.efti.int.k8s.groupein.local/bo
+  country: BO
   ap:
     url: http://ileftimicr03in.service.groupein.local:8080/domibus/services/wsplugin
     username: borduria_service_account

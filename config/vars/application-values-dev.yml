@@ -23,6 +23,7 @@ spring:
 
 gate:
   owner: https://gate-fr.efti.dev.k8s.groupein.local
+  country: FR
   ap:
     url: http://172.16.201.114:8080/domibus/services/wsplugin
     username: france_service_account

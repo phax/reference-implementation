@@ -23,6 +23,7 @@ spring:
 
 gate:
   owner: https://mock.efti.qlf.k8s.groupein.local/sy
+  country: SY
   ap:
     url: https://edelivery-sy.qlf.efti.service.groupein.local/ap-gate/domibus/services/wsplugin
     username: syldavia_service_account
