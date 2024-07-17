@@ -26,13 +26,13 @@ variables:
       - "true"
       - "false"
     description: "Allow to rebuild or no the component Image. Set to 'true' by default."
-  LABEL: 
+  LABEL:
     value: "NONE"
     options:
       - "NONE"
       - "bo"
       - "li"
-      - "sy"      
+      - "sy"
     description: "The label of component. Set to 'NONE' for default gate."
 
 workflow:

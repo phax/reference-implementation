@@ -3,7 +3,7 @@ spring:
     password: syldavia
     username: syldavia
     virtual_host: syldavia
-    host: svc-efti-rabbitmq.app-int-efti
+    host: svc-efti-rabbitmq.app-qlf-efti
   application:
     name: efti-gate-sy
   datasource:
