@@ -1,7 +1,6 @@
 package com.ingroupe.efti.eftigate.service.request;
 
 import com.ingroupe.efti.commons.constant.EftiGateConstants;
-import com.ingroupe.efti.commons.dto.ControlDto;
 import com.ingroupe.efti.commons.dto.RequestDto;
 import com.ingroupe.efti.commons.enums.RequestStatusEnum;
 import com.ingroupe.efti.commons.enums.RequestType;
