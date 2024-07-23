@@ -24,7 +24,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 class RequestUpdaterServiceTest {
 
     private RequestUpdaterService service;
-    private final static String FOLDER = "src/test/java/resources/wiremock";
+    private final static String FOLDER = "src/test/resources/wiremock";
     private WireMockServer wireMockServer;
 
     @BeforeEach

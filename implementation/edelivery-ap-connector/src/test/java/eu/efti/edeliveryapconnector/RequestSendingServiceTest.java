@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class RequestSendingServiceTest {
 
     private RequestSendingService service;
-    private final static String FOLDER = "src/test/java/resources/wiremock";
+    private final static String FOLDER = "src/test/resources/wiremock";
     private WireMockServer wireMockServer;
 
     @BeforeEach

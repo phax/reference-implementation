@@ -1,6 +1,5 @@
 package eu.efti.eftigate.service.request;
 
-import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.efti.commons.dto.IdentifiersRequestDto;

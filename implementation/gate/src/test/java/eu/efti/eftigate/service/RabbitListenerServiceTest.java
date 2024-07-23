@@ -1,7 +1,5 @@
 package eu.efti.eftigate.service;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
 import eu.efti.commons.enums.EDeliveryAction;
 import eu.efti.commons.enums.RequestTypeEnum;
 import eu.efti.commons.exception.TechnicalException;
@@ -13,13 +11,11 @@ import eu.efti.eftigate.service.request.RequestServiceFactory;
 import eu.efti.eftigate.service.request.UilRequestService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.LoggerFactory;
 
 import java.util.function.Function;
 
