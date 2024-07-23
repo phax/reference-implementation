@@ -1,0 +1,9 @@
+server:
+  port: 9005
+
+logging:
+  level:
+    eu:
+      efti:
+        edeliveryapconnector:
+          ApClient: DEBUG
