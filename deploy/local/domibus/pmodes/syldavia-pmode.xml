@@ -10,15 +10,15 @@
 			 retention_undownloaded="14400"
 			 retention_sent="14400"
 			 retention_metadata_offset="0"
-		     delete_message_metadata="false"
-		     max_batch_delete="1000"/>
+			 delete_message_metadata="false"
+			 max_batch_delete="1000"/>
 	</mpcs>
 	<businessProcesses>
 		<roles>
-			<role name="defaultInitiatorRole" 
-					value="http://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/core/200704/initiator"/>
-			<role name="defaultResponderRole" 
-					value="http://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/core/200704/responder"/>
+			<role name="defaultInitiatorRole"
+				  value="http://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/core/200704/initiator"/>
+			<role name="defaultResponderRole"
+				  value="http://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/core/200704/responder"/>
 		</roles>
 		<parties>
 			<partyIdTypes>
@@ -46,14 +46,14 @@
 			<binding name="pushAndPull" value="http://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/core/200704/pushAndPush"/>
 		</meps>
 		<properties>
-			<property name="originalSenderProperty" 
-					key="originalSender" 
-					datatype="string" 
-					required="true"/>
-			<property name="finalRecipientProperty" 
-					key="finalRecipient" 
-					datatype="string" 
-					required="true"/>
+			<property name="originalSenderProperty"
+					  key="originalSender"
+					  datatype="string"
+					  required="true"/>
+			<property name="finalRecipientProperty"
+					  key="finalRecipient"
+					  datatype="string"
+					  required="true"/>
 			<propertySet name="eDeliveryPropertySet">
 				<propertyRef property="finalRecipientProperty"/>
 				<propertyRef property="originalSenderProperty"/>
@@ -75,15 +75,15 @@
 		</payloadProfiles>
 		<securities>
 			<security name="eDeliveryAS4Policy"
-					policy="eDeliveryAS4Policy.xml"
-					signatureMethod="RSA_SHA256" />
+					  policy="eDeliveryAS4Policy.xml"
+					  signatureMethod="RSA_SHA256" />
 		</securities>
 		<errorHandlings>
 			<errorHandling name="eftiErrorHandling"
-					errorAsResponse="true" 
-					businessErrorNotifyProducer="true"
-					businessErrorNotifyConsumer="true"
-					deliveryFailureNotifyProducer="true"/>
+						   errorAsResponse="true"
+						   businessErrorNotifyProducer="true"
+						   businessErrorNotifyConsumer="true"
+						   deliveryFailureNotifyProducer="true"/>
 		</errorHandlings>
 		<agreements>
 			<agreement name="agreement1" value="A1" type="T1"/>
@@ -96,6 +96,7 @@
 			<action name="uploadMetadata" value="uploadMetadata"/>
 			<action name="forwardUil" value="forwardUil"/>
 			<action name="getIdentifiers" value="getIdentifiers"/>
+			<action name="sendNotes" value="sendNotes"/>
 		</actions>
 		<as4>
 			<receptionAwareness name="receptionAwareness" retry="1;4;CONSTANT" duplicateDetection="true"/>
@@ -146,7 +147,7 @@
 							  payloadProfile="MessageProfile"
 							  errorHandling="eftiErrorHandling"
 							  compressPayloads="true"/>
-		<legConfiguration name="eftiServiceForwardUil"
+			<legConfiguration name="eftiServiceForwardUil"
 							  service="eftiService"
 							  action="forwardUil"
 							  defaultMpc="defaultMpc"
@@ -155,6 +156,17 @@
 							  receptionAwareness="receptionAwareness"
 							  propertySet="eDeliveryPropertySet"
 							  payloadProfile="MessageProfile"
+							  errorHandling="eftiErrorHandling"
+							  compressPayloads="true"/>
+			<legConfiguration name="eftiServiceSendNotes"
+							  service="eftiService"
+							  action="sendNotes"
+							  defaultMpc="defaultMpc"
+							  reliability="AS4Reliability"
+							  security="eDeliveryAS4Policy"
+							  receptionAwareness="receptionAwareness"
+							  propertySet="eDeliveryPropertySet"
+							  payloadProfile="messageProfile"
 							  errorHandling="eftiErrorHandling"
 							  compressPayloads="true"/>
 		</legConfigurations>
@@ -181,6 +193,7 @@
 				<leg name="eftiServiceUploadMetadata"/>
 				<leg name="eftiServiceGetIdentifiers"/>
 				<leg name="eftiServiceForwardUil"/>
+				<leg name="eftiServiceSendNotes"/>
 			</legs>
 		</process>
 	</businessProcesses>
