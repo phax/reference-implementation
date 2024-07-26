@@ -23,6 +23,7 @@ spring:
 
 gate:
   owner: http://efti.gate.syldavia.eu
+  country: SY
   ap:
     url: http://efti.gate.syldavia.eu:81/domibus/services/wsplugin
     username: syldavia_service_account

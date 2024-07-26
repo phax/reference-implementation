@@ -1,5 +1,7 @@
 package eu.efti.eftigate.dto.requestbody;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.AllArgsConstructor;
@@ -13,6 +15,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name = "body")
 public class RequestBodyDto {
     @XmlElement(name = "eFTIData")

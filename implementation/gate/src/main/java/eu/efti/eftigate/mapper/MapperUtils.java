@@ -1,10 +1,11 @@
 package eu.efti.eftigate.mapper;
 
+import eu.efti.commons.dto.ControlDto;
+import eu.efti.commons.dto.ErrorDto;
 import eu.efti.commons.dto.MetadataDto;
 import eu.efti.commons.dto.MetadataResultDto;
-import eu.efti.eftigate.dto.ControlDto;
-import eu.efti.eftigate.dto.ErrorDto;
-import eu.efti.eftigate.dto.RequestDto;
+import eu.efti.commons.dto.RequestDto;
+import eu.efti.eftigate.dto.RabbitRequestDto;
 import eu.efti.eftigate.entity.ControlEntity;
 import eu.efti.eftigate.entity.ErrorEntity;
 import eu.efti.eftigate.entity.MetadataResult;
@@ -44,17 +45,27 @@ public class MapperUtils {
         return modelMapper.map(controlEntity, ControlDto.class);
     }
 
-    public RequestEntity requestDtoToRequestEntity(final RequestDto requestDto) {
-        return modelMapper.map(requestDto, RequestEntity.class);
+    public <T extends RequestEntity> T requestDtoToRequestEntity(final RequestDto requestDto, final Class<T> destinationClass) {
+        return modelMapper.map(requestDto, destinationClass);
     }
 
-    public RequestDto requestToRequestDto(final RequestEntity requestEntity) {
-        return modelMapper.map(requestEntity, RequestDto.class);
+    public <T extends RequestDto> T rabbitRequestDtoToRequestDto(final RabbitRequestDto rabbitRequestDto, final Class<T> destinationClass) {
+        return modelMapper.map(rabbitRequestDto, destinationClass);
+    }
+
+    public <T extends RequestEntity, D extends RequestDto> D requestToRequestDto(final T requestEntity, final Class<D> destinationClass) {
+        return modelMapper.map(requestEntity, destinationClass);
     }
 
     public List<MetadataResult> metadataDtosToMetadataEntities(final List<MetadataDto> metadataDtoList) {
         return CollectionUtils.emptyIfNull(metadataDtoList).stream()
                 .map(metadataDto -> modelMapper.map(metadataDto, MetadataResult.class))
+                .toList();
+    }
+
+    public List<MetadataResultDto> metadataDtosToMetadataResultDto(final List<MetadataDto> metadataDtoList) {
+        return CollectionUtils.emptyIfNull(metadataDtoList).stream()
+                .map(metadataDto -> modelMapper.map(metadataDto, MetadataResultDto.class))
                 .toList();
     }
 

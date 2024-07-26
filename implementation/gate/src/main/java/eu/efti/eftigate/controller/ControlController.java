@@ -1,8 +1,8 @@
 package eu.efti.eftigate.controller;
 
+import eu.efti.commons.dto.UilDto;
 import eu.efti.eftigate.controller.api.ControlControllerApi;
 import eu.efti.eftigate.dto.RequestUuidDto;
-import eu.efti.eftigate.dto.UilDto;
 import eu.efti.eftigate.entity.ControlEntity;
 import eu.efti.eftigate.service.ControlService;
 import io.swagger.v3.oas.annotations.Parameter;

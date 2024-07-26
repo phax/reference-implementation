@@ -6,6 +6,7 @@ import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
+import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
@@ -13,6 +14,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
@@ -20,8 +23,7 @@ import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import lombok.ToString;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serializable;
@@ -29,6 +31,8 @@ import java.time.LocalDateTime;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "request_type")
 @Table(name = "request", catalog = "efti")
 @Getter
 @Setter
@@ -50,9 +54,6 @@ public class RequestEntity extends AbstractModel implements Serializable {
     @Column(name = "retry")
     private Integer retry;
 
-    @Column(name = "reponsedata")
-    private byte[] reponseData;
-    
     @Column(name = "nextretrydate")
     private LocalDateTime nextRetryDate;
     
@@ -63,11 +64,12 @@ public class RequestEntity extends AbstractModel implements Serializable {
     @JoinColumn(name = "control")
     ControlEntity control;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "error", referencedColumnName = "id")
+    @ToString.Exclude @EqualsAndHashCode.Exclude
     ErrorEntity error;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "metadatas")
-    private MetadataResults metadataResults;
+    @Getter
+    @Column(name="request_type", insertable = false, updatable = false)
+    protected String requestType;
 }

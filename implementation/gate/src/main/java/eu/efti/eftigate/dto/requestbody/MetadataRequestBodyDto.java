@@ -1,11 +1,12 @@
 package eu.efti.eftigate.dto.requestbody;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import eu.efti.commons.dto.ControlDto;
+import eu.efti.commons.dto.SearchParameter;
 import eu.efti.commons.enums.CountryIndicator;
 import eu.efti.commons.validator.ValueOfEnum;
-import eu.efti.eftigate.dto.ControlDto;
-import eu.efti.eftigate.entity.SearchParameter;
 import jakarta.validation.Valid;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@XmlRootElement(name = "body")
 public class MetadataRequestBodyDto {
     private String requestUuid;
     private String transportMode;

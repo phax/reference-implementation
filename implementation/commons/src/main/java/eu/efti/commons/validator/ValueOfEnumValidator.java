@@ -18,9 +18,6 @@ public class ValueOfEnumValidator implements ConstraintValidator<ValueOfEnum, Ch
 
     @Override
     public boolean isValid(final CharSequence value, final ConstraintValidatorContext context) {
-        if (value == null) {
-            return true;
-        }
-        return acceptedValues.contains(value.toString());
+        return value == null || acceptedValues.contains(value.toString());
     }
 }

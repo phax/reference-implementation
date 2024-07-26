@@ -1,5 +1,6 @@
 package eu.efti.eftigate.entity;
 
+import eu.efti.commons.dto.SearchParameter;
 import eu.efti.commons.enums.RequestTypeEnum;
 import eu.efti.commons.enums.StatusEnum;
 import eu.efti.commons.model.AbstractModel;
@@ -101,4 +102,8 @@ public class ControlEntity extends AbstractModel implements Serializable {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadatas")
     private MetadataResults metadataResults;
+
+    public boolean isExternalAsk() {
+        return this.getRequestType() != null && this.getRequestType().isExternalAsk();
+    }
 }

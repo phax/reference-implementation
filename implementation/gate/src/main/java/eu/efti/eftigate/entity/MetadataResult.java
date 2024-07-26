@@ -1,5 +1,6 @@
 package eu.efti.eftigate.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -42,5 +43,6 @@ public class MetadataResult implements Serializable {
     @NotEmpty(message = "TRANSPORT_VEHICLES_MISSING")
     @Valid
     private List<TransportVehicle> transportVehicles;
+    @JsonIgnore
     private boolean isDisabled;
 }

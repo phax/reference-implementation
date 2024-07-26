@@ -1,7 +1,7 @@
-<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.11.xsd">
     <changeSet author="jthueux (generated)" id="1707989626822-1">
         <createTable tableName="metadata">
             <column autoIncrement="true" name="id" type="INTEGER">
@@ -56,4 +56,6 @@
     <changeSet author="jthueux (generated)" id="1707989626822-3">
         <addForeignKeyConstraint baseColumnNames="metadata" baseTableName="transportvehicle" constraintName="transportvehicle_metadata_fkey" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="metadata" validate="true"/>
     </changeSet>
+
+    <include file="./db.changelog/db.metadata.changelog-2024-05-16-add-index.xml"/>
 </databaseChangeLog>

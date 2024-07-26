@@ -2,13 +2,13 @@ package eu.efti.eftigate.service;
 
 import eu.efti.commons.dto.MetadataDto;
 import eu.efti.commons.enums.EDeliveryAction;
+import eu.efti.commons.exception.TechnicalException;
+import eu.efti.commons.utils.SerializeUtils;
 import eu.efti.edeliveryapconnector.dto.NotificationContentDto;
 import eu.efti.edeliveryapconnector.dto.NotificationDto;
 import eu.efti.edeliveryapconnector.dto.NotificationType;
 import eu.efti.edeliveryapconnector.dto.ReceivedNotificationDto;
 import eu.efti.edeliveryapconnector.service.NotificationService;
-import eu.efti.eftigate.exception.TechnicalException;
-import eu.efti.eftigate.mapper.SerializeUtils;
 import eu.efti.eftigate.service.request.EftiRequestUpdater;
 import eu.efti.eftigate.service.request.RequestService;
 import eu.efti.eftigate.service.request.RequestServiceFactory;
@@ -24,15 +24,16 @@ public class ApIncomingService {
 
     private final NotificationService notificationService;
     private final RequestServiceFactory requestServiceFactory;
-    private final EftiRequestUpdater eftiRequestUpdater;
     private final MetadataService metadataService;
     private final SerializeUtils serializeUtils;
+    private final EftiRequestUpdater eftiRequestUpdater;
 
     public void manageIncomingNotification(final ReceivedNotificationDto receivedNotificationDto) {
          notificationService.consume(receivedNotificationDto).ifPresent(this::rootResponse);
     }
 
     private void rootResponse(final NotificationDto notificationDto) {
+
         if (NotificationType.SEND_SUCCESS.equals(notificationDto.getNotificationType())) {
             eftiRequestUpdater.manageSendSuccess(notificationDto);
             return;
@@ -40,20 +41,23 @@ public class ApIncomingService {
             eftiRequestUpdater.manageSendFailure(notificationDto);
             return;
         }
-        final EDeliveryAction action = getAction(notificationDto);
+
+        final EDeliveryAction action = getAction(notificationDto.getContent());
+        final RequestService<?> requestService = getRequestService(action);
         switch (action) {
-            case GET_UIL, GET_IDENTIFIERS -> getRequestService(action).updateWithResponse(notificationDto);
-            case FORWARD_UIL -> getRequestService(action).receiveGateRequest(notificationDto);
+            case GET_UIL, GET_IDENTIFIERS -> requestService.updateWithResponse(notificationDto);
+            case FORWARD_UIL -> requestService.receiveGateRequest(notificationDto);
+            case SEND_NOTES -> requestService.manageMessageReceive(notificationDto);
             case UPLOAD_METADATA -> metadataService.createOrUpdate(parseBodyToMetadata(notificationDto.getContent()));
             default -> log.warn("unmanaged notification type {}", notificationDto.getContent().getAction());
         }
     }
 
-    private static EDeliveryAction getAction(NotificationDto notificationDto) {
-        final EDeliveryAction action = EDeliveryAction.getFromValue(notificationDto.getContent().getAction());
+    private EDeliveryAction getAction(final NotificationContentDto notificationContentDto) {
+        final EDeliveryAction action = EDeliveryAction.getFromValue(notificationContentDto.getAction());
         if(action == null) {
-            log.error("unknown edelivery action {}", notificationDto.getContent().getAction());
-            throw new TechnicalException("unknown edelivery action " + notificationDto.getContent().getAction());
+            log.error("unknown edelivery action {}", notificationContentDto.getAction());
+            throw new TechnicalException("unknown edelivery action " + notificationContentDto.getAction());
         }
         return action;
     }
@@ -62,7 +66,7 @@ public class ApIncomingService {
         return serializeUtils.mapXmlStringToClass(notificationContent.getBody(), MetadataDto.class);
     }
 
-    private RequestService getRequestService(final EDeliveryAction eDeliveryAction) {
+    private RequestService<?> getRequestService(final EDeliveryAction eDeliveryAction) {
         return  requestServiceFactory.getRequestServiceByEdeliveryActionType(eDeliveryAction);
     }
 }

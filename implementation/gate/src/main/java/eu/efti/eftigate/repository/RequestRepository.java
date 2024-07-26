@@ -7,11 +7,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface RequestRepository extends JpaRepository<RequestEntity, Long> {
+public interface RequestRepository<T extends RequestEntity> extends JpaRepository<T, Long> {
 
-    RequestEntity findByControlRequestUuidAndStatus(final String EftiDataUuid, final RequestStatusEnum status);
+    T findByEdeliveryMessageId(final String messageId);
 
-    RequestEntity findByEdeliveryMessageId(final String messageId);
+    T findByControlRequestTypeAndStatusAndEdeliveryMessageId(final RequestTypeEnum controlRequestType, final RequestStatusEnum requestStatusEnum, final String messageId);
 
-    RequestEntity findByControlRequestTypeInAndStatusAndEdeliveryMessageId(final List<RequestTypeEnum> controlRequestTypeIn, final RequestStatusEnum requestStatusEnum, final String messageId);
+    T findByControlRequestTypeInAndEdeliveryMessageId(final List<RequestTypeEnum> controlRequestTypeIn, final String messageId);
+
 }
