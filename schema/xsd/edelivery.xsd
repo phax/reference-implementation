@@ -1,0 +1,91 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:efti-id="http://efti.eu/v1/consignment/identifier"
+            xmlns:efti="http://efti.eu/v1/consignment/common"
+            xmlns:efti-ed="http://efti.eu/v1/edelivery"
+            targetNamespace="http://efti.eu/v1/edelivery"
+            elementFormDefault="qualified">
+
+  <xsd:import namespace="http://efti.eu/v1/consignment/identifier" schemaLocation="consignment-identifier.xsd"/>
+  <xsd:import namespace="http://efti.eu/v1/consignment/common" schemaLocation="consignment-common.xsd"/>
+
+  <xsd:element name="identifierQuery" type="efti-ed:IdentifierQuery"/>
+  <xsd:element name="identifierResponse" type="efti-ed:IdentifierResponse"/>
+
+  <xsd:element name="uilQuery" type="efti-ed:UILQuery"/>
+  <xsd:element name="uilResponse" type="efti-ed:UILResponse"/>
+
+  <xsd:complexType name="UIL">
+    <xsd:sequence>
+      <xsd:element name="gateId" type="xsd:string"/>
+      <xsd:element name="platformId" type="xsd:string"/>
+      <xsd:element name="datasetId" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="IdentifierQuery">
+    <xsd:annotation>
+      <xsd:documentation>
+        Query request message to find consignments matching the given identifier.
+        This match to fields (eFTI618, eFTI374, eFTI448) in the identifier subset.
+        Returns consignments in identifier subset with UIL.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="identifier" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="Consignment">
+    <xsd:annotation>
+      <xsd:documentation>
+        Consignment in identifier subset including UIL
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="efti-id:SupplyChainConsignment">
+        <xsd:sequence>
+          <xsd:element name="uil" type="efti-ed:UIL" />
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="IdentifierResponse">
+    <xsd:annotation>
+      <xsd:documentation>
+        Response payload to the identifier request. Returns consignments in identifier subset.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="consignment" type="efti-ed:Consignment" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="UILQuery">
+    <xsd:annotation>
+      <xsd:documentation>
+        Query request message to find a consignment using UIL - (any efti subset).
+        Returns the identified consignment in the requested subset.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <!-- uil of the consignment -->
+      <xsd:element name="uil" type="efti-ed:UIL"/>
+      <!-- subset id of the consignment e.g. identifier, EU1, FI or FI01 -->
+      <xsd:element name="subsetId" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="UILResponse">
+    <xsd:annotation>
+      <xsd:documentation>
+        Response payload to uil request. Returns consignment in requested subset.
+        If consignment does not exist return empty response.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element ref="efti:consignment" minOccurs="0" />
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>
+
