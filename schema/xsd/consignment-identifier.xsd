@@ -52,7 +52,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="categoryCode" type="xsd:token" minOccurs="0" maxOccurs="1">
+      <xsd:element name="categoryCode" type="codes:TransportEquipmentCategoryCode" minOccurs="0" maxOccurs="1">
         <xsd:annotation>
           <xsd:appinfo>
             <unCefact unId="UN01003767" id="Logistics_ Transport Equipment. Category. Code"/>
@@ -148,7 +148,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="modeCode" type="xsd:token" minOccurs="0" maxOccurs="1">
+      <xsd:element name="modeCode" type="codes:TransportModeCode" minOccurs="0" maxOccurs="1">
         <xsd:annotation>
           <xsd:appinfo>
             <unCefact unId="UN01003839" id="Logistics_ Transport Movement. Mode. Code"/>
