@@ -125,5 +125,8 @@
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
+
+  <xsd:element name="uilQuery" type="efti-ed:UILQuery"/>
+  <xsd:element name="uilResponse" type="efti-ed:UILResponse"/>
 </xsd:schema>
 

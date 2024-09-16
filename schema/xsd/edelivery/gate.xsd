@@ -6,13 +6,10 @@
 
   <xsd:import namespace="http://efti.eu/v1/consignment/identifier" schemaLocation="../consignment-identifier.xsd"/>
   <xsd:import namespace="http://efti.eu/v1/consignment/common" schemaLocation="../consignment-common.xsd"/>
-  <xsd:include schemaLocation="../edelivery.xsd"/>
+  <xsd:include schemaLocation="platform.xsd"/>
 
   <xsd:element name="identifierQuery" type="efti-ed:IdentifierQuery"/>
   <xsd:element name="identifierResponse" type="efti-ed:IdentifierResponse"/>
-
-  <xsd:element name="uilQuery" type="efti-ed:UILQuery"/>
-  <xsd:element name="uilResponse" type="efti-ed:UILResponse"/>
 
   <xsd:simpleType name="IdentifierType">
     <xsd:annotation>
