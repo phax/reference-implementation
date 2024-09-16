@@ -7,24 +7,20 @@
   <xsd:import namespace="http://efti.eu/v1/consignment/identifier" schemaLocation="../consignment-identifier.xsd"/>
   <xsd:include schemaLocation="../edelivery.xsd"/>
 
-  <xsd:element name="saveConsignmentIdentifiersRequest" type="efti-ed:SaveConsignmentIdentifiersRequest"/>
-  <xsd:element name="saveConsignmentIdentifiersResponse" type="efti-ed:Response"/>
+  <xsd:element name="saveIdentifiersRequest" type="efti-ed:SaveIdentifiersRequest"/>
+  <xsd:element name="saveIdentifiersResponse" type="efti-ed:Response"/>
 
-  <xsd:complexType name="SaveConsignmentIdentifiersRequest">
+  <xsd:complexType name="SaveIdentifiersRequest">
     <xsd:annotation>
       <xsd:documentation>
         Response payload to uil request. Returns consignment in requested subset.
         If consignment does not exist return empty response.
       </xsd:documentation>
     </xsd:annotation>
-    <xsd:complexContent>
-      <xsd:extension base="efti-ed:Response">
-        <xsd:sequence>
-          <xsd:element ref="efti-id:consignment"/>
-        </xsd:sequence>
-        <xsd:attribute name="datasetId" type="xsd:token" use="required"/>
-      </xsd:extension>
-    </xsd:complexContent>
+    <xsd:sequence>
+      <xsd:element ref="efti-id:consignment"/>
+    </xsd:sequence>
+    <xsd:attribute name="datasetId" type="xsd:token" use="required"/>
   </xsd:complexType>
 </xsd:schema>
 
