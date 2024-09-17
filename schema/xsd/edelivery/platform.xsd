@@ -13,8 +13,8 @@
   <xsd:complexType name="SaveIdentifiersRequest">
     <xsd:annotation>
       <xsd:documentation>
-        Response payload to uil request. Returns consignment in requested subset.
-        If consignment does not exist return empty response.
+        Save consignment identifiers request payload.
+        Platform can create and update consignment identifiers in gate using this request.
       </xsd:documentation>
     </xsd:annotation>
     <xsd:sequence>
