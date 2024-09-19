@@ -16,14 +16,10 @@ import eu.efti.edeliveryapconnector.dto.NotificationDto;
 import eu.efti.edeliveryapconnector.dto.NotificationType;
 import eu.efti.edeliveryapconnector.exception.SendRequestException;
 import eu.efti.eftigate.dto.RabbitRequestDto;
-import eu.efti.eftigate.entity.ControlEntity;
-import eu.efti.eftigate.entity.IdentifiersRequestEntity;
-import eu.efti.eftigate.entity.IdentifiersResult;
-import eu.efti.eftigate.entity.IdentifiersResults;
+import eu.efti.eftigate.entity.*;
 import eu.efti.eftigate.exception.RequestNotFoundException;
 import eu.efti.eftigate.repository.IdentifiersRequestRepository;
 import eu.efti.eftigate.service.BaseServiceTest;
-import eu.efti.identifiersregistry.entity.TransportVehicle;
 import eu.efti.identifiersregistry.service.IdentifiersService;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,7 +85,6 @@ class IdentifiersRequestServiceTest extends BaseServiceTest {
     private final IdentifiersRequestDto identifiersRequestDto = new IdentifiersRequestDto();
 
 
-
     @Override
     @BeforeEach
     public void before() {
@@ -109,8 +104,8 @@ class IdentifiersRequestServiceTest extends BaseServiceTest {
         identifiersResult1 = IdentifiersResult.builder()
                 .eFTIDataUuid(DATA_UUID)
                 .eFTIPlatformUrl(PLATFORM_URL)
-                .transportVehicles(List.of(TransportVehicle.builder()
-                        .vehicleId("abc123").vehicleCountry(CountryIndicator.FR).build(), TransportVehicle.builder()
+                .transportVehicles(List.of(TransportVehicleEntity.builder()
+                        .vehicleId("abc123").vehicleCountry(CountryIndicator.FR).build(), TransportVehicleEntity.builder()
                         .vehicleId("abc124").vehicleCountry(CountryIndicator.BE).build())).build();
         identifiersRequestService = new IdentifiersRequestService(identifiersRequestRepository, mapperUtils, rabbitSenderService, controlService, gateProperties, identifiersService, requestUpdaterService, serializeUtils, logManager);
 
@@ -146,7 +141,7 @@ class IdentifiersRequestServiceTest extends BaseServiceTest {
         assertEquals(identifiersResult1.getTransportVehicles().size(), requestDtoArgumentCaptor.getValue().getIdentifiersResultsDto().getIdentifiersResult().get(0).getTransportVehicles().size());
         assertEquals(SUCCESS, requestDtoArgumentCaptor.getValue().getStatus());
     }
-    
+
     @Test
     void trySendDomibusSuccessTest() throws SendRequestException, JsonProcessingException {
         when(identifiersRequestRepository.save(any())).thenReturn(identifiersRequestEntity);
@@ -402,7 +397,7 @@ class IdentifiersRequestServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void shouldUpdateSentRequestStatus_whenRequestIsExternal(){
+    void shouldUpdateSentRequestStatus_whenRequestIsExternal() {
         identifiersRequestDto.getControl().setRequestType(RequestTypeEnum.EXTERNAL_ASK_IDENTIFIERS_SEARCH);
         when(mapperUtils.requestToRequestDto(identifiersRequestEntity, IdentifiersRequestDto.class)).thenReturn(identifiersRequestDto);
         when(mapperUtils.requestDtoToRequestEntity(identifiersRequestDto, IdentifiersRequestEntity.class)).thenReturn(identifiersRequestEntity);
@@ -415,7 +410,7 @@ class IdentifiersRequestServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void shouldUpdateSentRequestStatus_whenRequestIsNotExternal(){
+    void shouldUpdateSentRequestStatus_whenRequestIsNotExternal() {
         identifiersRequestDto.getControl().setRequestType(RequestTypeEnum.EXTERNAL_IDENTIFIERS_SEARCH);
         when(mapperUtils.requestToRequestDto(identifiersRequestEntity, IdentifiersRequestDto.class)).thenReturn(identifiersRequestDto);
         when(mapperUtils.requestDtoToRequestEntity(identifiersRequestDto, IdentifiersRequestEntity.class)).thenReturn(identifiersRequestEntity);
@@ -428,7 +423,7 @@ class IdentifiersRequestServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void shouldBuildRequestBody_whenRemoteGateSentResponse(){
+    void shouldBuildRequestBody_whenRemoteGateSentResponse() {
         controlDto.setRequestType(RequestTypeEnum.EXTERNAL_ASK_IDENTIFIERS_SEARCH);
         controlDto.setIdentifiersResults(identifiersResultsDto);
         final RabbitRequestDto rabbitRequestDto = new RabbitRequestDto();
@@ -448,7 +443,7 @@ class IdentifiersRequestServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void shouldBuildRequestBody_whenLocalGateSendsRequest(){
+    void shouldBuildRequestBody_whenLocalGateSendsRequest() {
         controlDto.setRequestType(RequestTypeEnum.EXTERNAL_IDENTIFIERS_SEARCH);
         controlDto.setIdentifiersResults(identifiersResultsDto);
         controlDto.setTransportIdentifiers(searchParameter);
@@ -462,7 +457,7 @@ class IdentifiersRequestServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void shouldFindRequestByMessageId_whenRequestExists(){
+    void shouldFindRequestByMessageId_whenRequestExists() {
         when(identifiersRequestRepository.findByEdeliveryMessageId(anyString())).thenReturn(identifiersRequestEntity);
         final IdentifiersRequestEntity requestByMessageId = identifiersRequestService.findRequestByMessageIdOrThrow(MESSAGE_ID);
         assertNotNull(requestByMessageId);
@@ -473,7 +468,7 @@ class IdentifiersRequestServiceTest extends BaseServiceTest {
         final Exception exception = assertThrows(RequestNotFoundException.class, () -> {
             identifiersRequestService.findRequestByMessageIdOrThrow(MESSAGE_ID);
         });
-        assertEquals("couldn't find Identifiers request for messageId: messageId", exception.getMessage());
+        assertEquals("couldn't find Consignment request for messageId: messageId", exception.getMessage());
     }
 
     @Test
