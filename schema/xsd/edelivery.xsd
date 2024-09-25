@@ -128,5 +128,20 @@
 
   <xsd:element name="uilQuery" type="efti-ed:UILQuery"/>
   <xsd:element name="uilResponse" type="efti-ed:UILResponse"/>
+
+  <xsd:complexType name="PostFollowUpRequest">
+    <xsd:annotation>
+      <xsd:documentation>
+        Save follow-up message to some specific data set identified by UIL.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="uil" type="efti-ed:UIL"/>
+      <xsd:element name="message" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:element name="postFollowUpRequest" type="efti-ed:PostFollowUpRequest"/>
+  <xsd:element name="postFollowUpResponse" type="efti-ed:Response"/>
 </xsd:schema>
 
